@@ -62,7 +62,7 @@
         
         <div class="card-body">
             <div class="text-center">
-                <img class="form-group" src="{{ asset('vendor/adminlte/dist/img/icono camara.png') }}" alt="Snoopy" style="max-width: 200px; max-height: 200px;">
+                <img class="form-group" src="{{ asset('vendor/adminlte/dist/img/eleccionpy.png') }}" alt="Snoopy" style="max-width: 200px; max-height: 200px;">
             </div>
             
                 @csrf

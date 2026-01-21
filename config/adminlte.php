@@ -94,7 +94,7 @@ return [
     'auth_logo' => [
         'enabled' => true,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/camara.png',
+            'path' => 'vendor/adminlte/dist/img/eleccionpy.png',
             'alt' => 'Auth Logo',
             'class' => '',
             'width' => 180,
@@ -298,219 +298,82 @@ return [
     */
 
     'menu' => [
-        ['header' => 'STD'],
-        [
-            'text'       => 'Reportes',
-            'icon'       => 'fas fa-user-edit',
-            'icon_color' => 'dark',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-user-edit"></i>',
-            'can'  => 'Firmante', // Permiso requerido
-            'submenu'        => [
-                [
-                    'text' => 'Grafico General',
-                    'url'  => '/reportes',
-                ],
-                [
-                    'text' => 'Reporte por Fechas',
-                    'url'  => '/reportes/create',
-                ],
-            ],
-        ],
-        [
-            'text'       => 'Firmante',
-            'icon'       => 'fas fa-user-edit',
-            'icon_color' => 'warning',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-user-edit"></i>',
-            'can'  => 'Firmante', // Permiso requerido
-            'submenu'        => [
-                [
-                    'text' => 'Lista de Firmantes',
-                    'url'  => '/firmante',
 
-                ],
-                [
-                    'text' => 'Registrar Firmante',
-                    'url'  => '/firmante/create',
-                ],
-            ],
-        ],
+    [
+        'text'       => 'Equipo',
+        'icon'       => 'fas fa-users',
+        'icon_color' => 'info',
+        'classes'    => 'custom-icon-box custom-icon-box-blue',
+        'content'    => '<i class="fas fa-users"></i>',
+        'can'        => 'Equipo',
+        'url'        => 'home',
+    ],
+
+    [
+        'text'       => 'Dirigente',
+        'icon'       => 'fas fa-user-tie',
+        'icon_color' => 'warning',
+        'classes'    => 'custom-icon-box custom-icon-box-warning',
+        'content'    => '<i class="fas fa-user-tie"></i>',
+        'can'        => 'Dirigente',
+        'url'        => '/dirigente/create',
+    ],
+
+    [
+        'text'       => 'Puntero',
+        'icon'       => 'fas fa-user-friends',
+        'icon_color' => 'light',
+        'classes'    => 'custom-icon-box custom-icon-box-dark',
+        'content'    => '<i class="fas fa-user-friends"></i>',
+        'can'        => 'Puntero',
+        'url'        => '/puntero/create',
+    ],
+    [
+        'text'       => 'Reportes',
+        'icon'       => 'fas fa-user-friends',
+        'icon_color' => 'light',
+        'classes'    => 'custom-icon-box custom-icon-box-dark',
+        'content'    => '<i class="fas fa-user-friends"></i>',
+        'can'        => 'Reportes',
+        'url'        => '/puntero/create',
+    ],
+
+
 
         [
-            'text'       => 'Desc. de Documentos',
-            'icon'       => 'fas fa-file-alt',
-            'icon_color' => 'danger',
-            'classes'    => 'custom-icon-box-black',
-            'content'    => '<i class="fas fa-box"></i>',
-            'can'  => 'Tipos Documentos',
-            'submenu'    => [
-                [
-                    'text' => 'Lista de Descripciones',
-                    'url'  => '/tipodoc',
-                ],
-                [
-                    'text' => 'Registrar Descripcion',
-                    'url'  => '/tipodoc/create',
-                ],
-            ],
-        ],
-        [
-            'text'       => 'Origenes',
-            'icon'       => 'fas fa-map-marker-alt',
-            'icon_color' => 'warning',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-map-marker-alt"></i>',
-            'can'  => 'Origenes',
-            'submenu'        => [
-                [
-                    'text' => 'Lista de Origenes',
-                    'url'  => '/origen',
-                ],
-                [
-                    'text' => 'Registrar Origenes',
-                    'url'  => '/origen/create',
-                ],
-            ],
-        ],
-        [
-            'text'       => 'Destinos',
-            'icon'       => 'fas fa-map-marker-alt',  // Cambiado a un icono más adecuado
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-map-marker-alt"></i>',  // Cambiado a un icono más adecuado
-            'can'  => 'Destinos',
-            'submenu'        => [
-                [
-                    'text' => 'Lista de Destinos',
-                    'url'  => '/destino',
-                ],
-                [
-                    'text' => 'Registrar Destinos',
-                    'url'  => '/destino/create',
-                ],
-            ],
-        ],
-        [
-            'text'       => 'Mesa de Entrada',
-            'icon'       => 'fas fa-inbox',
-            'icon_color' => 'cyan',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-box"></i>',
-            'can'  => 'Mesa de Entrada', // Permiso requerido
-            'submenu'        => [
-                [
-                    'text' => 'Lista de Entradas Docs.',
-                    'url'  => '/mesaentrada',
-
-                ],
-                [
-                    'text' => 'Registrar Documento',
-                    'url'  => '/mesaentrada/create',
-                ],
-                [
-                    'text' => 'Registrar Doc. Auxiliar',
-                    'url'  => '/createaux',
-                ],
-                [
-                    'text' => 'Resumen Fechas Tipos Doc.',
-                    'url'  => '/restipodocfechas',
-                ],
-            ],
-        ],
-        
-        [
-            'text'       => 'Documentos Oficina',
-            'icon'       => 'fas fa-folder',
-            'icon_color' => 'primary',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-box"></i>',
-            'can'  => 'Documentos Oficina',
-            'submenu'        => [
-                [
-                    'text' => 'Recepcionado',
-                    'url'  => '/recepciondoc',
-
-                ],
-                [
-                    'text' => 'Enviado/Finalizado',
-                    'url'  => '/reenviadodoc',
-                ],
-            ],
-        ],
-        
-
-        ['header' => 'account_settings'],
-        [
-            'text' => 'profile',
+            'text' => 'Perfil',
+            'topnav'     => true,
             'url'  => 'profile',
-            'icon' => 'fas fa-fw fa-user',
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
+        ],
+        [
+            'text' => 'Gestión de Permisos',
+            'topnav'     => true,
+            'url'  => 'permissions',
+            'classes' => 'custom-icon-box-black',
+            'content' => '<i class="fas fa-box"></i>',
+            'can'  => 'Gestion de Permisos',
         ],
         [
             'text' => 'Gestión de Usuarios',
+            'topnav'     => true,
             'url'  => 'profiles',
-            'icon' => 'fas fa-fw fa-user',
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
-            'can'  => 'Gestion Usuarios',
+            'can'  => 'Gestion de Usuarios',
         ],
         [
             'text' => 'change_password',
+            'topnav'     => true,
             'url'  => 'profile/edit',
-            'icon' => 'fas fa-fw fa-lock',
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
         ],
-        [
-            'text'       => 'Usuario Oficina',
-            'icon'       => 'fas fa-user',
-            'icon_color' => 'success',
-            'classes'    => 'custom-icon-box-black',
-            'content'    => '<i class="fas fa-box"></i>',
-            'can'  => 'Usuario Oficina',
-            'submenu'    => [
-                [
-                    'text' => 'Lista de Usuarios',
-                    'url'  => '/usuariodestino',
-                ],
-                [
-                    'text' => 'Asignar usuario',
-                    'url'  => '/usuariodestino/create',
-                ],
-            ],
-        ],
-       
 
-        [
-            'text'       => 'MANTENIMIENTO',
-            'icon'       => 'fas fa-wrench',  //<i class="fas fa-wrench"></i>
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-map-marker-alt"></i>',  // Cambiado a un icono más adecuado
-            'can'  => 'Destinos',
-            'submenu'        => [
-                [
-                    'text' => 'Períodos',
-                    'url'  => '/periodos',
-                ],
-                [
-                    'text' => 'Partidos Politicos',
-                    'url'  => '/partidos',
-                ],
-                [
-                    'text' => 'Cargos',
-                    'url'  => '/cargos',
-                ],
-                [
-                    'text' => 'Entidades',
-                    'url'  => '/entidades',
-                ],
-                [
-                    'text' => 'Legisladores',
-                    'url'  => '/legislador',
-                ],
-            ],
-        ],
+
+
+
 
 
     ],

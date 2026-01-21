@@ -11,13 +11,13 @@ class PermissionController extends Controller
 {
 
 
-    // public function __construct()
-    // {
-    //     $this->middleware('permission:Listar Permisos', ['only' => ['index', 'show']]);
-    //     $this->middleware('permission:Guardar Permisos', ['only' => ['store', 'create']]);
-    //     $this->middleware('permission:Actualizar Permisos', ['only' => ['update', 'edit']]);
-    //     $this->middleware('permission:Eliminar Permisos', ['only' => ['destroy']]);
-    // }
+        public function __construct()
+        {
+            $this->middleware('permission:Listar Permisos', ['only' => ['index', 'show']]);
+            $this->middleware('permission:Guardar Permisos', ['only' => ['store', 'create']]);
+            $this->middleware('permission:Actualizar Permisos', ['only' => ['update', 'edit']]);
+            $this->middleware('permission:Eliminar Permisos', ['only' => ['destroy']]);
+        }
 
     /**
      * Display a listing of the resource.

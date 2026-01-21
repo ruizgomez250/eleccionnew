@@ -1,106 +1,95 @@
 <?php
 
-use App\Models\Legislador;
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CargoController;
-use App\Http\Controllers\OrigenController;
-use App\Http\Controllers\DestinoController;
-use App\Http\Controllers\EntidadController;
-use App\Http\Controllers\TipoDocController;
-use App\Http\Controllers\FirmanteController;
-
-use App\Http\Controllers\ProfilesController;
-use App\Http\Controllers\LegisladorController;
 use App\Http\Controllers\MesaEntradaController;
-use App\Http\Controllers\UserDestinoController;
-use App\Http\Controllers\AutocompleteController;
-use App\Http\Controllers\PartidoPoliticoController;
-use App\Http\Controllers\PeriodoLegislativoController;
-use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\DirigenteController;
+use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfilesController;
+use App\Http\Controllers\PunteroController;
+use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VotanteController;
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 
-Route::get('/home', function () {
-    return view('home');
-})->name('home')->middleware('auth');
+Route::get('/home', [EquipoController::class, 'index'])
+    ->name('home')
+    ->middleware('auth');
 
 Route::get('mesas-entrada/data1', [MesaEntradaController::class, 'getData'])->name('recepcionadoData');
 //acceden los autenticados
 Route::middleware('auth')->group(function () {
-    Route::resource('entidades', EntidadController::class);
-    Route::resource('cargos', CargoController::class);
-    Route::resource('partidos', PartidoPoliticoController::class);
-    Route::resource('periodos', PeriodoLegislativoController::class);
-    Route::resource('legislador', LegisladorController::class);
-    Route::resource('/firmante', FirmanteController::class);
-    Route::resource('/reportes', ReporteController::class);
-    Route::resource('/tipodoc', TipoDocController::class);
-    Route::resource('/destino', DestinoController::class);
-    Route::resource('/origen', OrigenController::class);
-    Route::resource('mesaentrada', MesaEntradaController::class);
-    Route::resource('usuariodestino', UserDestinoController::class);
-    Route::get('/recepciondoc',  [MesaEntradaController::class, 'recepcionado'])->name('recepciondoc');
-    Route::get('/reenviadodoc',  [MesaEntradaController::class, 'reenviado'])->name('reenviado');
-    Route::get('/restipodocfechas',  [MesaEntradaController::class, 'reportetipodocfechas'])->name('restipodocfechas');
-    Route::get('reporterecorrido/{row}', [MesaEntradaController::class, 'recorrido'])->name('reporte.recorrido');
-    Route::get('/reporte/multiple', [ReporteController::class, 'generateMultipleReport'])
-     ->name('reporte.multiple');
-    Route::get('/autocomplete/firmante',  [AutocompleteController::class, 'getfirmante'])->name('obtenerfirmante');
-    Route::post('mesaentrada/{id}/enviar', [MesaEntradaController::class, 'enviar'])->name('mesaentrada.enviar');
-    Route::post('mesaentrada/{id}/aceptar', [MesaEntradaController::class, 'aceptar'])->name('mesaentrada.aceptar');
-    Route::post('mesaentrada/{id}/finalizar', [MesaEntradaController::class, 'finalizar'])->name('mesaentrada.finalizar');
-    Route::post('reenviardoc', [MesaEntradaController::class, 'reenviardoc'])->name('reenviardoc');
-    Route::post('mesaentrada/{id}/redirigir', [MesaEntradaController::class, 'redirigir'])->name('mesaentrada.redirigir');
-    Route::post('/mesaentrada/storedocs', [MesaEntradaController::class, 'storedocs'])->name('mesaentrada.storedocs');
-    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile/update', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::resource('equipo', EquipoController::class);
+    // Rutas RESTful estándar: index, store, show, edit, update, destroy
+
+    // Ruta para crear un dirigente vinculado a un equipo
+    // (botón "Agregar Dirigente" en la vista de equipos)
+    Route::get('dirigente/create/{equipo?}', [DirigenteController::class, 'createWithEquipo'])
+        ->name('dirigente.createWithEquipo');
+
+
+    // Ruta para almacenar el dirigente creado desde la vista con equipo
+    Route::post('dirigente/store', [DirigenteController::class, 'store'])->name('dirigente.store');
+
+    // Opcional: si querés listar dirigentes de un equipo específico
+    Route::get('dirigente/equipo/{equipo}', [DirigenteController::class, 'indexByEquipo'])
+        ->name('dirigente.indexByEquipo');
+    Route::get('dirigente', [DirigenteController::class, 'index'])->name('dirigente.index'); // Datatable
+    Route::get('dirigente/create', [DirigenteController::class, 'create'])->name('dirigente.create'); // Form Agregar
+    Route::post('dirigente/store', [DirigenteController::class, 'store'])->name('dirigente.store'); // Guardar
+    Route::get('dirigente/{dirigente}/punteros', [DirigenteController::class, 'punteros'])->name('dirigente.punteros');
+    Route::delete('/dirigente/{id}', [DirigenteController::class, 'destroy'])
+        ->name('dirigente.destroy');
+    Route::get('puntero/createp/{equipo?}', [PunteroController::class, 'createWithDirigente'])
+        ->name('puntero.createWithDirigente');
+
+
+
+
+    // Ruta para crear un puntero vinculado a un equipo
+    // (botón "Agregar Puntero" en la vista de equipos)
+    Route::get('puntero/create/{equipo?}', [PunteroController::class, 'create'])
+        ->name('puntero.createWithEquipo');
+
+
+    // Ruta para almacenar el puntero creado
+    Route::post('puntero/store', [PunteroController::class, 'store'])->name('puntero.store');
+    // Ruta para eliminar un puntero
+
+    Route::delete('/puntero/destroy/{id}', [PunteroController::class, 'destroy'])
+        ->name('puntero.destroy');
+
+    // Opcional: listar punteros de un equipo específico
+    Route::get('puntero/equipo/{equipo}', [PunteroController::class, 'indexByEquipo'])
+        ->name('puntero.indexByEquipo');
+    Route::get('puntero/{idpuntero}/votantes', [VotanteController::class, 'votantespuntero'])
+        ->name('puntero.votantespuntero');
+    Route::delete('/votante/delete/{id}', [VotanteController::class, 'destroy'])
+        ->name('votante.destroy');
+    Route::get('dirigente/buscar-por-cedula/{cedula}', [DirigenteController::class, 'buscarPorCedula'])
+        ->name('dirigente.buscarPorCedula');
+    Route::get('dirigente/buscar-por-cedulap/{cedula}', [DirigenteController::class, 'buscarPorCedula'])
+        ->name('dirigente.buscarPorCedulap');
+    Route::get('votante/buscar-por-cedula/{cedula}', [VotanteController::class, 'buscarPorCedula'])
+        ->name('votante.buscarPorCedula');
+    Route::resource('votante', VotanteController::class)
+    ->except(['destroy']);
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profiles', [ProfilesController::class, 'index'])->name('profiles');
-    Route::resource('users', App\Http\Controllers\UserController::class);
-    Route::resource('roles', App\Http\Controllers\RolesController::class);
-    Route::get('roles/{role}/give-permissions', [App\Http\Controllers\RolesController::class, 'addPermissionToRole'])->name('roles.addpermissionrole');
-    Route::put('roles/{role}/give-permissions', [App\Http\Controllers\RolesController::class, 'givePermissionToRole'])->name('roles.updatepermissionrole');
-    Route::resource('permissions', App\Http\Controllers\PermissionController::class);
-    Route::get('/mesaentrada/documentos/{id}', [MesaEntradaController::class, 'documentos'])->name('mesaentrada.documentos');
-    Route::get('/createaux', [MesaEntradaController::class, 'aux'])->name('createaux');
-    Route::post('/mesaentradastoreaux', [MesaEntradaController::class, 'storeaux'])->name('mesaentradastoreaux');
-    Route::post('/mesaentrada/{id}/autorizar-modif', [MesaEntradaController::class, 'autorizarModif'])->name('mesaentrada.autorizarmodif');
-    Route::get('/generar-planilla', [MesaEntradaController::class, 'generarReporte'])->name('generar-planilla');
-    Route::get('/reportefechaspdf/{desde}/{hasta}/{idproducto?}/{tiporeporte}', [ReporteController::class, 'pdfreportes']);
-    Route::get('/reportefechaspdfresumen/{desde}/{hasta}', [ReporteController::class, 'pdfreportesresumen']);
+    Route::resource('users', UserController::class);
+    Route::resource('roles', RolesController::class);
+    Route::get('roles/{role}/give-permissions', [RolesController::class, 'addPermissionToRole'])->name('roles.addpermissionrole');
+    Route::put('roles/{role}/give-permissions', [RolesController::class, 'givePermissionToRole'])->name('roles.updatepermissionrole');
+    Route::resource('permissions', PermissionController::class);
+    Route::get('roles/{role}/give-permissions', [RolesController::class, 'addPermissionToRole'])->name('roles.addpermissionrole');
+    Route::put('roles/{role}/give-permissions', [RolesController::class, 'givePermissionToRole'])->name('roles.updatepermissionrole');
 
-    
-// Ruta AJAX para datos (devuelve JSON en formato DataTables)
-Route::get('/mesa-entrada/recepcionado/data2', [MesaEntradaController::class, 'recepcionadoData'])->name('mesaentrada.recepcionado.data');
-Route::get('/mesa-entrada/recepcionado/finalizadodata', [MesaEntradaController::class, 'finalizadoData'])->name('mesaentrada.finalizado.data');
+
 });
-Route::post('/verificar-duplicado', [MesaEntradaController::class, 'verificarDuplicado'])->name('verificar-duplicado');
-Route::get('/mesaentrada/firmantes/{id}', [MesaEntradaController::class, 'firmantes'])->name('mesaentrada.firmantes');
-Route::get('/sinpermiso', function () {
-    return view('sinpermiso.index');
-})->name('sinpermiso');
-
-
-
-Route::get('mesas-entrada/data', [MesaEntradaController::class, 'getData'])->name('mesas-entrada.data');
-
-
-Route::get('/mesaentrada/reenviados/data', [MesaEntradaController::class, 'getDataRen'])
-    ->name('mesaentrada.reenviados.data');
-
-Route::get('/autocomplete',  [AutocompleteController::class, 'autocomplete'])->name('autocomplete');
-Route::get('/autocomplete/proveedor',  [AutocompleteController::class, 'proveedor'])->name('obtenerproveedor');
-Route::get('/autocomplete/producto',  [AutocompleteController::class, 'getproducto'])->name('obtenerproducto');
-//Route::post('/guardar-categoria', 'CategoriaController@storeCat')->name('guardar-categoria');
-Route::get('/create', function () {
-    return view('create');
-});
-//Route::post('/guardar-categoria', [CrearCategoriaComponent::class, 'store'])->name('guardar-categoria');
-
-
-
-//Route::get('/mascota', 'MascotaController@getRaza');
