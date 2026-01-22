@@ -50,8 +50,7 @@
                         <i class="fas fa-search text-white"></i>
                     </span>
                 </div>
-                <input type="text" id="buscadorEquipo" class="form-control"
-                    placeholder="Buscar equipo ">
+                <input type="text" id="buscadorEquipo" class="form-control" placeholder="Buscar equipo ">
             </div>
         </div>
     </div>
@@ -98,13 +97,15 @@
                             </a>
 
                             <form action="{{ route('equipo.destroy', $equipo->id) }}" method="POST"
-                                onsubmit="return confirm('¿Eliminar este equipo?')">
+                                class="form-delete d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">
+
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
+
                         </div>
                     </div>
                 </div>
@@ -116,6 +117,41 @@
 
 @section('js')
     <script>
+        const successAlert = @json(session('success'));
+        if (successAlert) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: "{{ session('success') }}",
+                timer: 1800,
+                showConfirmButton: false
+            });
+        }
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+
+            btn.addEventListener('click', function() {
+
+                let form = this.closest('.form-delete');
+
+                Swal.fire({
+                    title: '¿Eliminar equipo?',
+                    text: "Si tiene dirigentes o punteros asociados no se podra eliminar",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+
+            });
+
+        });
+
         document.getElementById('buscadorEquipo').addEventListener('keyup', function() {
             let texto = this.value.toLowerCase();
             let equipos = document.querySelectorAll('.equipo-card');

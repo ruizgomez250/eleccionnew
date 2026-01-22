@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('votante/buscar-por-cedula/{cedula}', [VotanteController::class, 'buscarPorCedula'])
         ->name('votante.buscarPorCedula');
     Route::resource('votante', VotanteController::class)
-    ->except(['destroy']);
+        ->except(['destroy']);
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
@@ -90,6 +90,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('permissions', PermissionController::class);
     Route::get('roles/{role}/give-permissions', [RolesController::class, 'addPermissionToRole'])->name('roles.addpermissionrole');
     Route::put('roles/{role}/give-permissions', [RolesController::class, 'givePermissionToRole'])->name('roles.updatepermissionrole');
-
+    // web.php
+    Route::get('dirigentes/data', [DirigenteController::class, 'data'])->name('dirigentes.data');
 
 });
