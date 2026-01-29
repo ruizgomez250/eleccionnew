@@ -17,28 +17,53 @@
         </div>
         <form action="{{ route('equipo.store') }}" method="POST">
             @csrf
+
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3">
-                        <input type="text" name="descripcion" class="form-control" placeholder="Descripción" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" name="sist" class="form-control" placeholder="Sistema">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="colegio" class="form-control" placeholder="Colegio">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" name="ciudad" class="form-control" placeholder="Ciudad">
-                    </div>
-                    <div class="col-md-2">
+
+                    {{-- Descripción --}}
+                    <x-adminlte-input name="descripcion" label="Descripción del Equipo" placeholder="Ej: Equipo Central"
+                        fgroup-class="col-md-3" required>
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
+
+                    {{-- Sistema (oculto) --}}
+                    <input type="hidden" name="sist" value="7">
+
+                    {{-- Colegio --}}
+                    <x-adminlte-input name="colegio" label="Colegio" placeholder="Nombre del colegio"
+                        fgroup-class="col-md-3">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-school"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
+
+                    {{-- Ciudad --}}
+                    <x-adminlte-input name="ciudad" label="Ciudad" placeholder="Ciudad" fgroup-class="col-md-2">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
+
+                    {{-- Botón Guardar --}}
+                    <div class="col-md-2 d-flex align-items-end">
                         <button class="btn btn-success w-100">
                             <i class="fas fa-save"></i> Guardar
                         </button>
                     </div>
+
                 </div>
             </div>
         </form>
+
     </div>
 
     {{-- =================== BUSCADOR =================== --}}

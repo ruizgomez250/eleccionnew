@@ -12,15 +12,16 @@ return new class extends Migration
             $table->id(); // id
 
             $table->string('cedulachofer', 20)->index();
+            $table->string('nombre', 150);
             $table->string('chapa', 20)->index();
 
             $table->string('tipovehiculo', 50)->nullable();
             $table->integer('capacidad')->nullable();
-
+            $table->integer('numero_auto')->nullable();
             $table->string('telefono1', 20)->nullable();
             $table->string('telefono2', 20)->nullable();
             $table->string('telefono3', 20)->nullable();
-
+            ;
             $table->decimal('montopagar', 12, 2)->default(0);
             $table->integer('cantidadpagos')->default(0);
 

@@ -16,7 +16,7 @@ class DirigenteController extends Controller
     public function index(Request $request)
     {
         $equipos = Equipo::all();
-
+        
         $equipo_id = $request->query('equipo_id');
         $dirigentes = Dirigente::when($equipo_id, function ($query, $equipo_id) {
             $query->where('id_equipo', $equipo_id);

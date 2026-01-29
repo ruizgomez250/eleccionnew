@@ -193,7 +193,7 @@
                             </div>
                             <div class="col-md-5">
                                 <input name="nombre" id="votante_nombre" class="form-control" placeholder="Nombre"
-                                    required>
+                                    required readonly>
                             </div>
                             <div class="col-md-4">
                                 <select name="tipo_votante" class="form-control" id="tipo_votante">
@@ -206,29 +206,29 @@
 
                         <div class="row mb-2">
                             <div class="col-md-4">
-                                <input name="direccion" id="direccion" class="form-control" placeholder="Dirección">
+                                <input name="direccion" id="direccion" class="form-control" placeholder="Dirección" readonly>
                             </div>
                             <div class="col-md-2">
-                                <input name="mesa" id="mesa" class="form-control" placeholder="Mesa">
+                                <input name="mesa" id="mesa" class="form-control" placeholder="Mesa" readonly>
                             </div>
                             <div class="col-md-2">
-                                <input name="orden" id="orden" class="form-control" placeholder="Orden">
+                                <input name="orden" id="orden" class="form-control" placeholder="Orden" readonly>
                             </div>
                             <div class="col-md-4">
-                                <input name="partido" id="partido" class="form-control" placeholder="Partido">
+                                <input name="partido" id="partido" class="form-control" placeholder="Partido" readonly>
                             </div>
                         </div>
 
                         <div class="row mb-2">
                             <div class="col-md-4">
-                                <input name="escuela" id="escuela" class="form-control" placeholder="Escuela">
+                                <input name="escuela" id="escuela" class="form-control" placeholder="Escuela" readonly>
                             </div>
                             <div class="col-md-4">
-                                <input name="ciudad" id="ciudad" class="form-control" placeholder="Ciudad">
+                                <input name="ciudad" id="ciudad" class="form-control" placeholder="Ciudad" readonly>
                             </div>
                             <div class="col-md-4">
                                 <input name="departamento" id="departamento" class="form-control"
-                                    placeholder="Departamento">
+                                    placeholder="Departamento" readonly>
                             </div>
                         </div>
 

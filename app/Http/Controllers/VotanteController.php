@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PadronIluminado;
+use App\Models\PrePadron;
 use App\Models\Puntero;
 use App\Models\Socio;
 use App\Models\Votante;
@@ -12,9 +13,66 @@ use Illuminate\Support\Facades\Log;
 
 class VotanteController extends Controller
 {
+    public function buscador()
+    {
+        return view('votante.buscador');
+    }
+
+    public function datatables(Request $request)
+    {
+        $columns = [
+            0 => 'cedula',
+            1 => 'nombre',
+            2 => 'apellido',
+            3 => 'direccion',
+            4 => 'ciudad'
+        ];
+
+        $totalData = PrePadron::count();
+        $totalFiltered = $totalData;
+
+        $limit  = $request->input('length');
+        $start  = $request->input('start');
+        $order  = $columns[$request->input('order.0.column')];
+        $dir    = $request->input('order.0.dir');
+
+        $query = PrePadron::query();
+
+        if($search = $request->input('search.value')) {
+            $query->where(function($q) use ($search){
+                $q->where('cedula','like',"%$search%")
+                  ->orWhere('nombre','like',"%$search%")
+                  ->orWhere('apellido','like',"%$search%");
+            });
+
+            $totalFiltered = $query->count();
+        }
+
+        $data = $query
+            ->offset($start)
+            ->limit($limit)
+            ->orderBy($order,$dir)
+            ->get();
+
+        // agregar botón seleccionar
+        $data->transform(function($item){
+            $item->action = '<button class="btn btn-success btn-sm select-votante" data-id="'.$item->id.'" data-nombre="'.$item->nombre.' '.$item->apellido.'">
+                                <i class="fas fa-check"></i> Seleccionar
+                             </button>';
+            return $item;
+        });
+
+        return response()->json([
+            "draw" => intval($request->input('draw')),
+            "recordsTotal" => $totalData,
+            "recordsFiltered" => $totalFiltered,
+            "data" => $data
+        ]);
+    }
+
     public function buscarPorCedula($cedula)
     {
-        $votante = PadronIluminado::where('cedula', $cedula)->first();
+        $votante = PrePadron::where('cedula', $cedula)->first();
 
         if (!$votante) {
             return response()->json([
@@ -26,13 +84,13 @@ class VotanteController extends Controller
         $data = [
             'cedula'       => $votante->cedula,
             'nombre'       => trim($votante->nombre . ' ' . $votante->apellido),
-            'direccion'    => $votante->localdesc,
-            'mesa'         => $votante->mesa,
-            'orden'        => $votante->orden,
-            'partido'      => $votante->partido,
-            'escuela'      => $votante->local,
-            'ciudad'       => $votante->distrito,
-            'departamento' => $votante->departamento,
+            'direccion'    => $votante->local_interna,
+            'mesa'         => '',
+            'orden'        => '',
+            'partido'      => $votante->afiliaciones,
+            'escuela'      => $votante->local_interna,
+            'ciudad'       => $votante->distrito_nombre,
+            'departamento' => $votante->departamento_nombre,
         ];
 
         return response()->json([

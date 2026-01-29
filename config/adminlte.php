@@ -330,14 +330,27 @@ return [
     ],
     [
         'text'       => 'Reportes',
-        'icon'       => 'fas fa-user-friends',
-        'icon_color' => 'light',
+        'icon'       => 'fas fa-file-alt',
+        'icon_color' => 'primary',
         'classes'    => 'custom-icon-box custom-icon-box-dark',
         'content'    => '<i class="fas fa-user-friends"></i>',
         'can'        => 'Reportes',
-        'url'        => '/puntero/create',
+        'submenu'        => [
+                [
+                    'text' => 'Imprimir por Dirigente',
+                    'url'  => '/punterosyvotantespordirigente',
+                ],
+            ],
     ],
-
+    [
+        'text'       => 'Vehiculo',
+        'icon'       => 'fas fa-car',
+        'icon_color' => 'success',
+        'classes'    => 'custom-icon-box custom-icon-box-dark',
+        'content'    => '<i class="fas fa-user-friends"></i>',
+        'can'        => 'Vehiculo',
+        'url'        => '/vehiculo',
+    ],
 
 
         [

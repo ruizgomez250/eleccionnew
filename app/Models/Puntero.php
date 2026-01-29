@@ -42,4 +42,10 @@ class Puntero extends Model
     {
         return $this->hasMany(Votante::class, 'idpuntero');
     }
+    public function vehiculos()
+    {
+        return $this->belongsToMany(Vehiculo::class, 'puntero_vehiculo', 'puntero_id', 'vehiculo_id')
+            ->withTimestamps()
+            ->withPivot('fecha_asignacion');
+    }
 }

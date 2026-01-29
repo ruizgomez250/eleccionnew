@@ -8,41 +8,65 @@
 
 @section('content')
 
-<div class="card">
-    <div class="card-body">
-        <form action="{{ route('equipo.update', $equipo->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ route('equipo.update', $equipo->id) }}" method="POST">
+                @csrf
+                @method('PUT')
 
-            <div class="row">
-                <div class="col-md-3">
-                    <input type="text" name="descripcion" class="form-control"
-                        value="{{ $equipo->descripcion }}" required>
-                </div>
+                <div class="row">
 
-                <div class="col-md-2">
-                    <input type="text" name="sist" class="form-control"
-                        value="{{ $equipo->sist }}">
-                </div>
+                    {{-- Descripción --}}
+                    <x-adminlte-input name="descripcion" label="Descripción del Equipo" placeholder="Descripción"
+                        value="{{ $equipo->descripcion }}" fgroup-class="col-md-3" required>
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
 
-                <div class="col-md-3">
-                    <input type="text" name="colegio" class="form-control"
-                        value="{{ $equipo->colegio }}">
-                </div>
+                    {{-- Sistema --}}
+                    <x-adminlte-input name="sist" label="Sistema" placeholder="Sistema" value="{{ $equipo->sist }}"
+                        fgroup-class="col-md-2">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
 
-                <div class="col-md-2">
-                    <input type="text" name="ciudad" class="form-control"
-                        value="{{ $equipo->ciudad }}">
-                </div>
+                    {{-- Colegio --}}
+                    <x-adminlte-input name="colegio" label="Colegio" placeholder="Colegio" value="{{ $equipo->colegio }}"
+                        fgroup-class="col-md-3">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-school"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
 
-                <div class="col-md-2">
-                    <button class="btn btn-primary w-100">
-                        <i class="fas fa-save"></i> Actualizar
-                    </button>
+                    {{-- Ciudad --}}
+                    <x-adminlte-input name="ciudad" label="Ciudad" placeholder="Ciudad" value="{{ $equipo->ciudad }}"
+                        fgroup-class="col-md-2">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                        </x-slot>
+                    </x-adminlte-input>
+
+                    {{-- Botón --}}
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100">
+                            <i class="fas fa-save"></i> Actualizar
+                        </button>
+                    </div>
+
                 </div>
-            </div>
-        </form>
+            </form>
+
+        </div>
     </div>
-</div>
 
 @stop
