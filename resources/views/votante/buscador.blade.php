@@ -1,98 +1,157 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador de Votantes</title>
+    <title>Consulta pre padron</title>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-    <!-- Font Awesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .dataTables_processing {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            padding: 10px;
+        }
+    </style>
 </head>
-<body>
-    <div class="container mt-4">
-        <h1 class="mb-4"><i class="fas fa-user-friends text-primary"></i> Buscador de Votantes</h1>
 
-        <!-- Filtro por puntero o cedula -->
+<body>
+
+    <div class="container">
+
+        <h3 class="mb-4">
+            <i class="fas fa-users text-primary"></i> Consulta pre Padron
+        </h3>
+
+        <!-- Buscador -->
         <div class="row mb-3">
-            <div class="col-md-4">
-                <input type="text" id="filtro_cedula" class="form-control" placeholder="Filtrar por cédula">
+            <div class="col-md-3">
+                <input type="text" id="cedula" class="form-control" placeholder="Cédula">
             </div>
+
             <div class="col-md-4">
-                <input type="text" id="filtro_nombre" class="form-control" placeholder="Filtrar por nombre">
+                <input type="text" id="nombre" class="form-control" placeholder="Nombre">
             </div>
+
             <div class="col-md-4">
-                <button id="btn_filtrar" class="btn btn-primary"><i class="fas fa-search"></i> Filtrar</button>
+                <input type="text" id="apellido" class="form-control" placeholder="Apellido">
+            </div>
+
+            <div class="col-md-1">
+                <button id="btnSearch" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
             </div>
         </div>
 
-        <!-- Tabla DataTables -->
-        <table id="tablaVotantes" class="table table-striped table-bordered" style="width:100%">
-            <thead>
+        <!-- Tabla -->
+        <table id="votantesTable" class="table table-bordered table-striped w-100">
+            <thead class="table-light">
                 <tr>
                     <th>Cédula</th>
                     <th>Nombre</th>
+                    <th>Apellido</th>
                     <th>Dirección</th>
-                    <th>Partido</th>
-                    <th>Mesa</th>
-                    <th>Acciones</th>
+                    <th>Afiliaciones</th>
                 </tr>
             </thead>
+            <tbody></tbody>
         </table>
+
+
     </div>
 
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- DataTables JS -->
+    <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Inicializar DataTable con server-side
-            var tabla = $('#tablaVotantes').DataTable({
+
+            let table = $('#votantesTable').DataTable({
                 processing: true,
                 serverSide: true,
+                searching: false,
+                ordering: true,
+                deferLoading: 0, // tabla vacía al inicio
                 ajax: {
-                    url: '{{ route("votante.datatables") }}',
+                    url: "{{ route('votantes.datatables') }}", // ruta con nombre
+                    type: 'GET',
                     data: function(d) {
-                        d.cedula = $('#filtro_cedula').val();
-                        d.nombre = $('#filtro_nombre').val();
+                        d.cedula = $('#cedula').val();
+                        d.nombre = $('#nombre').val();
+                        d.apellido = $('#apellido').val();
+                    },
+                    error: function(xhr) {
+                        console.error(xhr.responseText);
                     }
                 },
-                columns: [
-                    { data: 'cedula', name: 'cedula' },
-                    { data: 'nombre', name: 'nombre' },
-                    { data: 'direccion', name: 'direccion' },
-                    { data: 'partido', name: 'partido' },
-                    { data: 'mesa', name: 'mesa' },
-                    { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
+                columns: [{
+                        data: 'cedula'
+                    },
+                    {
+                        data: 'nombre'
+                    },
+                    {
+                        data: 'apellido'
+                    },
+                    {
+                        data: 'direccion'
+                    },
+                    {
+                        data: 'afiliaciones'
+                    }
                 ],
-                order: [[1, 'asc']]
-            });
-
-            // Botón filtrar
-            $('#btn_filtrar').click(function() {
-                tabla.draw();
-            });
-
-            // Filtrar al presionar Enter
-            $('#filtro_cedula, #filtro_nombre').on('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    tabla.draw();
+                language: {
+                    processing: "Buscando...",
+                    emptyTable: "Ingrese cédula, nombre o apellido para buscar",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    paginate: {
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
+
+            function buscar() {
+                if (!$('#cedula').val() && !$('#nombre').val() && !$('#apellido').val()) {
+                    alert('Debe ingresar algún dato para buscar');
+                    return;
+                }
+                table.ajax.reload();
+            }
+
+            $('#btnSearch').on('click', buscar);
+
+            $('#cedula, #nombre, #apellido').on('keypress', function(e) {
+                if (e.which === 13) {
+                    buscar();
+                }
+            });
+
         });
     </script>
+
+
 </body>
+
 </html>

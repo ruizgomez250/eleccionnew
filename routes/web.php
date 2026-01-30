@@ -15,18 +15,19 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VotanteController;
 
+
+
+Route::get('votante/buscador', [VotanteController::class, 'buscador']);
+Route::get('/votantes/datatables', [VotanteController::class, 'datatables'])->name('votantes.datatables');
 Auth::routes();
-
-
-
 Route::get('/home', [EquipoController::class, 'index'])
     ->name('home')
     ->middleware('auth');
 
 Route::get('mesas-entrada/data1', [MesaEntradaController::class, 'getData'])->name('recepcionadoData');
 //acceden los autenticados
-Route::get('votante/buscador', [VotanteController::class, 'buscador']);
-Route::get('votante/datatables', [VotanteController::class, 'datatables'])->name('votante.datatables');
+
+
 Route::middleware('auth')->group(function () {
     Route::get('punterosyvotantespordirigente', [ReportesController::class, 'index'])
         ->name('punterosyvotantespordirigente');

@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Log;
 
 class VotanteController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['buscador', 'datatables']);
+    }
+
     public function buscador()
     {
         return view('votante.buscador');
@@ -20,55 +26,40 @@ class VotanteController extends Controller
 
     public function datatables(Request $request)
     {
-        $columns = [
-            0 => 'cedula',
-            1 => 'nombre',
-            2 => 'apellido',
-            3 => 'direccion',
-            4 => 'ciudad'
-        ];
+        $cedula = $request->cedula;
+        $nombre = $request->nombre;
+        $apellido = $request->apellido;
 
-        $totalData = PrePadron::count();
-        $totalFiltered = $totalData;
-
-        $limit  = $request->input('length');
-        $start  = $request->input('start');
-        $order  = $columns[$request->input('order.0.column')];
-        $dir    = $request->input('order.0.dir');
+        // Si no hay filtros, devolvemos vacío
+        if (empty($cedula) && empty($nombre) && empty($apellido)) {
+            return response()->json([
+                "draw" => intval($request->draw),
+                "recordsTotal" => 0,
+                "recordsFiltered" => 0,
+                "data" => []
+            ]);
+        }
 
         $query = PrePadron::query();
 
-        if($search = $request->input('search.value')) {
-            $query->where(function($q) use ($search){
-                $q->where('cedula','like',"%$search%")
-                  ->orWhere('nombre','like',"%$search%")
-                  ->orWhere('apellido','like',"%$search%");
-            });
-
-            $totalFiltered = $query->count();
+        if (!empty($cedula)) {
+            $query->where('cedula', 'like', "%{$cedula}%");
         }
 
-        $data = $query
-            ->offset($start)
-            ->limit($limit)
-            ->orderBy($order,$dir)
-            ->get();
+        if (!empty($nombre)) {
+            $query->where('nombre', 'like', "%{$nombre}%");
+        }
 
-        // agregar botón seleccionar
-        $data->transform(function($item){
-            $item->action = '<button class="btn btn-success btn-sm select-votante" data-id="'.$item->id.'" data-nombre="'.$item->nombre.' '.$item->apellido.'">
-                                <i class="fas fa-check"></i> Seleccionar
-                             </button>';
-            return $item;
-        });
+        if (!empty($apellido)) {
+            $query->where('apellido', 'like', "%{$apellido}%");
+        }
 
-        return response()->json([
-            "draw" => intval($request->input('draw')),
-            "recordsTotal" => $totalData,
-            "recordsFiltered" => $totalFiltered,
-            "data" => $data
-        ]);
+        return datatables()
+            ->eloquent($query)
+            ->make(true);
     }
+
+
 
     public function buscarPorCedula($cedula)
     {
