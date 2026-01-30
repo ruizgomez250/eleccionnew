@@ -44,15 +44,15 @@ class VotanteController extends Controller
         $query = DB::table('prepadron')->select('cedula', 'nombre', 'apellido', 'direccion', 'afiliaciones');
 
         if (!empty($cedula)) {
-            $query->where('cedula', 'like', "{$cedula}%"); // más rápido que '%...%'
+            $query->where('cedula', 'like', "{$cedula}"); // más rápido que '%...%'
         }
 
         if (!empty($nombre)) {
-            $query->where('nombre', 'like', "{$nombre}%");
+            $query->where('nombre', 'like', "%{$nombre}%");
         }
 
         if (!empty($apellido)) {
-            $query->where('apellido', 'like', "{$apellido}%");
+            $query->where('apellido', 'like', "%{$apellido}%");
         }
 
         // DataTables con query builder
