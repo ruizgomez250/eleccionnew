@@ -40,24 +40,30 @@ class VotanteController extends Controller
             ]);
         }
 
-        $query = PrePadron::query();
+        // Seleccionamos solo columnas necesarias
+        $query = DB::table('prepadron')->select('cedula', 'nombre', 'apellido', 'direccion', 'afiliaciones');
 
         if (!empty($cedula)) {
-            $query->where('cedula', 'like', "%{$cedula}%");
+            $query->where('cedula', 'like', "{$cedula}%"); // más rápido que '%...%'
         }
 
         if (!empty($nombre)) {
-            $query->where('nombre', 'like', "%{$nombre}%");
+            $query->where('nombre', 'like', "{$nombre}%");
         }
 
         if (!empty($apellido)) {
-            $query->where('apellido', 'like', "%{$apellido}%");
+            $query->where('apellido', 'like', "{$apellido}%");
         }
 
-        return datatables()
-            ->eloquent($query)
+        // DataTables con query builder
+        return datatables($query)
+            ->addColumn('nombre_completo', function ($row) {
+                return trim($row->nombre . ' ' . $row->apellido);
+            })
+            ->rawColumns(['nombre_completo'])
             ->make(true);
     }
+
 
 
 
