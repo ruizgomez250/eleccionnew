@@ -41,7 +41,7 @@ class VotanteController extends Controller
         }
 
         // Seleccionamos solo columnas necesarias
-        $query = DB::table('prepadron')->select('cedula', 'nombre', 'apellido', 'direccion', 'afiliaciones');
+        $query = DB::table('prepadron')->select('cedula','local_interna','local_generales', 'nombre', 'apellido', 'direccion', 'afiliaciones');
 
         if (!empty($cedula)) {
             $query->where('cedula', 'like', "{$cedula}"); // más rápido que '%...%'
