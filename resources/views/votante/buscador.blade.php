@@ -64,6 +64,8 @@
                     <th>Cédula</th>
                     <th>Nombre</th>
                     <th>Apellido</th>
+                    <th>Local Interna</th>
+                    <th>Local Generales</th>
                     <th>Dirección</th>
                     <th>Afiliaciones</th>
                 </tr>
@@ -112,6 +114,12 @@
                     },
                     {
                         data: 'apellido'
+                    },
+                    {
+                        data: 'local_interna'
+                    },
+                    {
+                        data: 'local_generales'
                     },
                     {
                         data: 'direccion'
