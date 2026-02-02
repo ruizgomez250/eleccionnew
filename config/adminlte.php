@@ -22,7 +22,7 @@ return [
     |
     */
 
-    'title' => 'DocuSys',
+    'title' => 'Eleccion',
     'title_prefix' => '',
     'title_postfix' => '',
 

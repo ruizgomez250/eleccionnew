@@ -5,29 +5,50 @@ namespace App\Http\Controllers;
 use App\Models\Dirigente;
 use App\Models\Equipo;
 use App\Models\PadronIluminado;
-use App\Models\Puntero;
 use App\Models\Socio;
-use App\Models\Votante;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DirigenteController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+
+        $this->middleware('permission:Dirigente', [
+            'only' => [
+                'index',
+                'create',
+                'store',
+                'destroy',
+                'createWithEquipo',
+                'punteros',
+                'buscarPorCedula'
+            ]
+        ]);
+    }
     public function index(Request $request)
     {
-        $equipos = Equipo::all();
-        
+        $equipos = Equipo::where('sist', Auth::user()->sistema)->get();
+
         $equipo_id = $request->query('equipo_id');
-        $dirigentes = Dirigente::when($equipo_id, function ($query, $equipo_id) {
-            $query->where('id_equipo', $equipo_id);
-        })->orderBy('nombre')->get();
+        $dirigentes = Dirigente::whereHas('equipo', function ($q) {
+            $q->where('sist', Auth::user()->sistema);
+        })
+            ->when($equipo_id, function ($query, $equipo_id) {
+                $query->where('id_equipo', $equipo_id);
+            })
+            ->orderBy('nombre')
+            ->get();
+
 
         return view('dirigente.index', compact('dirigentes', 'equipos', 'equipo_id'));
     }
 
     public function create()
     {
-        $equipos = Equipo::all();
+        $equipos = Equipo::where('sist', Auth::user()->sistema)->get();
         return view('dirigente.index', compact('equipos'));
     }
 
@@ -96,12 +117,17 @@ class DirigenteController extends Controller
     }
     public function createWithEquipo($equipoId = null)
     {
-        $equipos = Equipo::all(); // Para el select
+        $equipos = Equipo::where('sist', Auth::user()->sistema)->get(); // Para el select
 
-        // Traer dirigentes filtrando por equipo si se pasa el ID
+        $sistemaUsuario = Auth::user()->sistema;
+
         $dirigentes = Dirigente::with('punteros.votantes', 'equipo')
+            ->whereHas('equipo', function ($q) use ($sistemaUsuario) {
+                $q->where('sist', $sistemaUsuario);
+            })
             ->when($equipoId, fn($q) => $q->where('id_equipo', $equipoId))
             ->get();
+
 
         // Calcular punteros_count y votantes_count por dirigente
         foreach ($dirigentes as $dir) {

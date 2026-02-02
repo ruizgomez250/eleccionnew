@@ -5,19 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\UserDestino;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
 
-//    public function __construct()
-//     {
-//         $this->middleware('permission:Listar Usuarios',['only'=>['index','show']]);
-//         $this->middleware('permission:Guardar Usuarios',['only'=>['store','create']]);
-//         $this->middleware('permission:Actualizar Usuarios',['only'=>['update','edit']]);
-//         $this->middleware('permission:Eliminar Usuarios',['only'=>['destroy']]);
-//     }
+   public function __construct()
+    {
+        $this->middleware('permission:Listar Usuarios',['only'=>['index','show']]);
+        $this->middleware('permission:Guardar Usuarios',['only'=>['store','create']]);
+        $this->middleware('permission:Actualizar Usuarios',['only'=>['update','edit']]);
+        $this->middleware('permission:Eliminar Usuarios',['only'=>['destroy']]);
+    }
 
     /**
      * Display a listing of the resource.
@@ -52,11 +53,13 @@ class UserController extends Controller
             'password' => 'required|string|min:8|max:20',
             'roles' => 'required'
         ]);
+        $sistema   = Auth::user()->sistema;
         // $role = Role::create(['name' => 'writer']);
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'sistema' => $sistema,
         ]);
         $user->syncRoles($request->roles);
         return redirect('users')->with('status', 'Usuario creado exitosamente');

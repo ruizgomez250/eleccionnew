@@ -23,9 +23,15 @@ class Vehiculo extends Model
         'montopagar',
         'cantidadpagos',
         'numero_auto',
+        'id_equipo',
     ];
     public function punteros()
     {
         return $this->belongsToMany(Puntero::class, 'puntero_vehiculo', 'vehiculo_id', 'puntero_id');
+    }
+    // Dirigente pertenece a un equipo
+    public function equipo()
+    {
+        return $this->belongsTo(Equipo::class, 'id_equipo');
     }
 }

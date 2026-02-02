@@ -11,60 +11,57 @@
 @section('content')
 
     {{-- =================== FORMULARIO NUEVO EQUIPO =================== --}}
-    <div class="card mb-4">
-        <div class="card-header bg-primary">
-            <strong><i class="fas fa-plus-circle"></i> Nuevo Equipo</strong>
-        </div>
-        <form action="{{ route('equipo.store') }}" method="POST">
-            @csrf
-
-            <div class="card-body">
-                <div class="row">
-
-                    {{-- Descripción --}}
-                    <x-adminlte-input name="descripcion" label="Descripción del Equipo" placeholder="Ej: Equipo Central"
-                        fgroup-class="col-md-3" required>
-                        <x-slot name="prependSlot">
-                            <div class="input-group-text">
-                                <i class="fas fa-users"></i>
-                            </div>
-                        </x-slot>
-                    </x-adminlte-input>
-
-                    {{-- Sistema (oculto) --}}
-                    <input type="hidden" name="sist" value="7">
-
-                    {{-- Colegio --}}
-                    <x-adminlte-input name="colegio" label="Colegio" placeholder="Nombre del colegio"
-                        fgroup-class="col-md-3">
-                        <x-slot name="prependSlot">
-                            <div class="input-group-text">
-                                <i class="fas fa-school"></i>
-                            </div>
-                        </x-slot>
-                    </x-adminlte-input>
-
-                    {{-- Ciudad --}}
-                    <x-adminlte-input name="ciudad" label="Ciudad" placeholder="Ciudad" fgroup-class="col-md-2">
-                        <x-slot name="prependSlot">
-                            <div class="input-group-text">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </div>
-                        </x-slot>
-                    </x-adminlte-input>
-
-                    {{-- Botón Guardar --}}
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button class="btn btn-success w-100">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </div>
-
-                </div>
+    @can('Guardar Equipos')
+        <div class="card mb-4">
+            <div class="card-header bg-primary">
+                <strong><i class="fas fa-plus-circle"></i> Nuevo Equipo</strong>
             </div>
-        </form>
 
-    </div>
+            <form action="{{ route('equipo.store') }}" method="POST">
+                @csrf
+
+                <div class="card-body">
+                    <div class="row">
+
+                        <x-adminlte-input name="descripcion" label="Descripción del Equipo" placeholder="Ej: Equipo Central"
+                            fgroup-class="col-md-3" required>
+                            <x-slot name="prependSlot">
+                                <div class="input-group-text">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </x-slot>
+                        </x-adminlte-input>
+
+                        {{-- Colegio --}}
+                        <x-adminlte-input name="colegio" label="Colegio" fgroup-class="col-md-3">
+                            <x-slot name="prependSlot">
+                                <div class="input-group-text">
+                                    <i class="fas fa-school"></i>
+                                </div>
+                            </x-slot>
+                        </x-adminlte-input>
+
+                        {{-- Ciudad --}}
+                        <x-adminlte-input name="ciudad" label="Ciudad" fgroup-class="col-md-2">
+                            <x-slot name="prependSlot">
+                                <div class="input-group-text">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                            </x-slot>
+                        </x-adminlte-input>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-success w-100">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    @endcan
+
 
     {{-- =================== BUSCADOR =================== --}}
     <div class="card mb-3">

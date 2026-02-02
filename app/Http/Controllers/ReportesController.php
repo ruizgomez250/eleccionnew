@@ -6,16 +6,20 @@ use App\Models\Dirigente;
 use App\Models\Equipo;
 use Illuminate\Http\Request;
 use TCPDF;
+use Illuminate\Support\Facades\Auth;
 
 class ReportesController extends Controller
 {
-
     public function index($equipoId = null)
     {
-        $equipos = Equipo::all(); // Para el select
+        // Equipos del sistema del usuario
+        $equipos = Equipo::where('sist', Auth::user()->sistema)->get();
 
-        // Traer dirigentes filtrando por equipo si se pasa el ID
+        // Traer dirigentes filtrando por sistema y por equipo si se pasa el ID
         $dirigentes = Dirigente::with('punteros.votantes', 'equipo')
+            ->whereHas('equipo', function($q) {
+                $q->where('sist', Auth::user()->sistema);
+            })
             ->when($equipoId, fn($q) => $q->where('id_equipo', $equipoId))
             ->get();
 
@@ -30,9 +34,14 @@ class ReportesController extends Controller
 
         return view('reportes.pordirigente', compact('equipos', 'equipoId', 'dirigentes', 'totalVotantesGeneral'));
     }
+
     public function votantesPorDirigente($idDirigente)
     {
+        // Solo dirigente del sistema del usuario
         $dirigente = Dirigente::with(['punteros.votantes'])
+            ->whereHas('equipo', function($q) {
+                $q->where('sist', Auth::user()->sistema);
+            })
             ->findOrFail($idDirigente);
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
@@ -45,14 +54,8 @@ class ReportesController extends Controller
 
         foreach ($dirigente->punteros as $puntero) {
 
-            // =========================
-            // NUEVA PÁGINA POR PUNTERO
-            // =========================
             $pdf->AddPage();
 
-            // =========================
-            // TÍTULO
-            // =========================
             $pdf->SetFont('helvetica', 'B', 11);
             $pdf->Cell(0, 6, 'REPORTE DE VOTANTES', 0, 1, 'C');
 
@@ -70,9 +73,6 @@ class ReportesController extends Controller
 
             $pdf->Ln(4);
 
-            // =========================
-            // CABECERA TABLA
-            // =========================
             $pdf->SetFont('helvetica', 'B', 8);
             $pdf->SetFillColor(180, 180, 180);
 
@@ -83,57 +83,31 @@ class ReportesController extends Controller
             $pdf->Cell(15, 8, 'Mesa', 1, 0, 'C', true);
             $pdf->Cell(15, 8, 'Orden', 1, 1, 'C', true);
 
-            // =========================
-            // CUERPO CON AUTO-ALTURA
-            // =========================
             $pdf->SetFont('helvetica', '', 7.5);
             $fill = false;
 
             if ($puntero->votantes->isEmpty()) {
                 $pdf->Cell(180, 8, 'No existen votantes para este puntero', 1, 1, 'C');
             } else {
-
                 foreach ($puntero->votantes as $votante) {
-
-                    // Color intercalado
                     $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
 
-                    // Datos
                     $cedula  = number_format($votante->cedula, 0, ',', '.');
                     $nombre  = $votante->nombre ?? '';
                     $ciudad  = $votante->ciudad ?? '';
                     $escuela = $votante->escuela ?? '';
 
-                    // Altura mínima
                     $minHeight = 7;
-
-                    // Calcular altura necesaria por columna
                     $hNombre  = $pdf->getStringHeight(48, $nombre);
                     $hCiudad  = $pdf->getStringHeight(25, $ciudad);
                     $hEscuela = $pdf->getStringHeight(55, $escuela);
-
                     $rowHeight = max($minHeight, $hNombre, $hCiudad, $hEscuela);
 
-                    // Guardar posición inicial
-                    $x = $pdf->GetX();
-                    $y = $pdf->GetY();
-
-                    // Cédula
                     $pdf->MultiCell(22, $rowHeight, $cedula, 1, 'C', true, 0);
-
-                    // Nombre
                     $pdf->MultiCell(48, $rowHeight, $nombre, 1, 'L', true, 0);
-
-                    // Ciudad
                     $pdf->MultiCell(25, $rowHeight, $ciudad, 1, 'L', true, 0);
-
-                    // Escuela
                     $pdf->MultiCell(55, $rowHeight, $escuela, 1, 'L', true, 0);
-
-                    // Mesa
                     $pdf->MultiCell(15, $rowHeight, $votante->mesa, 1, 'C', true, 0);
-
-                    // Orden
                     $pdf->MultiCell(15, $rowHeight, $votante->orden, 1, 'C', true, 1);
 
                     $fill = !$fill;

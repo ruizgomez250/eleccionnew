@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('puntero_id')->constrained('puntero')->onDelete('cascade');
             $table->foreignId('vehiculo_id')->constrained('vehiculo')->onDelete('cascade');
             $table->date('fecha_asignacion')->nullable(); // opcional: para saber cuándo se asignó
+            $table->foreignId('id_equipo')
+                  ->nullable()
+                  ->constrained('equipo')
+                  ->nullOnDelete();
             $table->timestamps();
 
             $table->unique(['puntero_id', 'vehiculo_id']); // Evita duplicados

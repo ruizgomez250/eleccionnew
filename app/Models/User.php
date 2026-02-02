@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'autorizar_modif',
+        'sistema',
     ];
 
     /**

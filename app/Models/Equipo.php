@@ -37,4 +37,9 @@ class Equipo extends Model
     {
         return $this->hasMany(Votante::class, 'idequipo');
     }
+    // Un equipo tiene muchos dirigentes
+    public function vehiculos()
+    {
+        return $this->hasMany(Vehiculo::class, 'id_equipo');
+    }
 }
