@@ -247,8 +247,9 @@
                                 <th>#</th>
                                 <th>Cédula</th>
                                 <th>Nombre</th>
-                                <th>Tipo</th>
+                                <th>Escuela</th>
                                 <th>Mesa</th>
+                                <th>orden</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -488,19 +489,22 @@
 
             // Cargar datos
             $.get("{{ url('puntero') }}/" + punteroId + "/votantes", function(data) {
-
+                //console.log(data);
 
                 let tbody = $('#votantes-table tbody');
                 tbody.empty();
 
                 data.forEach((v, i) => {
+                    //console.log(JSON.stringify(v, null, 2));
+
                     tbody.append(`
                 <tr>
                     <td>${i + 1}</td>
                     <td>${v.cedula}</td>
                     <td>${v.nombre ?? ''}</td>
-                    <td>${v.tipo_votante ?? ''}</td>
+                    <td>${v.escuela ?? ''}</td>
                     <td>${v.mesa ?? ''}</td>
+                    <td>${v.orden ?? ''}</td>
                     <td class="text-center">
                         <button class="btn btn-danger btn-sm"
                             onclick="eliminarVotante(${v.id})">

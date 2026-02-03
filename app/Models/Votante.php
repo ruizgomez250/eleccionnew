@@ -52,11 +52,19 @@ class Votante extends Model
         return self::where('idpuntero', $idpuntero)
             ->orderBy('id', 'desc')
             ->get([
-                'id',
                 'cedula',
-                'nombre',
-                'tipo_votante',
-                'mesa'
+        'tipo_votante',
+        'voto',
+        'idpuntero',
+        'idusuario',
+        'nombre',
+        'direccion',
+        'mesa',
+        'orden',
+        'partido',
+        'escuela',
+        'ciudad',
+        'departamento'
             ]);
     }
 }

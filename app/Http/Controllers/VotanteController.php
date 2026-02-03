@@ -218,7 +218,6 @@ class VotanteController extends Controller
     public function votantespuntero($idpuntero)
     {
         $votantes = Votante::porPuntero($idpuntero);
-
         return response()->json($votantes);
     }
     public function destroy($id)
