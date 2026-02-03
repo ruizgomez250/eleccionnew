@@ -6,10 +6,8 @@ use App\Models\Equipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class EquipoController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth');
@@ -20,16 +18,31 @@ class EquipoController extends Controller
     }
 
     /**
-     * Muestra la lista de equipos
+     * Muestra la lista de equipos (optimizado con paginación)
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = $request->input('search');
+
         $equipos = Equipo::where('sist', Auth::user()->sistema)
+            ->when($query, function ($q) use ($query) {
+                $q->where('descripcion', 'like', "%{$query}%")
+                    ->orWhere('ciudad', 'like', "%{$query}%");
+            })
+            ->select('id', 'descripcion', 'colegio', 'ciudad')
             ->orderBy('id', 'desc')
-            ->get();
+            ->paginate(24)
+            ->withQueryString(); // mantiene el parámetro de búsqueda en la paginación
+
+        // Si es AJAX, devolvemos solo el partial
+        if ($request->ajax()) {
+            return view('equipo.partials.lista_equipos', compact('equipos'))->render();
+        }
 
         return view('equipo.index', compact('equipos'));
     }
+
+
     public function edit($id)
     {
         $equipo = Equipo::where('id', $id)
@@ -55,7 +68,6 @@ class EquipoController extends Controller
             'descripcion' => $request->descripcion,
             'colegio'     => $request->colegio,
             'ciudad'      => $request->ciudad,
-            // 🚫 nunca permitir cambiar sist
         ]);
 
         return redirect()
@@ -84,7 +96,7 @@ class EquipoController extends Controller
 
         Equipo::create([
             'descripcion' => $request->descripcion,
-            'sist'        => Auth::user()->sistema, // 🔒 seguro
+            'sist'        => Auth::user()->sistema,
             'colegio'     => $request->colegio,
             'ciudad'      => $request->ciudad,
         ]);

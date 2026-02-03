@@ -26,7 +26,7 @@ class UserController extends Controller
     public function index()
     {
         //
-        $users = User::get();
+        $users = User::where('sistema', auth()->user()->sistema)->get();
 
         return view('role-permission.user.index', compact('users'));
     }

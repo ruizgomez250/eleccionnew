@@ -115,4 +115,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/vehiculos/{vehiculo}/punteros', [VehiculoController::class, 'punteros']);
     Route::post('/vehiculos/{vehiculo}/punteros', [VehiculoController::class, 'asignarPuntero']);
     Route::delete('/vehiculos/{vehiculo}/punteros/{puntero}', [VehiculoController::class, 'quitarPuntero']);
+    Route::get('dirigente/data', [DirigenteController::class, 'data'])->name('dirigente.data');
+
 });

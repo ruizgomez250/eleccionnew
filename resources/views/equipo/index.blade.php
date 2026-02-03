@@ -10,7 +10,7 @@
 
 @section('content')
 
-    {{-- =================== FORMULARIO NUEVO EQUIPO =================== --}}
+    {{-- FORMULARIO NUEVO EQUIPO --}}
     @can('Guardar Equipos')
         <div class="card mb-4">
             <div class="card-header bg-primary">
@@ -19,12 +19,10 @@
 
             <form action="{{ route('equipo.store') }}" method="POST">
                 @csrf
-
                 <div class="card-body">
                     <div class="row">
-
-                        <x-adminlte-input name="descripcion" label="Descripción del Equipo" placeholder="Ej: Equipo Central"
-                            fgroup-class="col-md-3" required>
+                        <x-adminlte-input name="descripcion" label="Descripción del Equipo"
+                            placeholder="Ej: Equipo Central" fgroup-class="col-md-3" required>
                             <x-slot name="prependSlot">
                                 <div class="input-group-text">
                                     <i class="fas fa-users"></i>
@@ -32,7 +30,6 @@
                             </x-slot>
                         </x-adminlte-input>
 
-                        {{-- Colegio --}}
                         <x-adminlte-input name="colegio" label="Colegio" fgroup-class="col-md-3">
                             <x-slot name="prependSlot">
                                 <div class="input-group-text">
@@ -41,7 +38,6 @@
                             </x-slot>
                         </x-adminlte-input>
 
-                        {{-- Ciudad --}}
                         <x-adminlte-input name="ciudad" label="Ciudad" fgroup-class="col-md-2">
                             <x-slot name="prependSlot">
                                 <div class="input-group-text">
@@ -55,15 +51,13 @@
                                 <i class="fas fa-save"></i> Guardar
                             </button>
                         </div>
-
                     </div>
                 </div>
             </form>
         </div>
     @endcan
 
-
-    {{-- =================== BUSCADOR =================== --}}
+    {{-- BUSCADOR --}}
     <div class="card mb-3">
         <div class="card-body">
             <div class="input-group">
@@ -77,84 +71,31 @@
         </div>
     </div>
 
-    {{-- =================== LISTA DE EQUIPOS =================== --}}
-    <div class="row">
-        @foreach ($equipos as $equipo)
-            <div class="col-md-3 mb-4 equipo-card"
-                data-search="{{ strtolower($equipo->descripcion . ' ' . $equipo->ciudad) }}">
-
-                <div class="card shadow h-100">
-                    <div class="card-header text-center bg-light">
-                        <i class="fas fa-users fa-3x text-primary"></i>
-                    </div>
-
-                    <div class="card-body text-center">
-                        <h5 class="font-weight-bold">{{ $equipo->descripcion }}</h5>
-
-
-
-                        <p class="mb-0">
-                            <i class="fas fa-map-marker-alt"></i>
-                            {{ $equipo->ciudad ?? '—' }}
-                        </p>
-                    </div>
-
-                    <div class="card-footer text-center">
-                        <a href="{{ route('dirigente.createWithEquipo', $equipo->id) }}"
-                            class="btn btn-sm btn-outline-primary mb-1 w-100">
-                            <i class="fas fa-user-tie"></i> Agregar Dirigente
-                        </a>
-
-
-
-                        <a href="{{ route('puntero.createWithEquipo', $equipo->id) }}"
-                            class="btn btn-sm btn-outline-success mb-1 w-100">
-                            <i class="fas fa-user-plus"></i> Agregar Puntero
-                        </a>
-
-
-                        <div class="btn-group w-100 mt-2">
-                            <a href="{{ route('equipo.edit', $equipo->id) }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-
-                            <form action="{{ route('equipo.destroy', $equipo->id) }}" method="POST"
-                                class="form-delete d-inline">
-                                @csrf
-                                @method('DELETE')
-
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endforeach
+    {{-- LISTA DE EQUIPOS (se actualizará con AJAX) --}}
+    <div id="listaEquipos">
+        @include('equipo.partials.lista_equipos')
     </div>
 
 @stop
 
 @section('js')
-    <script>
-        const successAlert = @json(session('success'));
-        if (successAlert) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: "{{ session('success') }}",
-                timer: 1800,
-                showConfirmButton: false
-            });
-        }
+<script>
+    const successAlert = @json(session('success'));
+    if (successAlert) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: successAlert,
+            timer: 1800,
+            showConfirmButton: false
+        });
+    }
+
+    // Botones eliminar
+    function initDeleteButtons() {
         document.querySelectorAll('.btn-delete').forEach(btn => {
-
             btn.addEventListener('click', function() {
-
                 let form = this.closest('.form-delete');
-
                 Swal.fire({
                     title: '¿Eliminar equipo?',
                     text: "Si tiene dirigentes o punteros asociados no se podra eliminar",
@@ -165,28 +106,64 @@
                     confirmButtonText: 'Sí, eliminar',
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
+                    if (result.isConfirmed) form.submit();
                 });
-
-            });
-
-        });
-
-        document.getElementById('buscadorEquipo').addEventListener('keyup', function() {
-            let texto = this.value.toLowerCase();
-            let equipos = document.querySelectorAll('.equipo-card');
-
-            equipos.forEach(function(card) {
-                let contenido = card.getAttribute('data-search');
-
-                if (contenido.includes(texto)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
             });
         });
-    </script>
+    }
+
+    initDeleteButtons(); // inicializamos botones de la primera carga
+
+    // Búsqueda AJAX
+    const buscador = document.getElementById('buscadorEquipo');
+    let typingTimer;
+    buscador.addEventListener('keyup', function() {
+        clearTimeout(typingTimer);
+        let query = this.value;
+
+        typingTimer = setTimeout(() => {
+            fetch(`{{ route('equipo.index') }}?search=${query}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('listaEquipos').innerHTML = html;
+                initDeleteButtons(); // re-inicializar botones eliminar después del AJAX
+
+                // Capturar clicks de paginación AJAX
+                document.querySelectorAll('#listaEquipos .pagination a').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        let url = this.href;
+                        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(res => res.text())
+                            .then(html => {
+                                document.getElementById('listaEquipos').innerHTML = html;
+                                initDeleteButtons();
+                                attachPaginationEvents();
+                            });
+                    });
+                });
+            });
+        }, 300); // espera 300ms para no saturar el servidor
+    });
+
+    // Capturar clicks de paginación inicial
+    function attachPaginationEvents() {
+        document.querySelectorAll('#listaEquipos .pagination a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                let url = this.href;
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById('listaEquipos').innerHTML = html;
+                        initDeleteButtons();
+                        attachPaginationEvents();
+                    });
+            });
+        });
+    }
+    attachPaginationEvents();
+</script>
 @endsection
