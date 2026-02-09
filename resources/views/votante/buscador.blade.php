@@ -3,163 +3,149 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta pre padron</title>
+    <title>Consulta Padrón</title>
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
 
     <style>
         body {
-            padding: 20px;
+            background: #f4f6f9;
         }
 
-        .dataTables_processing {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 6px;
-            padding: 10px;
+        .resultado-card {
+            display: none;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+<div class="container mt-5">
 
-        <h3 class="mb-4">
-            <i class="fas fa-users text-primary"></i> Consulta pre Padron
-        </h3>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
 
-        <!-- Buscador -->
-        <div class="row mb-3">
-            <div class="col-md-3">
-                <input type="text" id="cedula" class="form-control" placeholder="Cédula">
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <h5 class="mb-3 text-center">
+                        <i class="fas fa-search text-primary"></i> Consulta Pre Padron
+                    </h5>
+
+                    <div class="input-group mb-3">
+                        <input type="text" id="cedula" class="form-control"
+                               placeholder="Ingrese cédula">
+                        <button class="btn btn-primary" id="btnBuscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
+                    <div id="mensaje" class="text-danger text-center"></div>
+
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <input type="text" id="nombre" class="form-control" placeholder="Nombre">
-            </div>
-
-            <div class="col-md-4">
-                <input type="text" id="apellido" class="form-control" placeholder="Apellido">
-            </div>
-
-            <div class="col-md-1">
-                <button id="btnSearch" class="btn btn-primary w-100">
-                    <i class="fas fa-search"></i> Buscar
-                </button>
-            </div>
         </div>
-
-        <!-- Tabla -->
-        <table id="votantesTable" class="table table-bordered table-striped w-100">
-            <thead class="table-light">
-                <tr>
-                    <th>Cédula</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Local Interna</th>
-                    <th>Local Generales</th>
-                    <th>Dirección</th>
-                    <th>Afiliaciones</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-
     </div>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    {{-- Resultado --}}
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
 
-    <!-- Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <div class="card resultado-card shadow-sm" id="resultado">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-user"></i> Datos del ciudadano
+                </div>
 
-    <!-- DataTables -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <th>Cédula</th>
+                            <td id="r-cedula"></td>
+                        </tr>
+                        <tr>
+                            <th>Nombre</th>
+                            <td id="r-nombre"></td>
+                        </tr>
+                        <tr>
+                            <th>Apellido</th>
+                            <td id="r-apellido"></td>
+                        </tr>
+                        <tr>
+                            <th>Local Interna</th>
+                            <td id="r-local-interna"></td>
+                        </tr>
+                        <tr>
+                            <th>Local Generales</th>
+                            <td id="r-local-generales"></td>
+                        </tr>
+                        <tr>
+                            <th>Dirección</th>
+                            <td id="r-direccion"></td>
+                        </tr>
+                        <tr>
+                            <th>Afiliaciones</th>
+                            <td id="r-afiliaciones"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
 
-    <script>
-        $(document).ready(function() {
+        </div>
+    </div>
 
-            let table = $('#votantesTable').DataTable({
-                processing: true,
-                serverSide: true,
-                searching: false,
-                ordering: true,
-                deferLoading: 0, // tabla vacía al inicio
-                ajax: {
-                    url: "{{ route('votantes.datatables') }}", // ruta con nombre
-                    type: 'GET',
-                    data: function(d) {
-                        d.cedula = $('#cedula').val();
-                        d.nombre = $('#nombre').val();
-                        d.apellido = $('#apellido').val();
-                    },
-                    error: function(xhr) {
-                        console.error(xhr.responseText);
-                    }
-                },
-                columns: [{
-                        data: 'cedula'
-                    },
-                    {
-                        data: 'nombre'
-                    },
-                    {
-                        data: 'apellido'
-                    },
-                    {
-                        data: 'local_interna'
-                    },
-                    {
-                        data: 'local_generales'
-                    },
-                    {
-                        data: 'direccion'
-                    },
-                    {
-                        data: 'afiliaciones'
-                    }
-                ],
-                language: {
-                    processing: "Buscando...",
-                    emptyTable: "Ingrese cédula, nombre o apellido para buscar",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    paginate: {
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    }
-                }
-            });
+</div>
 
-            function buscar() {
-                if (!$('#cedula').val() && !$('#nombre').val() && !$('#apellido').val()) {
-                    alert('Debe ingresar algún dato para buscar');
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    $('#btnBuscar').on('click', buscar);
+    $('#cedula').on('keypress', function (e) {
+        if (e.which === 13) buscar();
+    });
+
+    function buscar() {
+
+        let cedula = $('#cedula').val().trim();
+        $('#mensaje').text('');
+        $('#resultado').hide();
+
+        if (!cedula) {
+            $('#mensaje').text('Ingrese una cédula');
+            return;
+        }
+
+        $.ajax({
+            url: "{{ route('votante.buscar.simple') }}",
+            type: "POST",
+            data: {
+                cedula: cedula,
+                _token: "{{ csrf_token() }}"
+            },
+            success: function (res) {
+
+                if (!res.encontrado) {
+                    $('#mensaje').text('No se encontró registro para esa cédula');
                     return;
                 }
-                table.ajax.reload();
+
+                $('#r-cedula').text(res.data.cedula);
+                $('#r-nombre').text(res.data.nombre);
+                $('#r-apellido').text(res.data.apellido);
+                $('#r-local-interna').text(res.data.local_interna);
+                $('#r-local-generales').text(res.data.local_generales);
+                $('#r-direccion').text(res.data.direccion);
+                $('#r-afiliaciones').text(res.data.afiliaciones);
+
+                $('#resultado').fadeIn();
+            },
+            error: function () {
+                $('#mensaje').text('Error al consultar');
             }
-
-            $('#btnSearch').on('click', buscar);
-
-            $('#cedula, #nombre, #apellido').on('keypress', function(e) {
-                if (e.which === 13) {
-                    buscar();
-                }
-            });
-
         });
-    </script>
-
+    }
+</script>
 
 </body>
-
 </html>

@@ -206,7 +206,8 @@
 
                         <div class="row mb-2">
                             <div class="col-md-4">
-                                <input name="direccion" id="direccion" class="form-control" placeholder="Dirección" readonly>
+                                <input name="direccion" id="direccion" class="form-control" placeholder="Dirección"
+                                    readonly>
                             </div>
                             <div class="col-md-2">
                                 <input name="mesa" id="mesa" class="form-control" placeholder="Mesa" readonly>
@@ -215,13 +216,15 @@
                                 <input name="orden" id="orden" class="form-control" placeholder="Orden" readonly>
                             </div>
                             <div class="col-md-4">
-                                <input name="partido" id="partido" class="form-control" placeholder="Partido" readonly>
+                                <input name="partido" id="partido" class="form-control" placeholder="Partido"
+                                    readonly>
                             </div>
                         </div>
 
                         <div class="row mb-2">
                             <div class="col-md-4">
-                                <input name="escuela" id="escuela" class="form-control" placeholder="Escuela" readonly>
+                                <input name="escuela" id="escuela" class="form-control" placeholder="Escuela"
+                                    readonly>
                             </div>
                             <div class="col-md-4">
                                 <input name="ciudad" id="ciudad" class="form-control" placeholder="Ciudad" readonly>
@@ -567,10 +570,11 @@
         ============================ */
         function confirmarBorrado(button) {
             const url = button.getAttribute('data-url');
+            const row = button.closest('tr'); // fila del puntero
 
             Swal.fire({
                 title: '¿Eliminar puntero?',
-                text: 'Esta acción no se puede deshacer. Se borraran los votantes asociados',
+                text: 'Esta acción no se puede deshacer. Se borrarán los votantes asociados.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -580,12 +584,53 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     let form = document.getElementById('formEliminarPuntero');
-                    console.log(url);
                     form.action = url;
-                    form.submit();
+
+                    fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: new FormData(form)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Eliminar fila de la tabla sin recargar
+                                if ($.fn.DataTable.isDataTable('#punteros-table')) {
+                                    let table = $('#punteros-table').DataTable();
+                                    table.row(row).remove().draw();
+                                } else {
+                                    row.remove();
+                                }
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: data.message ?? 'Puntero eliminado correctamente'
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.message ?? 'No se pudo eliminar el puntero'
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Ocurrió un error inesperado'
+                            });
+                            console.error(err);
+                        });
                 }
             });
         }
+
+
 
         function filtrarPunteros() {
             if (bloqueaFiltro) return;

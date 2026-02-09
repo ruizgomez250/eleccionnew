@@ -2,84 +2,186 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Puntero;
 use App\Models\Vehiculo;
+use App\Models\Equipo;
+use App\Models\Puntero;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class VehiculoController extends Controller
 {
-    public function index()
+
+    /*
+    |--------------------------------------------------------------------------
+    | LISTAR + FILTRAR
+    |--------------------------------------------------------------------------
+    */
+    public function index(Request $request)
     {
-        $vehiculos = Vehiculo::orderBy('nombre')->get();
-        return view('vehiculo.index', compact('vehiculos'));
+        $sistema = Auth::user()->sistema;
+        $equipoId = $request->equipo_id;
+
+        // 🔹 equipos solo del sistema del usuario
+        $equipos = Equipo::where('sist', $sistema)
+            ->orderBy('descripcion')
+            ->get();
+
+        // 🔹 vehiculos filtrando por sistema a través del equipo
+        $vehiculos = Vehiculo::with('equipo')
+
+            // SOLO vehículos cuyo equipo pertenece al sistema
+            ->whereHas('equipo', function ($q) use ($sistema) {
+                $q->where('sist', $sistema);
+            })
+
+            // 🔥 filtro por equipo específico
+            ->when($equipoId, function ($q) use ($equipoId) {
+                $q->where('id_equipo', $equipoId);
+            })
+
+            ->orderBy('nombre')
+            ->get();
+        return view('vehiculo.index', compact(
+            'vehiculos',
+            'equipos',
+            'equipoId'
+        ));
     }
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CREAR
+    |--------------------------------------------------------------------------
+    */
+    public function create()
+    {
+        $sistema = Auth::user()->sistema;
+
+        $equipos = Equipo::where('sist', $sistema)
+            ->orderBy('descripcion')
+            ->get();
+
+        return view('vehiculo.create', compact('equipos'));
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GUARDAR
+    |--------------------------------------------------------------------------
+    */
     public function store(Request $request)
     {
-        $request->validate([
-            'cedulachofer' => 'required',
-            'nombre'       => 'required',
-            'chapa'        => 'required',
-        ]);
+        try {
+            // Validación
+            $validated = $request->validate([
+                'nombre'        => 'required|string|max:150',
+                'id_equipo'     => 'required|exists:equipo,id',
+                'cedulachofer'  => 'required',
+                'chapa'         => 'required',
+                'tipovehiculo'  => 'required',
+                'capacidad'     => 'required|integer',
+                'telefono1'     => 'required',
+                'telefono2'     => 'nullable',
+                'telefono3'     => 'nullable',
+                'montopagar'    => 'required|numeric',
+                'cantidadpagos' => 'required|integer',
+            ]);
 
-        Vehiculo::create($request->all());
+            // Buscar el último numero_auto del equipo
+            $ultimoNumero = Vehiculo::where('id_equipo', $validated['id_equipo'])
+                ->max('numero_auto');
 
-        return redirect()->route('vehiculo.index')
-            ->with('success', 'Vehículo registrado correctamente');
+            $validated['numero_auto'] = $ultimoNumero ? $ultimoNumero + 1 : 1;
+
+            // Crear vehículo
+            Vehiculo::create($validated);
+
+            return redirect()
+                ->route('vehiculo.index')
+                ->with('success', 'Vehículo creado correctamente');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            // En caso de error general
+            return redirect()->back()
+                ->with('error', 'Ocurrió un error al crear el vehículo: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDITAR
+    |--------------------------------------------------------------------------
+    */
     public function edit($id)
     {
-        $vehiculo = Vehiculo::findOrFail($id);
-        return view('vehiculo.edit', compact('vehiculo'));
+        $sistema = Auth::user()->sistema;
+
+        $vehiculo = Vehiculo::whereHas('equipo', function ($q) use ($sistema) {
+            $q->where('sist', $sistema);
+        })->findOrFail($id);
+
+        $equipos = Equipo::where('sist', $sistema)
+            ->orderBy('descripcion')
+            ->get();
+
+        return view('vehiculo.edit', compact('vehiculo', 'equipos'));
     }
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTUALIZAR
+    |--------------------------------------------------------------------------
+    */
     public function update(Request $request, $id)
     {
-        $vehiculo = Vehiculo::findOrFail($id);
+        $request->validate([
+            'nombre'     => 'required|string|max:150',
+            'equipo_id'  => 'required|exists:equipo,id',
+        ]);
+
+        $vehiculo = Vehiculo::whereHas('equipo', function ($q) {
+            $q->where('sist', Auth::user()->sistema);
+        })->findOrFail($id);
+
         $vehiculo->update($request->all());
 
-        return redirect()->route('vehiculo.index')
-            ->with('success', 'Vehículo actualizado');
+        return redirect()
+            ->route('vehiculo.index')
+            ->with('success', 'Vehículo actualizado correctamente');
     }
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ELIMINAR
+    |--------------------------------------------------------------------------
+    */
     public function destroy($id)
     {
-        Vehiculo::findOrFail($id)->delete();
+        $vehiculo = Vehiculo::whereHas('equipo', function ($q) {
+            $q->where('sist', Auth::user()->sistema);
+        })->findOrFail($id);
 
-        return redirect()->route('vehiculo.index')
-            ->with('success', 'Vehículo eliminado');
+        $vehiculo->delete();
+
+        return back()->with('success', 'Vehículo eliminado correctamente');
     }
-    public function actualizarPunteros(Request $request, Vehiculo $vehiculo)
-    {
-        // Validar que los punteros existen
-        $request->validate([
-            'punteros' => 'array|exists:puntero,id',
-        ]);
-
-        // Sincronizar punteros asignados al vehículo
-        $vehiculo->punteros()->sync($request->punteros ?? []);
-
-        return redirect()->back()->with('success', 'Punteros actualizados correctamente.');
-    }
-    public function punteros(Vehiculo $vehiculo)
-    {
-        return response()->json([
-            'todos' => Puntero::select('id', 'nombre')->get(),
-            'asignados' => $vehiculo->punteros()->select('punteros.id', 'punteros.nombre')->get()
-        ]);
-    }
-
-
-    public function guardarPunteros(Request $request)
-    {
-        $vehiculo = Vehiculo::findOrFail($request->vehiculo_id);
-        $vehiculo->punteros()->sync($request->punteros ?? []);
-
-        return response()->json(['success' => true, 'message' => 'Punteros actualizados correctamente']);
-    }
-
-
     public function generarContratoPDF($idVehiculo)
     {
         $vehiculo = Vehiculo::findOrFail($idVehiculo);
@@ -157,5 +259,69 @@ Este recibo constituye constancia de pago parcial o total conforme al contrato d
 
         $pdf->Output("contrato_vehiculo_{$vehiculo->numero_auto}.pdf", 'I');
         exit;
+    }
+    public function getPunteros($vehiculoId)
+    {
+        // Obtener el vehículo
+        $vehiculo = Vehiculo::findOrFail($vehiculoId);
+
+        // 🔹 Punteros asignados a este vehículo
+        $asignados = $vehiculo->punteros()->get();
+
+        // 🔹 Todos los punteros del mismo equipo del vehículo
+        $todos = Puntero::where('id_equipo', $vehiculo->id_equipo)
+            ->orderBy('nombre')
+            ->get();
+
+        return response()->json([
+            'asignados' => $asignados,
+            'todos' => $todos
+        ]);
+    }
+    public function punteros(Request $request, $vehiculo)
+    {
+        $vehiculo = Vehiculo::with('punteros', 'equipo')->findOrFail($vehiculo);
+
+        $equipoId = $request->query('equipo', $vehiculo->id_equipo);
+
+        // Punteros ya asignados
+        $asignados = $vehiculo->punteros;
+
+        // Punteros disponibles del mismo equipo que no están asignados
+        $todos = Puntero::where('id_equipo', $equipoId)
+            ->whereNotIn('id', $asignados->pluck('id'))
+            ->get();
+
+        return response()->json([
+            'asignados' => $asignados,
+            'todos' => $todos
+        ]);
+    }
+
+    public function asignarPuntero($vehiculoId, $punteroId)
+    {
+        $vehiculo = Vehiculo::findOrFail($vehiculoId);
+        $puntero = Puntero::findOrFail($punteroId);
+
+        // Evitar duplicados
+        if (!$vehiculo->punteros->contains($puntero->id)) {
+            $vehiculo->punteros()->attach($puntero->id);
+        }
+
+        // Retornar los punteros actualizados
+        $vehiculo->load('punteros');
+        return response()->json([
+            'asignados' => $vehiculo->punteros
+        ]);
+    }
+    public function quitarPuntero($vehiculoId, $punteroId)
+    {
+        $vehiculo = Vehiculo::findOrFail($vehiculoId);
+        $vehiculo->punteros()->detach($punteroId);
+
+        $vehiculo->load('punteros');
+        return response()->json([
+            'asignados' => $vehiculo->punteros
+        ]);
     }
 }

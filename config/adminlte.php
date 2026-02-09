@@ -337,10 +337,16 @@ return [
         'can'        => 'Reportes',
         'submenu'        => [
                 [
-                    'text' => 'Imprimir por Dirigente',
+                    'text' => 'Votantes por Dirigente',
                     'url'  => '/punterosyvotantespordirigente',
                 ],
+                [
+                    'text' => 'Todos los Vehiculos',
+                    'url'  => '/vehiculosporsistema',
+                ],
             ],
+
+        
     ],
     [
         'text'       => 'Vehiculo',

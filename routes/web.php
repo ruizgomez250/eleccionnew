@@ -13,12 +13,19 @@ use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculoController;
+use App\Http\Controllers\VehiculoPunteroController;
 use App\Http\Controllers\VotanteController;
+
+
+
 
 
 
 Route::get('votante/buscador', [VotanteController::class, 'buscador']);
 Route::get('/votantes/datatables', [VotanteController::class, 'datatables'])->name('votantes.datatables');
+Route::post('/votante/buscar-simple', [VotanteController::class, 'buscarSimplePorCedula'])
+    ->name('votante.buscar.simple');
+
 Auth::routes();
 Route::get('/home', [EquipoController::class, 'index'])
     ->name('home')
@@ -32,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('punterosyvotantespordirigente', [ReportesController::class, 'index'])
         ->name('punterosyvotantespordirigente');
     Route::resource('equipo', EquipoController::class);
+
     // Rutas RESTful estándar: index, store, show, edit, update, destroy
 
     // Ruta para crear un dirigente vinculado a un equipo
@@ -102,6 +110,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/votantespordirigente/{id}', [ReportesController::class, 'votantesPorDirigente'])
         ->name('votantes.por.dirigente');
+    Route::get('/vehiculosporsistema', [ReportesController::class, 'vehicporsis'])
+    ->name('vehiculos.porsistema');
     Route::resource('vehiculo', VehiculoController::class);
     Route::get('/vehiculos/contrato/{vehiculo}', [VehiculoController::class, 'generarContratoPDF'])
         ->name('vehiculo.contrato');
@@ -112,9 +122,24 @@ Route::middleware('auth')->group(function () {
 
     // Guardar asignaciones
     Route::post('/vehiculos/punteros/guardar', [VehiculoController::class, 'guardarPunteros'])->name('vehiculos.punteros.guardar');
-    Route::get('/vehiculos/{vehiculo}/punteros', [VehiculoController::class, 'punteros']);
+    Route::get('/vehiculos/{equipo}/punteroslistar', [VehiculoController::class, 'punteros']);
     Route::post('/vehiculos/{vehiculo}/punteros', [VehiculoController::class, 'asignarPuntero']);
     Route::delete('/vehiculos/{vehiculo}/punteros/{puntero}', [VehiculoController::class, 'quitarPuntero']);
     Route::get('dirigente/data', [DirigenteController::class, 'data'])->name('dirigente.data');
+    // Para modal: traer punteros de un vehículo según su equipo
+    Route::get('/vehiculosasignar/{vehiculo}/punteros', [VehiculoController::class, 'punteros'])
+        ->name('vehiculo.punteros')
+        ->middleware('auth');
+    // Guardar asignación de puntero a vehículo
+    Route::post('/vehiculos/{vehiculo}/punteros/{puntero}', [VehiculoController::class, 'asignarPuntero'])
+        ->name('vehiculo.puntero.asignar')
+        ->middleware('auth');
+    Route::delete('/vehiculos/{vehiculo}/punteros/{puntero}', [VehiculoController::class, 'quitarPuntero'])
+        ->name('vehiculo.puntero.quitar')
+        ->middleware('auth');
+    Route::get(
+    'reportes/vehiculos-equipo/{equipo}',
+    [ReportesController::class, 'vehiculosPorEquipo']
+)->name('reportes.vehiculos.equipo');
 
 });

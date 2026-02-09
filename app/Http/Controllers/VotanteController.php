@@ -16,7 +16,40 @@ class VotanteController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth')->except(['buscador', 'datatables']);
+        $this->middleware('auth')->except(['buscador', 'datatables', 'buscarSimplePorCedula']);
+    }
+    public function buscarSimplePorCedula(Request $request)
+    {
+        $request->validate([
+            'cedula' => 'required'
+        ]);
+
+        $sql = "
+        SELECT 
+            cedula,
+            nombre,
+            apellido,
+            local_interna,
+            local_generales,
+            direccion,
+            afiliaciones
+        FROM prepadron
+        WHERE cedula = ?
+        LIMIT 1
+    ";
+
+        $votante = DB::selectOne($sql, [$request->cedula]);
+
+        if (!$votante) {
+            return response()->json([
+                'encontrado' => false
+            ]);
+        }
+
+        return response()->json([
+            'encontrado' => true,
+            'data' => $votante
+        ]);
     }
 
     public function buscador()
@@ -41,7 +74,7 @@ class VotanteController extends Controller
         }
 
         // Seleccionamos solo columnas necesarias
-        $query = DB::table('prepadron')->select('cedula','local_interna','local_generales', 'nombre', 'apellido', 'direccion', 'afiliaciones');
+        $query = DB::table('prepadron')->select('cedula', 'local_interna', 'local_generales', 'nombre', 'apellido', 'direccion', 'afiliaciones');
 
         if (!empty($cedula)) {
             $query->where('cedula', 'like', "{$cedula}"); // más rápido que '%...%'

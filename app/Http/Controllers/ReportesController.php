@@ -4,12 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Models\Dirigente;
 use App\Models\Equipo;
+use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use TCPDF;
 use Illuminate\Support\Facades\Auth;
 
 class ReportesController extends Controller
 {
+    public function vehicporsis()
+    {
+        $vehiculos = Vehiculo::with(['equipo', 'punteros'])
+            ->whereHas('equipo', function ($q) {
+                $q->where('sist', Auth::user()->sistema);
+            })
+            ->get();
+
+        $totalMonto     = $vehiculos->sum('montopagar');
+        $totalPagos     = $vehiculos->sum('cantidadpagos');
+        $totalVehiculos = $vehiculos->count();
+
+        return view('reportes.vehiculos_porsistema', compact(
+            'vehiculos',
+            'totalMonto',
+            'totalPagos',
+            'totalVehiculos'
+        ));
+    }
     public function index($equipoId = null)
     {
         // Equipos del sistema del usuario
@@ -17,7 +37,7 @@ class ReportesController extends Controller
 
         // Traer dirigentes filtrando por sistema y por equipo si se pasa el ID
         $dirigentes = Dirigente::with('punteros.votantes', 'equipo')
-            ->whereHas('equipo', function($q) {
+            ->whereHas('equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
             })
             ->when($equipoId, fn($q) => $q->where('id_equipo', $equipoId))
@@ -39,7 +59,7 @@ class ReportesController extends Controller
     {
         // Solo dirigente del sistema del usuario
         $dirigente = Dirigente::with(['punteros.votantes'])
-            ->whereHas('equipo', function($q) {
+            ->whereHas('equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
             })
             ->findOrFail($idDirigente);
@@ -116,6 +136,103 @@ class ReportesController extends Controller
         }
 
         $pdf->Output('reporte_votantes_por_dirigente.pdf', 'I');
+        exit;
+    }
+    public function vehiculosPorEquipo($idEquipo)
+    {
+        $equipo = Equipo::with(['vehiculos.punteros'])
+            ->where('sist', Auth::user()->sistema)
+            ->findOrFail($idEquipo);
+
+        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false); // LANDSCAPE
+
+        $pdf->SetMargins(5, 12, 5);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->SetFont('helvetica', '', 7);
+
+        $pdf->AddPage();
+
+        /* ================= TÍTULO ================= */
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->Cell(0, 6, 'PLANILLA DE VEHÍCULOS Y PUNTEROS', 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->Cell(0, 5, 'Equipo: ' . $equipo->descripcion, 0, 1, 'C');
+
+        $pdf->Ln(3);
+
+        /* ================= ENCABEZADO TABLA ================= */
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetFillColor(200, 200, 200);
+
+        $pdf->Cell(6, 8, '#', 1, 0, 'C', true);
+        $pdf->Cell(30, 8, 'Chofer', 1, 0, 'C', true);
+        $pdf->Cell(22, 8, 'Cédula', 1, 0, 'C', true);
+        $pdf->Cell(18, 8, 'Chapa', 1, 0, 'C', true);
+        $pdf->Cell(18, 8, 'Tipo', 1, 0, 'C', true);
+        $pdf->Cell(10, 8, 'Cap.', 1, 0, 'C', true);
+        $pdf->Cell(30, 8, 'Teléfono', 1, 0, 'C', true);
+        $pdf->Cell(18, 8, 'Monto', 1, 0, 'C', true);
+        $pdf->Cell(12, 8, 'Pagos', 1, 0, 'C', true);
+        $pdf->Cell(25, 8, 'Equipo', 1, 0, 'C', true);
+        $pdf->Cell(55, 8, 'Punteros', 1, 1, 'C', true);
+
+        /* ================= DATOS ================= */
+        $pdf->SetFont('helvetica', '', 7);
+
+        $i = 1;
+        $totalMonto = 0;
+        $totalPagos = 0;
+        $totalVehiculos = 0;
+
+        foreach ($equipo->vehiculos as $vehiculo) {
+
+            $punterosTexto = $vehiculo->punteros
+                ->pluck('nombre')
+                ->implode("\n");
+
+            $telefonos = collect([
+                $vehiculo->telefono1,
+                $vehiculo->telefono2,
+                $vehiculo->telefono3
+            ])->filter()->implode(' - ');
+
+            // calcular altura dinámica
+            $hPunteros = $pdf->getStringHeight(55, $punterosTexto);
+            $rowHeight = max(7, $hPunteros);
+
+            $pdf->MultiCell(6, $rowHeight, $i, 1, 'C', false, 0);
+            $pdf->MultiCell(30, $rowHeight, $vehiculo->nombre, 1, 'L', false, 0);
+            $pdf->MultiCell(22, $rowHeight, number_format($vehiculo->cedulachofer, 0, ',', '.'), 1, 'C', false, 0);
+            $pdf->MultiCell(18, $rowHeight, $vehiculo->chapa, 1, 'C', false, 0);
+            $pdf->MultiCell(18, $rowHeight, $vehiculo->tipovehiculo, 1, 'C', false, 0);
+            $pdf->MultiCell(10, $rowHeight, $vehiculo->capacidad, 1, 'C', false, 0);
+            $pdf->MultiCell(30, $rowHeight, $telefonos, 1, 'L', false, 0);
+            $pdf->MultiCell(18, $rowHeight, number_format($vehiculo->montopagar, 0, ',', '.'), 1, 'R', false, 0);
+            $pdf->MultiCell(12, $rowHeight, $vehiculo->cantidadpagos, 1, 'C', false, 0);
+            $pdf->MultiCell(25, $rowHeight, $vehiculo->equipo->descripcion, 1, 'L', false, 0);
+            $pdf->MultiCell(55, $rowHeight, $punterosTexto, 1, 'L', false, 1);
+
+            $totalMonto += $vehiculo->montopagar;
+            $totalPagos += $vehiculo->cantidadpagos;
+            $totalVehiculos++;
+
+            $i++;
+        }
+
+        /* ================= TOTALES ================= */
+        $pdf->Ln(2);
+        $pdf->SetFont('helvetica', 'B', 8);
+
+        $pdf->Cell(60, 7, 'TOTAL VEHÍCULOS:', 1, 0);
+        $pdf->Cell(20, 7, $totalVehiculos, 1, 1, 'C');
+
+        $pdf->Cell(60, 7, 'TOTAL MONTO:', 1, 0);
+        $pdf->Cell(20, 7, number_format($totalMonto, 0, ',', '.'), 1, 1, 'R');
+
+
+
+        $pdf->Output('planilla_vehiculos_punteros.pdf', 'I');
         exit;
     }
 }
