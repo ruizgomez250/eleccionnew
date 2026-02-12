@@ -80,6 +80,8 @@
 
 @section('js')
 <script>
+    
+
     const successAlert = @json(session('success'));
     if (successAlert) {
         Swal.fire({

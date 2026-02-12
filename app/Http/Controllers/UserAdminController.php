@@ -52,7 +52,8 @@ class UserAdminController extends Controller
             $user->sistema = $request->sistema;
             $user->save();
 
-            return back()->with('success', 'Usuario actualizado correctamente');
+            return redirect()->route('useradmin.index')->with('success', 'Usuario actualizado correctamente');
+
         } else {
             // Crear nuevo usuario
             User::create([
@@ -62,7 +63,8 @@ class UserAdminController extends Controller
                 'sistema' => $request->sistema,
             ]);
 
-            return back()->with('success', 'Usuario creado correctamente');
+            return redirect()->route('useradmin.index')->with('success', 'Usuario creado correctamente');
+
         }
     }
 

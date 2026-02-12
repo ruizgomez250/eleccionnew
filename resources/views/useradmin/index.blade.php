@@ -176,6 +176,25 @@
 
 @push('js')
 <script>
+    const successAlert = @json(session('successAlert'));
+        const errorAlert = @json(session('errorAlert'));
+
+        if (errorAlert) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorAlert,
+                confirmButtonColor: '#dc3545'
+            });
+        }
+        if (successAlert) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: successAlert,
+                            confirmButtonColor: '#28a745'
+                        });
+                    }
     $(document).ready(function() {
         $('#usuarios-table').DataTable({
             responsive: true,
