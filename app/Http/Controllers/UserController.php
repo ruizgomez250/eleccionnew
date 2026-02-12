@@ -12,12 +12,12 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
 
-   public function __construct()
+    public function __construct()
     {
-        $this->middleware('permission:Listar Usuarios',['only'=>['index','show']]);
-        $this->middleware('permission:Guardar Usuarios',['only'=>['store','create']]);
-        $this->middleware('permission:Actualizar Usuarios',['only'=>['update','edit']]);
-        $this->middleware('permission:Eliminar Usuarios',['only'=>['destroy']]);
+        $this->middleware('permission:Listar Usuarios', ['only' => ['index', 'show']]);
+        $this->middleware('permission:Guardar Usuarios', ['only' => ['store', 'create']]);
+        $this->middleware('permission:Actualizar Usuarios', ['only' => ['update', 'edit']]);
+        $this->middleware('permission:Eliminar Usuarios', ['only' => ['destroy']]);
     }
 
     /**
@@ -30,6 +30,7 @@ class UserController extends Controller
 
         return view('role-permission.user.index', compact('users'));
     }
+    
 
     /** user does not have correct Role
      * Show the form for creating a new resource.
@@ -113,6 +114,6 @@ class UserController extends Controller
     {
         $deleted = UserDestino::where('user_id', $user->id)->delete();
         $user->delete();
-        return redirect('users')->with('status', 'Usuario '.$user->name.' eliminado exitosamente');
+        return redirect('users')->with('status', 'Usuario ' . $user->name . ' eliminado exitosamente');
     }
 }

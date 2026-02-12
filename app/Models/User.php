@@ -58,5 +58,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(MesaEntrada::class, 'id_usuario');
     }
-
+    public function sistemaRelacion()
+    {
+        return $this->belongsTo(Sistema::class, 'sistema');
+    }
 }

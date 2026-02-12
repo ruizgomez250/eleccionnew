@@ -11,6 +11,8 @@ use App\Http\Controllers\ProfilesController;
 use App\Http\Controllers\PunteroController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\SistemaController;
+use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VehiculoPunteroController;
@@ -39,6 +41,9 @@ Route::middleware('auth')->group(function () {
     Route::get('punterosyvotantespordirigente', [ReportesController::class, 'index'])
         ->name('punterosyvotantespordirigente');
     Route::resource('equipo', EquipoController::class);
+    Route::resource('useradmin', UserAdminController::class);
+    Route::post('sistema', [SistemaController::class, 'store'])->name('sistema.store');
+Route::delete('sistema/{id}', [SistemaController::class, 'destroy'])->name('sistema.destroy');
 
     // Rutas RESTful estándar: index, store, show, edit, update, destroy
 

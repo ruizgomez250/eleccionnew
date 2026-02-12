@@ -389,7 +389,13 @@ return [
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
         ],
-
+        [
+            'text' => 'Administracion General',
+            'topnav'     => true,
+            'url'  => 'useradmin',
+            'classes' => 'custom-icon-box-black',
+            'content' => '<i class="fas fa-box"></i>',
+        ],
 
 
 
