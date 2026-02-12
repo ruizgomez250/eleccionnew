@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Sistema;
 use Illuminate\Http\Request;
@@ -24,10 +25,10 @@ class UserAdminController extends Controller
     public function index()
     {
         $this->verificarPermiso(); // 🔹 Verificar permiso al entrar a la página
-
+        $roles = Role::pluck('name', 'name')->all();
         $users = User::with('sistemaRelacion')->get();
         $sistemas = Sistema::all();
-        return view('useradmin.index', compact('users', 'sistemas'));
+        return view('useradmin.index', compact('users', 'sistemas','roles'));
     }
 
     public function store(Request $request)
