@@ -3,7 +3,13 @@
 @section('title', 'Administración de Usuarios y Sistemas')
 
 @section('content_header')
-    <h1>Administración de Usuarios y Sistemas</h1>
+    <h1>Administración de Usuarios y Sistemas <button class="btn btn-info btn-sm float-right mr-2"
+            onclick="abrirModalReporte()">
+            <i class="fas fa-file-excel"></i> Reporte Totales
+        </button>
+    </h1>
+
+
 @stop
 
 @section('content')
@@ -132,6 +138,35 @@
             </form>
         </div>
     </div>
+    {{-- Modal Reporte --}}
+    <div class="modal fade" id="modalReporte" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title">Reporte General de Sistemas</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table table-bordered table-striped" id="reporte-table">
+                        <thead>
+                            <tr>
+                                <th>Sistema</th>
+                                <th>Equipo</th>
+                                <th>Total Dirigentes</th>
+                                <th>Total Punteros</th>
+                                <th>Total Votantes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Modal Usuario --}}
     <div class="modal fade" id="modalUsuario" tabindex="-1" role="dialog">
@@ -205,6 +240,46 @@ $selected = false;
 
 @push('js')
     <script>
+        function abrirModalReporte() {
+            $('#modalReporte').modal('show');
+
+            $.get("{{ route('reportes.totalesporSistema') }}", function(data) {
+                let tbody = $('#reporte-table tbody');
+                tbody.empty();
+
+                data.forEach(d => {
+                    let rowClass = d.es_total ? 'table-success font-weight-bold' : '';
+                    tbody.append(`
+                <tr class="${rowClass}">
+                    <td>${d.sistema}</td>
+                    <td>${d.equipo}</td>
+                    <td>${d.dirigentes}</td>
+                    <td>${d.punteros}</td>
+                    <td>${d.votantes}</td>
+                </tr>
+            `);
+                });
+
+                // Inicializar DataTable si no estaba inicializado
+                if (!$.fn.DataTable.isDataTable('#reporte-table')) {
+                    $('#reporte-table').DataTable({
+                        responsive: true,
+                        dom: 'Bfrtip',
+                        buttons: [{
+                            extend: 'excelHtml5',
+                            text: 'Exportar a Excel',
+                            className: 'btn btn-success btn-sm'
+                        }],
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                        }
+                    });
+                }
+            });
+        }
+
+
+
         const successAlert = @json(session('successAlert'));
         const errorAlert = @json(session('errorAlert'));
 

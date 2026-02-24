@@ -12,5 +12,8 @@ class Sistema extends Model
     {
         return $this->hasMany(User::class, 'sistema');
     }
+    public function equipos()
+    {
+        return $this->hasMany(Equipo::class, 'sist');
+    }
 }
-

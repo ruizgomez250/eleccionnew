@@ -67,4 +67,5 @@ class Votante extends Model
         'departamento'
             ]);
     }
+    
 }

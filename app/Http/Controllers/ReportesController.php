@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Dirigente;
 use App\Models\Equipo;
+use App\Models\Sistema;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use TCPDF;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReportesController extends Controller
 {
@@ -234,5 +236,51 @@ class ReportesController extends Controller
 
         $pdf->Output('planilla_vehiculos_punteros.pdf', 'I');
         exit;
+    }
+    public function totalesporSistema()
+    {
+        // Traemos todos los sistemas con sus equipos, punteros y dirigentes
+        $sistemas = Sistema::with('equipos.dirigentes', 'equipos.punteros.votantes')->get();
+
+        $data = [];
+
+        foreach ($sistemas as $sistema) {
+            // Inicializamos los totales por sistema
+            $totalDirigentes = 0;
+            $totalPunteros = 0;
+            $totalVotantes = 0;
+
+            foreach ($sistema->equipos as $equipo) {
+                // Contar votantes sumando los de cada puntero
+                $votantes_count = $equipo->punteros->sum(fn($puntero) => $puntero->votantes->count());
+
+                // Acumulamos totales por sistema
+                $totalDirigentes += $equipo->dirigentes->count();
+                $totalPunteros += $equipo->punteros->count();
+                $totalVotantes += $votantes_count;
+
+                // Guardamos los datos de cada equipo
+                $data[] = [
+                    'sistema' => $sistema->nombre,
+                    'equipo' => $equipo->descripcion,
+                    'dirigentes' => $equipo->dirigentes->count(),
+                    'punteros' => $equipo->punteros->count(),
+                    'votantes' => $votantes_count,
+                    'es_total' => false, // Marcamos que no es fila de total
+                ];
+            }
+
+            // Agregamos fila de total por sistema
+            $data[] = [
+                'sistema' => $sistema->nombre,
+                'equipo' => 'TOTAL',
+                'dirigentes' => $totalDirigentes,
+                'punteros' => $totalPunteros,
+                'votantes' => $totalVotantes,
+                'es_total' => true, // Marcamos que es fila de total
+            ];
+        }
+
+        return response()->json($data);
     }
 }

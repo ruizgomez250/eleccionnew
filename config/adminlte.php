@@ -94,7 +94,7 @@ return [
     'auth_logo' => [
         'enabled' => true,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/eleccionpy.png',
+            'path' => 'vendor/adminlte/dist/img/elarca.png',
             'alt' => 'Auth Logo',
             'class' => '',
             'width' => 180,
@@ -117,7 +117,7 @@ return [
     'preloader' => [
         'enabled' => false,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/camara.png',
+            'path' => 'vendor/adminlte/dist/img/elarca.png',
             'alt' => 'AdminLTE Preloader Image',
             'effect' => 'animation__shake',
             'width' => 370,
@@ -395,6 +395,7 @@ return [
             'url'  => 'useradmin',
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
+            'can'        => 'Administracion General',
         ],
 
 

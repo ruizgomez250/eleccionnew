@@ -42,4 +42,16 @@ class Equipo extends Model
     {
         return $this->hasMany(Vehiculo::class, 'id_equipo');
     }
+    // Votantes a través de punteros
+    public function votantesPorPuntero()
+    {
+        return $this->hasManyThrough(
+            Votante::class,   // Modelo final
+            Puntero::class,   // Modelo intermedio
+            'id_equipo',      // FK de puntero hacia equipo
+            'idpuntero',      // FK de votante hacia puntero
+            'id',             // PK de equipo
+            'id'              // PK de puntero
+        );
+    }
 }

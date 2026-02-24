@@ -43,7 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('equipo', EquipoController::class);
     Route::resource('useradmin', UserAdminController::class);
     Route::post('sistema', [SistemaController::class, 'store'])->name('sistema.store');
-Route::delete('sistema/{id}', [SistemaController::class, 'destroy'])->name('sistema.destroy');
+    Route::delete('sistema/{id}', [SistemaController::class, 'destroy'])->name('sistema.destroy');
 
     // Rutas RESTful estándar: index, store, show, edit, update, destroy
 
@@ -116,7 +116,7 @@ Route::delete('sistema/{id}', [SistemaController::class, 'destroy'])->name('sist
     Route::get('/votantespordirigente/{id}', [ReportesController::class, 'votantesPorDirigente'])
         ->name('votantes.por.dirigente');
     Route::get('/vehiculosporsistema', [ReportesController::class, 'vehicporsis'])
-    ->name('vehiculos.porsistema');
+        ->name('vehiculos.porsistema');
     Route::resource('vehiculo', VehiculoController::class);
     Route::get('/vehiculos/contrato/{vehiculo}', [VehiculoController::class, 'generarContratoPDF'])
         ->name('vehiculo.contrato');
@@ -142,9 +142,10 @@ Route::delete('sistema/{id}', [SistemaController::class, 'destroy'])->name('sist
     Route::delete('/vehiculos/{vehiculo}/punteros/{puntero}', [VehiculoController::class, 'quitarPuntero'])
         ->name('vehiculo.puntero.quitar')
         ->middleware('auth');
-    Route::get(
-    'reportes/vehiculos-equipo/{equipo}',
-    [ReportesController::class, 'vehiculosPorEquipo']
-)->name('reportes.vehiculos.equipo');
 
+    Route::get(
+        'reportes/vehiculos-equipo/{equipo}',
+        [ReportesController::class, 'vehiculosPorEquipo']
+    )->name('reportes.vehiculos.equipo');
+    Route::get('/reportestotalesporsistema', [ReportesController::class, 'totalesporSistema'])->name('reportes.totalesporSistema');
 });
