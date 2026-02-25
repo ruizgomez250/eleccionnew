@@ -1,10 +1,11 @@
 <?php
 
-
+use App\Http\Controllers\ConfiguracionMontoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MesaEntradaController;
 use App\Http\Controllers\DirigenteController;
 use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\MiembroDeMesaController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilesController;
@@ -148,4 +149,22 @@ Route::middleware('auth')->group(function () {
         [ReportesController::class, 'vehiculosPorEquipo']
     )->name('reportes.vehiculos.equipo');
     Route::get('/reportestotalesporsistema', [ReportesController::class, 'totalesporSistema'])->name('reportes.totalesporSistema');
+    Route::get('miembros-de-mesa', [MiembroDeMesaController::class, 'index'])
+        ->name('miembros-de-mesa.index');
+
+    Route::get('miembros-de-mesa/create/{equipoId?}', [MiembroDeMesaController::class, 'createWithEquipo'])
+        ->name('miembros-de-mesa.create');
+
+    Route::post('miembros-de-mesa/store', [MiembroDeMesaController::class, 'store'])
+        ->name('miembros-de-mesa.store');
+
+    Route::delete('miembros-de-mesa/{id}', [MiembroDeMesaController::class, 'destroy'])
+        ->name('miembros-de-mesa.destroy');
+    Route::get('/configuracion-montos', [ConfiguracionMontoController::class, 'index'])
+        ->name('configuracion_montos.index');
+    Route::post('/configuracion-montos/actualizar', [ConfiguracionMontoController::class, 'store'])
+        ->name('configuracion_montos.store');
+    Route::get('configuracion_montos/reporte', [ConfiguracionMontoController::class, 'reporteGeneral'])
+    ->name('configuracion_montos.reporte')
+    ->middleware(['auth','permission:Administracion General']);
 });

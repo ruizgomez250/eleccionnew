@@ -299,43 +299,43 @@ return [
 
     'menu' => [
 
-    [
-        'text'       => 'Equipo',
-        'icon'       => 'fas fa-users',
-        'icon_color' => 'info',
-        'classes'    => 'custom-icon-box custom-icon-box-blue',
-        'content'    => '<i class="fas fa-users"></i>',
-        'can'        => 'Equipo',
-        'url'        => 'home',
-    ],
+        [
+            'text'       => 'Equipo',
+            'icon'       => 'fas fa-users',
+            'icon_color' => 'info',
+            'classes'    => 'custom-icon-box custom-icon-box-blue',
+            'content'    => '<i class="fas fa-users"></i>',
+            'can'        => 'Equipo',
+            'url'        => 'home',
+        ],
 
-    [
-        'text'       => 'Dirigente',
-        'icon'       => 'fas fa-user-tie',
-        'icon_color' => 'warning',
-        'classes'    => 'custom-icon-box custom-icon-box-warning',
-        'content'    => '<i class="fas fa-user-tie"></i>',
-        'can'        => 'Dirigente',
-        'url'        => '/dirigente/create',
-    ],
+        [
+            'text'       => 'Dirigente',
+            'icon'       => 'fas fa-user-tie',
+            'icon_color' => 'warning',
+            'classes'    => 'custom-icon-box custom-icon-box-warning',
+            'content'    => '<i class="fas fa-user-tie"></i>',
+            'can'        => 'Dirigente',
+            'url'        => '/dirigente/create',
+        ],
 
-    [
-        'text'       => 'Puntero',
-        'icon'       => 'fas fa-user-friends',
-        'icon_color' => 'light',
-        'classes'    => 'custom-icon-box custom-icon-box-dark',
-        'content'    => '<i class="fas fa-user-friends"></i>',
-        'can'        => 'Puntero',
-        'url'        => '/puntero/create',
-    ],
-    [
-        'text'       => 'Reportes',
-        'icon'       => 'fas fa-file-alt',
-        'icon_color' => 'primary',
-        'classes'    => 'custom-icon-box custom-icon-box-dark',
-        'content'    => '<i class="fas fa-user-friends"></i>',
-        'can'        => 'Reportes',
-        'submenu'        => [
+        [
+            'text'       => 'Puntero',
+            'icon'       => 'fas fa-user-friends',
+            'icon_color' => 'light',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-user-friends"></i>',
+            'can'        => 'Puntero',
+            'url'        => '/puntero/create',
+        ],
+        [
+            'text'       => 'Reportes',
+            'icon'       => 'fas fa-file-alt',
+            'icon_color' => 'primary',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-user-friends"></i>',
+            'can'        => 'Reportes',
+            'submenu'        => [
                 [
                     'text' => 'Votantes por Dirigente',
                     'url'  => '/punterosyvotantespordirigente',
@@ -346,17 +346,26 @@ return [
                 ],
             ],
 
-        
-    ],
-    [
-        'text'       => 'Vehiculo',
-        'icon'       => 'fas fa-car',
-        'icon_color' => 'success',
-        'classes'    => 'custom-icon-box custom-icon-box-dark',
-        'content'    => '<i class="fas fa-user-friends"></i>',
-        'can'        => 'Vehiculo',
-        'url'        => '/vehiculo',
-    ],
+
+        ],
+        [
+            'text'       => 'Vehiculo',
+            'icon'       => 'fas fa-car',
+            'icon_color' => 'success',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-user-friends"></i>',
+            'can'        => 'Vehiculo',
+            'url'        => '/vehiculo',
+        ],
+        [
+            'text'       => 'Miembros de Mesa',
+            'icon'       => 'fas fa-users',
+            'icon_color' => 'primary',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-user-check"></i>',
+            'can'        => 'Miembros de Mesa',
+            'url'        => '/miembros-de-mesa/create',
+        ],
 
 
         [
@@ -375,7 +384,7 @@ return [
             'can'  => 'Gestion de Permisos',
         ],
         [
-            'text' => 'Gestión de Usuarios',
+            'text' => 'Roles y Usuarios',
             'topnav'     => true,
             'url'  => 'profiles',
             'classes' => 'custom-icon-box-black',
@@ -396,6 +405,14 @@ return [
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
             'can'        => 'Administracion General',
+        ],
+        [
+            'text' => 'Configuración de Montos',
+            'topnav' => true,
+            'url' => 'configuracion-montos',
+            'classes' => 'custom-icon-box-black',
+            'content' => '<i class="fas fa-dollar-sign"></i>',
+            'can' => 'Configuracion de montos', // aquí va el permiso que permita ver esta ruta
         ],
 
 

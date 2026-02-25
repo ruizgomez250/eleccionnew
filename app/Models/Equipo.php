@@ -54,4 +54,8 @@ class Equipo extends Model
             'id'              // PK de puntero
         );
     }
+    public function miembrosDeMesa()
+    {
+        return $this->hasMany(MiembroDeMesa::class, 'idequipo');
+    }
 }
