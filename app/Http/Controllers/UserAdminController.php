@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CiudadElectoral;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Sistema;
@@ -28,7 +29,8 @@ class UserAdminController extends Controller
         $roles = Role::pluck('name', 'name')->all();
         $users = User::with('sistemaRelacion')->get();
         $sistemas = Sistema::all();
-        return view('useradmin.index', compact('users', 'sistemas','roles'));
+        $ciudades = CiudadElectoral::orderBy('descripcion')->get();
+        return view('useradmin.index', compact('users', 'sistemas','roles', 'ciudades'));
     }
 
     public function store(Request $request)

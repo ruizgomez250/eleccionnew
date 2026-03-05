@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('sistemas', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
+             $table->foreignId('id_ciudad_electoral')
+                ->nullable()
+                ->constrained('ciudades_electorales')
+                ->cascadeOnDelete();
             $table->timestamps();
         });
     }

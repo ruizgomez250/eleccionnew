@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CiudadElectoral;
+use App\Models\Equipo;
+use App\Models\PrePadron;
 use App\Models\Sistema;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SistemaController extends Controller
 {
@@ -21,42 +27,98 @@ class SistemaController extends Controller
 
     public function store(Request $request)
     {
-        $this->verificarPermiso(); // 🔹 Verificar permiso
+        $this->verificarPermiso();
 
         $request->validate([
             'nombre' => 'required|string|max:255',
             'sistema_id' => 'nullable|exists:sistemas,id',
+            'id_ciudad_electoral' => 'required|exists:ciudades_electorales,id',
         ]);
 
-        if ($request->sistema_id) {
-            // Actualizar sistema
-            $sistema = Sistema::findOrFail($request->sistema_id);
-            $sistema->nombre = $request->nombre;
-            $sistema->save();
+        DB::beginTransaction();
 
-            return back()->with('success', 'Sistema actualizado correctamente');
-        } else {
-            // Crear nuevo sistema
-            Sistema::create([
-                'nombre' => $request->nombre
-            ]);
+        try {
 
-            return back()->with('success', 'Sistema creado correctamente');
+            if ($request->sistema_id) {
+
+                // 🔹 Actualizar sistema
+                $sistema = Sistema::findOrFail($request->sistema_id);
+                $sistema->nombre = $request->nombre;
+                $sistema->id_ciudad_electoral = $request->id_ciudad_electoral;
+                $sistema->save();
+
+                DB::commit();
+                return back()->with('success', 'Sistema actualizado correctamente');
+            } else {
+
+                // 🔹 Crear sistema
+                $sistema = Sistema::create([
+                    'nombre' => $request->nombre,
+                    'id_ciudad_electoral' => $request->id_ciudad_electoral
+                ]);
+
+                // 🔹 Obtener ciudad electoral
+                $ciudad = CiudadElectoral::findOrFail($request->id_ciudad_electoral);
+
+                // 🔹 Insert masivo filtrado por ciudad electoral
+                DB::statement("
+                INSERT INTO equipo (sist, ciudad, colegio, descripcion, created_at, updated_at)
+                SELECT 
+                    ? AS sist,
+                    li.distrito_nombre AS ciudad,
+                    li.local_interna AS colegio,
+                    li.local_interna AS descripcion,
+                    NOW(),
+                    NOW()
+                FROM locales_internas li
+                LEFT JOIN equipo e
+                    ON e.sist = ?
+                    AND e.ciudad = li.distrito_nombre
+                    AND e.colegio = li.local_interna
+                WHERE e.id IS NULL
+                AND li.distrito_nombre = ?
+                AND li.departamento_nombre = ?
+            ", [
+                    $sistema->id,
+                    $sistema->id,
+                    $ciudad->descripcion,
+                    $ciudad->departamento
+                ]);
+
+                DB::commit();
+
+                return back()->with('success', 'Sistema creado correctamente con equipos generados');
+            }
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+            return back()->with('error', 'Ocurrió un error: ' . $e->getMessage());
         }
     }
 
     public function destroy($id)
     {
+
         $this->verificarPermiso(); // 🔹 Verificar permiso
 
-        $sistema = Sistema::findOrFail($id);
+        try {
+            $sistema = Sistema::findOrFail($id);
 
-        // Opcional: Verificar si tiene usuarios asignados antes de borrar
-        if ($sistema->users()->count() > 0) {
-            return back()->with('error', 'No se puede eliminar un sistema que tiene usuarios asignados');
+            // Verificar si tiene usuarios asignados antes de borrar
+            if ($sistema->users()->count() > 0) {
+                return back()->with('error', 'No se puede eliminar un sistema que tiene usuarios asignados');
+            }
+
+            $sistema->delete();
+
+            return back()->with('success', 'Sistema eliminado correctamente');
+        } catch (ModelNotFoundException $e) {
+            // Cuando no encuentra el sistema
+            return back()->with('error', 'Sistema no encontrado');
+        } catch (Exception $e) {
+
+            // Otros errores generales
+            return back()->with('error', 'Ocurrió un error al eliminar el sistema: ' . $e->getMessage());
         }
-
-        $sistema->delete();
-        return back()->with('success', 'Sistema eliminado correctamente');
     }
 }

@@ -30,6 +30,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Nombre</th>
+                                <th>Ciudad</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -38,6 +39,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $sistema->nombre }}</td>
+                                    <td>{{ $sistema->ciudad->descripcion }}</td>
                                     <td>
                                         <button class="btn btn-warning btn-sm"
                                             onclick="editarSistema({{ $sistema->id }}, '{{ $sistema->nombre }}')">
@@ -128,6 +130,16 @@
                         <div class="form-group">
                             <label>Nombre del Sistema</label>
                             <input type="text" name="nombre" id="nombre_sistema" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <x-adminlte-select2 name="id_ciudad_electoral" label="Ciudad" label-class="text-lightblue"
+                                igroup-size="lg">
+                                @foreach ($ciudades as $ciudad)
+                                    <option value="{{ $ciudad->id }}">
+                                        {{ $ciudad->descripcion }} - {{ $ciudad->departamento }}
+                                    </option>
+                                @endforeach
+                            </x-adminlte-select2>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -240,6 +252,15 @@ $selected = false;
 
 @push('js')
     <script>
+        $('#modalSistema').on('shown.bs.modal', function() {
+            $('#id_ciudad_electoral').select2({
+                width: '100%',
+                dropdownParent: $('#modalSistema'),
+                placeholder: 'Seleccionar Ciudad',
+                allowClear: true
+            });
+        });
+
         function abrirModalReporte() {
             $('#modalReporte').modal('show');
 

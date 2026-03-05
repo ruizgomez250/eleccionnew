@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CiudadElectoralController;
 use App\Http\Controllers\ConfiguracionMontoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MesaEntradaController;
@@ -167,4 +168,5 @@ Route::middleware('auth')->group(function () {
     Route::get('configuracion_montos/reporte', [ConfiguracionMontoController::class, 'reporteGeneral'])
     ->name('configuracion_montos.reporte')
     ->middleware(['auth','permission:Administracion General']);
+    Route::resource('ciudades_electorales', CiudadElectoralController::class);
 });
