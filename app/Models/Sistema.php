@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sistema extends Model
 {
-    protected $fillable = ['nombre','id_ciudad_electoral'];
+    protected $fillable = ['nombre','id_ciudad_electoral','idusuario'];
 
     public function users()
     {

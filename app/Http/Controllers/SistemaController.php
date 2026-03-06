@@ -17,17 +17,17 @@ class SistemaController extends Controller
     /**
      * Verifica que el usuario logueado tenga permisos.
      */
-    private function verificarPermiso()
-    {
-        $userId = Auth::id();
-        if (!in_array($userId, [1, 4])) {
-            abort(403, 'No tiene permiso para realizar esta acción.');
-        }
-    }
+    // private function verificarPermiso()
+    // {
+    //     $userId = Auth::id();
+    //     if (!in_array($userId, [1, 4])) {
+    //         abort(403, 'No tiene permiso para realizar esta acción.');
+    //     }
+    // }
 
     public function store(Request $request)
     {
-        $this->verificarPermiso();
+        //$this->verificarPermiso();
 
         $request->validate([
             'nombre' => 'required|string|max:255',
@@ -54,7 +54,8 @@ class SistemaController extends Controller
                 // 🔹 Crear sistema
                 $sistema = Sistema::create([
                     'nombre' => $request->nombre,
-                    'id_ciudad_electoral' => $request->id_ciudad_electoral
+                    'id_ciudad_electoral' => $request->id_ciudad_electoral,
+                    'idusuario' => Auth::id()
                 ]);
 
                 // 🔹 Obtener ciudad electoral

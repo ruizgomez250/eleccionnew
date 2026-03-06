@@ -384,9 +384,9 @@ return [
             'can'  => 'Gestion de Permisos',
         ],
         [
-            'text' => 'Roles y Usuarios',
+            'text' => 'Roles',
             'topnav'     => true,
-            'url'  => 'profiles',
+            'url'  => 'roles',
             'classes' => 'custom-icon-box-black',
             'content' => '<i class="fas fa-box"></i>',
             'can'  => 'Gestion de Usuarios',
