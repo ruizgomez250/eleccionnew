@@ -45,6 +45,7 @@ class SistemaController extends Controller
                 $sistema = Sistema::findOrFail($request->sistema_id);
                 $sistema->nombre = $request->nombre;
                 $sistema->id_ciudad_electoral = $request->id_ciudad_electoral;
+                $sistema->tipo = $request->tipo;
                 $sistema->save();
 
                 DB::commit();
@@ -55,7 +56,8 @@ class SistemaController extends Controller
                 $sistema = Sistema::create([
                     'nombre' => $request->nombre,
                     'id_ciudad_electoral' => $request->id_ciudad_electoral,
-                    'idusuario' => Auth::id()
+                    'idusuario' => Auth::id(),
+                    'tipo' => $request->tipo
                 ]);
 
                 // 🔹 Obtener ciudad electoral

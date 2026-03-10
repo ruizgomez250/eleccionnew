@@ -38,11 +38,16 @@
                             @foreach ($sistemas as $sistema)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $sistema->nombre }}</td>
+                                    <td>{{ $sistema->nombre . ' - ' . $sistema->tipo }}</td>
                                     <td>{{ $sistema->ciudad->descripcion }}</td>
                                     <td>
                                         <button class="btn btn-warning btn-sm"
-                                            onclick="editarSistema({{ $sistema->id }}, '{{ $sistema->nombre }}')">
+                                            onclick="editarSistema(
+                                            {{ $sistema->id }},
+                                            '{{ $sistema->nombre }}',
+                                            {{ $sistema->id_ciudad_electoral }},
+                                            '{{ $sistema->tipo }}'
+                                        )">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('sistema.destroy', $sistema->id) }}" method="POST"
@@ -131,6 +136,7 @@
                             <label>Nombre del Sistema</label>
                             <input type="text" name="nombre" id="nombre_sistema" class="form-control" required>
                         </div>
+
                         <div class="form-group">
                             <x-adminlte-select2 name="id_ciudad_electoral" label="Ciudad" label-class="text-lightblue"
                                 igroup-size="lg">
@@ -140,6 +146,14 @@
                                     </option>
                                 @endforeach
                             </x-adminlte-select2>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tipo de Candidato</label>
+                            <select name="tipo" id="tipo" class="form-control" required>
+                                <option value="concejal">Concejal</option>
+                                <option value="intendente">Intendente</option>
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -336,9 +350,17 @@ $selected = false;
             });
         });
 
-        function editarSistema(id, nombre) {
+        function editarSistema(id, nombre, ciudad, tipo) {
+
             $('#sistema_id').val(id);
             $('#nombre_sistema').val(nombre);
+
+            // seleccionar ciudad
+            $('#id_ciudad_electoral').val(ciudad).trigger('change');
+
+            // seleccionar tipo
+            $('#tipo').val(tipo);
+
             $('#modalSistema .modal-title').text('Editar Sistema');
             $('#modalSistema').modal('show');
         }
