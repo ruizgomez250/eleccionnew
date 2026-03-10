@@ -346,7 +346,7 @@ $selected = false;
                 responsive: true,
                 paging: false,
                 info: false,
-                searching: false
+                searching: true
             });
         });
 
