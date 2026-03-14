@@ -17,13 +17,14 @@ class SistemaController extends Controller
     /**
      * Verifica que el usuario logueado tenga permisos.
      */
-    // private function verificarPermiso()
-    // {
-    //     $userId = Auth::id();
-    //     if (!in_array($userId, [1, 4])) {
-    //         abort(403, 'No tiene permiso para realizar esta acción.');
-    //     }
-    // }
+    private function verificarPermiso($sistema)
+    {
+        $userId = Auth::id();
+
+        if (!in_array($userId, [1, 4]) && $sistema->idusuario != $userId) {
+            abort(403, 'No tiene permiso para realizar esta acción.');
+        }
+    }
 
     public function store(Request $request)
     {
@@ -101,15 +102,15 @@ class SistemaController extends Controller
 
     public function destroy($id)
     {
-
-        $this->verificarPermiso(); // 🔹 Verificar permiso
+        $sistema = Sistema::findOrFail($id);
+        $this->verificarPermiso($sistema); // 🔹 Verificar permiso
 
         try {
-            $sistema = Sistema::findOrFail($id);
+            
 
             // Verificar si tiene usuarios asignados antes de borrar
             if ($sistema->users()->count() > 0) {
-                return back()->with('error', 'No se puede eliminar un sistema que tiene usuarios asignados');
+                return back()->with('error', 'No se puede eliminar un sistema que tiene usuarios asignados. Primero debe eliminar el usuario');
             }
 
             $sistema->delete();

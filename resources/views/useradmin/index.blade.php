@@ -11,7 +11,31 @@
 
 
 @stop
+@section('js')
 
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#3085d6'
+            });
+        </script>
+    @endif
+
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#d33'
+            });
+        </script>
+    @endif
+
+@endsection
 @section('content')
     <div class="row">
 
@@ -51,11 +75,10 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('sistema.destroy', $sistema->id) }}" method="POST"
-                                            class="d-inline">
+                                            class="d-inline form-eliminar">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-danger btn-sm"
-                                                onclick="return confirm('¿Eliminar sistema?')">
+                                            <button type="button" class="btn btn-danger btn-sm btn-eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -101,11 +124,11 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('useradmin.destroy', $user->id) }}" method="POST"
-                                            class="d-inline">
+                                            class="d-inline form-eliminar">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-danger btn-sm"
-                                                onclick="return confirm('¿Eliminar usuario?')">
+
+                                            <button type="button" class="btn btn-danger btn-sm btn-eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -266,6 +289,33 @@ $selected = false;
 
 @push('js')
     <script>
+        document.querySelectorAll('.btn-eliminar').forEach(button => {
+
+            button.addEventListener('click', function() {
+
+                let form = this.closest('form');
+
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: "No podrá revertir esta acción",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+
+                });
+
+            });
+
+        });
+
         $('#modalSistema').on('shown.bs.modal', function() {
             $('#id_ciudad_electoral').select2({
                 width: '100%',

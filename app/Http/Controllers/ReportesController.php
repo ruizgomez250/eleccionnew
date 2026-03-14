@@ -240,7 +240,17 @@ class ReportesController extends Controller
     public function totalesporSistema()
     {
         // Traemos todos los sistemas con sus equipos, punteros y dirigentes
-        $sistemas = Sistema::with('equipos.dirigentes', 'equipos.punteros.votantes')->get();
+        $userId = Auth::id();
+        $userSistema = Auth::user()->sistema_id;
+
+        $sistemas = Sistema::with('equipos.dirigentes', 'equipos.punteros.votantes')
+            ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
+                $query->where(function ($q) use ($userId, $userSistema) {
+                    $q->where('idusuario', $userId)
+                        ->orWhere('id', $userSistema);
+                });
+            })
+            ->get();
 
         $data = [];
 
