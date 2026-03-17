@@ -279,4 +279,129 @@ class VotanteController extends Controller
             ], 500);
         }
     }
+    public function storeAjax(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            /* =========================== VALIDACIONES BÁSICAS ============================ */
+            $request->validate([
+                'cedula' => 'required',
+                'nombre' => 'required',
+                'idpuntero' => 'required|exists:puntero,id',
+                'tipo_votante' => 'required'
+            ]);
+
+            $cedula = $request->cedula;
+            $idPuntero = $request->idpuntero;
+
+            /* =========================== OBTENER PUNTERO Y SISTEMA ============================ */
+            $puntero = Puntero::with('dirigente.equipo')->find($idPuntero);
+
+            if (!$puntero || !$puntero->dirigente || !$puntero->dirigente->equipo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo determinar el sistema del puntero.'
+                ], 400);
+            }
+
+            $sistemaActual = $puntero->dirigente->equipo->sist;
+
+            /* =========================== BLOQUEAR MISMO SISTEMA ============================ */
+            $votanteMismoSistema = Votante::with(['puntero.dirigente'])
+                ->where('cedula', $cedula)
+                ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
+                    $q->where('sist', $sistemaActual);
+                })->first();
+
+            if ($votanteMismoSistema) {
+                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
+                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: esta cédula ya está registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}».",
+                    'code' => 'DUPLICADO_MISMO_SISTEMA'
+                ], 422);
+            }
+
+            /* =========================== BUSCAR EN OTRO SISTEMA (AVISO) ============================ */
+            $votanteOtroSistema = Votante::where('cedula', $cedula)
+                ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
+                    $q->where('sist', '!=', $sistemaActual);
+                })
+                ->with('puntero.dirigente.equipo')
+                ->first();
+
+            /* =========================== CREAR VOTANTE ============================ */
+            $votante = Votante::create([
+                'cedula' => $cedula,
+                'nombre' => $request->nombre,
+                'tipo_votante' => $request->tipo_votante,
+                'voto' => $request->voto ?? null,
+                'idpuntero' => $idPuntero,
+                'idusuario' => auth()->id(),
+                'direccion' => $request->direccion,
+                'mesa' => $request->mesa,
+                'orden' => $request->orden,
+                'partido' => $request->partido,
+                'escuela' => $request->escuela,
+                'ciudad' => $request->ciudad,
+                'departamento' => $request->departamento,
+            ]);
+
+            DB::commit();
+
+            /* =========================== PREPARAR RESPUESTA ============================ */
+            $mensaje = 'Votante agregado correctamente.';
+            $tipoAlerta = 'success';
+
+            if ($votanteOtroSistema) {
+                $mensaje = "Atención: esta cédula ya existe en otro sistema (" .
+                    $votanteOtroSistema->puntero->dirigente->equipo->descripcion .
+                    "). Se ha registrado igualmente en este sistema.";
+                $tipoAlerta = 'warning';
+            }
+
+            // Obtener la lista actualizada de votantes
+            $votantes = Votante::porPuntero($idPuntero);
+
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje,
+                'tipo_alerta' => $tipoAlerta,
+                'punteroId' => $idPuntero,
+                'punteroNombre' => $puntero->nombre,
+                'votantes' => $votantes,
+                'votante_creado' => [
+                    'id' => $votante->id,
+                    'cedula' => $votante->cedula,
+                    'nombre' => $votante->nombre,
+                    'escuela' => $votante->escuela,
+                    'mesa' => $votante->mesa,
+                    'orden' => $votante->orden,
+                    'tipo_votante' => $votante->tipo_votante
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear votante AJAX', [
+                'cedula' => $request->cedula ?? 'N/A',
+                'puntero_id' => $request->idpuntero ?? 'N/A',
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar el votante: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

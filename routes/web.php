@@ -189,4 +189,6 @@ Route::middleware('auth')->group(function () {
 
     // Ruta para obtener punteros por sistema
     Route::get('/sistemas/{sistema}/punteros', [PunteroController::class, 'porSistema'])->name('sistemas.punteros');
+    // Agrega esta línea junto a las otras rutas AJAX de votantes
+    Route::post('/votante/store-ajax', [VotanteController::class, 'storeAjax'])->name('votante.store.ajax');
 });

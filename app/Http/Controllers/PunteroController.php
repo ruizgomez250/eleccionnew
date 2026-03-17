@@ -361,17 +361,17 @@ class PunteroController extends Controller
     {
         try {
             $sistema = \App\Models\Sistema::findOrFail($sistemaId);
-
+            
             // Obtener equipos del sistema
-            $equipos = Equipo::where('sist', $sistema->nombre)
+            $equipos = Equipo::where('sist', $sistema->id)
                 ->with('dirigentes.punteros')
                 ->get();
-
+            
             // Obtener todos los punteros del sistema
             $punteros = Puntero::whereHas('dirigente.equipo', function ($q) use ($sistema) {
-                $q->where('sist', $sistema->nombre);
+                $q->where('sist', $sistema->id);
             })->with(['dirigente', 'equipo', 'votantes'])->get();
-
+            
             // Contar votantes por puntero
             foreach ($punteros as $p) {
                 $p->votantes_count = $p->votantes->count();
@@ -382,7 +382,7 @@ class PunteroController extends Controller
 
             // Obtener todos los dirigentes del sistema para el filtro
             $dirigentes = Dirigente::whereHas('equipo', function ($q) use ($sistema) {
-                $q->where('sist', $sistema->nombre);
+                $q->where('sist', $sistema->id);
             })->get();
 
             // Valores seleccionados (si vienen por request)
@@ -434,6 +434,7 @@ class PunteroController extends Controller
      */
     public function filtrarAjax(Request $request)
     {
+        //dd($request->input());
         try {
             $equipoId = $request->equipo_id;
             $dirigenteId = $request->dirigente_id;
@@ -467,13 +468,17 @@ class PunteroController extends Controller
             })->when($equipoId, function ($q) use ($equipoId) {
                 $q->where('id_equipo', $equipoId);
             })->get();
+            $equipoSeleccionado = $equipoId;
+            $dirigenteSeleccionado = $dirigenteId;
 
-            return view('puntero.lista_punteros', compact(
+            return view('ciudades.partials.lista_punteros', compact(
                 'punteros',
                 'equipos',
                 'dirigentes',
                 'totalVotantesGeneral',
                 'equipoId',
+                'equipoSeleccionado',
+                'dirigenteSeleccionado',
                 'dirigenteId'
             ));
         } catch (\Exception $e) {

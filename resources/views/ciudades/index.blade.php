@@ -222,7 +222,95 @@
             </div>
         </div>
     </div>
+    {{-- MODAL VOTANTES --}}
+    <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-labelledby="tituloVotantes"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
 
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="tituloVotantes">
+                        <i class="fas fa-users"></i> Votantes del Puntero
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                 <div class=" p-4">
+                        <form id="formAgregarVotante" method="POST" >
+                            @csrf
+                            <input type="hidden" name="idpuntero" id="votante_id_puntero">
+                            <input type="hidden" name="idusuario" value="{{ auth()->id() }}">
+
+                            <div class="row mb-2">
+                                <div class="col-md-3">
+                                    <input name="cedula" id="votante_cedula" class="form-control" placeholder="Cédula"
+                                        required>
+                                </div>
+                                <div class="col-md-5">
+                                    <input name="nombre" id="votante_nombre" class="form-control" placeholder="Nombre"
+                                        required readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="tipo_votante" class="form-control" id="tipo_votante">
+                                        <option value="seguro" selected>Seguro</option>
+                                        <option value="dudoso">Dudoso</option>
+                                        <option value="solo visita">Solo Visita</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-4">
+                                    <input name="direccion" id="direccion" class="form-control" placeholder="Dirección"
+                                        readonly>
+                                </div>
+                                <div class="col-md-2">
+                                    <input name="mesa" id="mesa" class="form-control" placeholder="Mesa"
+                                        readonly>
+                                </div>
+                                <div class="col-md-2">
+                                    <input name="orden" id="orden" class="form-control" placeholder="Orden"
+                                        readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <input name="partido" id="partido" class="form-control" placeholder="Partido"
+                                        readonly>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-4">
+                                    <input name="escuela" id="escuela" class="form-control" placeholder="Escuela"
+                                        readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <input name="ciudad" id="ciudad" class="form-control" placeholder="Ciudad"
+                                        readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <input name="departamento" id="departamento" class="form-control"
+                                        placeholder="Departamento" readonly>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary mt-2">
+                                <i class="fas fa-save"></i> Guardar Votante
+                            </button>
+                        </form>
+                    </div>
+
+                <div class="modal-body" id="contenidoVotantes">
+                   
+
+                    <div class="text-center p-4">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Cargando votantes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -249,6 +337,83 @@
         // Guardar puntero por AJAX
         $(document).ready(function() {
             $('#formAgregarPuntero').on('submit', function(e) {
+                e.preventDefault();
+
+                // Verificar que el id_dirigente esté presente
+                let dirigenteId = $('#puntero_id_dirigente').val();
+                if (!dirigenteId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se ha seleccionado un dirigente',
+                        confirmButtonColor: '#dc3545'
+                    });
+                    return;
+                }
+
+                let formData = $(this).serialize();
+                let submitBtn = $('#btnGuardarPuntero');
+
+                console.log('Datos a enviar:', formData); // Para depuración
+
+                submitBtn.prop('disabled', true).html(
+                    '<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+                $.ajax({
+                    url: "{{ route('puntero.store.ajax') }}",
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Éxito',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+
+                            // Limpiar formulario pero mantener el id_dirigente
+                            $('#puntero_cedula, #puntero_nombre, #puntero_telefono, #puntero_barrio')
+                                .val('');
+                            $('#puntero_cedula').focus();
+
+                            // Recargar la tabla de punteros con un pequeño retraso
+                            setTimeout(function() {
+                                cargarPunteros(dirigenteId);
+                            }, 100);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Error al guardar el puntero';
+
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMessage = '<ul>';
+                            $.each(xhr.responseJSON.errors, function(key, value) {
+                                errorMessage += '<li>' + value + '</li>';
+                            });
+                            errorMessage += '</ul>';
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: errorMessage,
+                            confirmButtonColor: '#dc3545'
+                        });
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).html(
+                            '<i class="fas fa-save"></i> Guardar Puntero');
+                    }
+                });
+            });
+            $('#formAgregarVotante').on('submit', function(e) {
                 e.preventDefault();
 
                 // Verificar que el id_dirigente esté presente
@@ -948,5 +1113,262 @@
         });
         // Exponer la función globalmente
         window.abrirModalPunterosLista = abrirModalPunterosLista;
+        window.abrirModalVotantes = function(punteroId, nombre) {
+            console.log('Abriendo modal para:', punteroId, nombre);
+
+            // Ejemplo básico (ajustá a tu lógica real)
+            $('#modalVotantes').modal('show');
+
+            // Si cargás datos por AJAX:
+            $('#contenidoVotantes').html(
+                '<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>');
+
+            let url = `{{ url('/') }}/punteros/${punteroId}/votantes`;
+
+            $.get(url, function(data) {
+                $('#contenidoVotantes').html(data);
+            });
+        };
+        // Función para cargar votantes de un puntero específico
+        function cargarVotantes(idPuntero, nombrePuntero = '') {
+            console.log('Cargando votantes para puntero:', idPuntero);
+
+            // Actualizar título del modal
+            $('#tituloVotantes').html(`
+        <i class="fas fa-users"></i> Votantes del Puntero: ${nombrePuntero}
+    `);
+
+            // Mostrar modal con spinner
+            $('#modalVotantes').modal('show');
+
+            // Mostrar loading en el body
+            $('#contenidoVotantes').html(`
+        <div class="text-center p-4">
+            <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="sr-only">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando votantes del puntero...</p>
+        </div>
+    `);
+
+            // Construir URL usando la ruta de Laravel
+            let url = `{{ url('puntero') }}/${idPuntero}/votantes`;
+
+            // Petición AJAX
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                success: function(data) {
+                    console.log('Votantes recibidos:', data);
+
+                    let contenido = `
+                <div class="table-responsive">
+                    <table id="votantes-table" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th>Cédula</th>
+                                <th>Nombre</th>
+                                <th>Escuela</th>
+                                <th>Tipo Votante</th>
+                                <th>Mesa</th>
+                                <th style="width: 10%">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+                    if (data.length === 0) {
+                        contenido += `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>No hay votantes registrados para este puntero</p>
+                        </td>
+                    </tr>
+                `;
+                    } else {
+                        data.forEach((v, i) => {
+                            contenido += `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${v.cedula}</td>
+                            <td>${v.nombre ?? ''}</td>
+                            <td>${v.escuela ?? ''}</td>
+                            <td>
+                                <span class="badge badge-${v.tipo_votante === 'RESERVADO' ? 'warning' : 'info'}">
+                                    ${v.tipo_votante ?? ''}
+                                </span>
+                            </td>
+                            <td>${v.mesa ?? ''}</td>
+                            <td class="text-center">
+                                <button class="btn btn-danger btn-sm" 
+                                    onclick="eliminarVotante(${v.id}, ${idPuntero})"
+                                    title="Eliminar votante">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                        });
+                    }
+
+                    contenido += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+                    $('#contenidoVotantes').html(contenido);
+
+                    // Inicializar DataTable después de un pequeño delay
+                    setTimeout(function() {
+                        if ($.fn.DataTable && $('#votantes-table').length) {
+                            if ($.fn.DataTable.isDataTable('#votantes-table')) {
+                                $('#votantes-table').DataTable().destroy();
+                            }
+
+                            $('#votantes-table').DataTable({
+                                responsive: true,
+                                dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
+                                    "<'row'<'col-sm-12'tr>>" +
+                                    "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+                                buttons: [{
+                                        extend: 'excelHtml5',
+                                        className: 'btn btn-success btn-sm',
+                                        text: '<i class="fas fa-file-excel"></i> Excel',
+                                        title: 'Votantes del Puntero',
+                                        exportOptions: {
+                                            columns: [0, 1, 2, 3, 4, 5]
+                                        }
+                                    },
+                                    {
+                                        extend: 'pdfHtml5',
+                                        className: 'btn btn-danger btn-sm',
+                                        text: '<i class="fas fa-file-pdf"></i> PDF',
+                                        title: 'Votantes del Puntero',
+                                        exportOptions: {
+                                            columns: [0, 1, 2, 3, 4, 5]
+                                        }
+                                    },
+                                    {
+                                        extend: 'print',
+                                        className: 'btn btn-secondary btn-sm',
+                                        text: '<i class="fas fa-print"></i> Imprimir',
+                                        exportOptions: {
+                                            columns: [0, 1, 2, 3, 4, 5]
+                                        },
+                                        customize: function(win) {
+                                            $(win.document.body).find('table').addClass(
+                                                'table table-bordered');
+                                            $(win.document.body).find('h1').css(
+                                                'text-align', 'center');
+                                        }
+                                    }
+                                ],
+                                language: {
+                                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                                },
+                                pageLength: 10,
+                                lengthMenu: [
+                                    [10, 25, 50, -1],
+                                    [10, 25, 50, "Todos"]
+                                ]
+                            });
+                        }
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error cargando votantes:', error);
+                    console.error('Respuesta:', xhr.responseText);
+
+                    $('#contenidoVotantes').html(`
+                <div class="alert alert-danger text-center p-4">
+                    <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                    <h5>Error al cargar los votantes</h5>
+                    <p class="mb-0">${xhr.responseJSON?.message || 'Intente nuevamente más tarde'}</p>
+                    <button class="btn btn-sm btn-outline-danger mt-3" onclick="cargarVotantes(${idPuntero}, '${nombrePuntero}')">
+                        <i class="fas fa-sync"></i> Reintentar
+                    </button>
+                </div>
+            `);
+                }
+            });
+        }
+
+        // Función para eliminar votante
+        function eliminarVotante(votanteId, punteroId) {
+            Swal.fire({
+                title: '¿Eliminar votante?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Eliminando...',
+                        text: 'Por favor espera',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    $.ajax({
+                        url: `{{ url('votante') }}/${votanteId}`,
+                        type: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            Swal.close();
+
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Eliminado',
+                                    text: 'El votante ha sido eliminado',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+
+                                // Recargar la tabla de votantes
+                                let nombrePuntero = $('#tituloVotantes').text().replace(
+                                    'Votantes del Puntero: ', '');
+                                cargarVotantes(punteroId, nombrePuntero);
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.close();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.message ||
+                                    'No se pudo eliminar el votante'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Limpiar DataTable cuando se cierra el modal
+        $('#modalVotantes').on('hidden.bs.modal', function() {
+            if ($.fn.DataTable && $.fn.DataTable.isDataTable('#votantes-table')) {
+                $('#votantes-table').DataTable().destroy();
+            }
+        });
+
+        // Exponer funciones globalmente
+        window.cargarVotantes = cargarVotantes;
+        window.eliminarVotante = eliminarVotante;
     </script>
 @stop
