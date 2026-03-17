@@ -71,6 +71,7 @@ class PunteroController extends Controller
 
     public function store(Request $request)
     {
+        //dd($request->input());
         DB::beginTransaction();
 
         try {
@@ -78,16 +79,33 @@ class PunteroController extends Controller
             $cedula = $request->cedula;
             $idDirigente = $request->id_dirigente;
 
-            $equipoActual = Equipo::where('sist', Auth::user()->sistema)
-                ->find($idEquipo);
-            if (!$equipoActual) throw new Exception('El equipo seleccionado no existe.');
-
+            // Buscar dirigente
             $dirigente = Dirigente::find($idDirigente);
+
             if (!$dirigente) {
                 return redirect()->back()
                     ->with('errorAlert', 'Error: no se encontró el dirigente.')
                     ->with('abrirModalPuntero', true);
             }
+            if ($idEquipo == null) {
+                $idEquipo = $dirigente->id_equipo;
+                $request->merge([
+                    'id_equipo' => $idEquipo
+                ]);
+            }
+
+            // Si no viene equipo en el request usar el del dirigente
+
+
+
+            // Validar que el equipo exista y pertenezca al sistema del usuario
+            $equipoActual = Equipo::where('sist', Auth::user()->sistema)
+                ->find($idEquipo);
+
+            if (!$equipoActual) {
+                throw new Exception('El equipo seleccionado no existe.');
+            }
+
 
             $equipoActual = $dirigente->equipo;
             $sistemaActual = $equipoActual->sist ?? 'default';
@@ -141,6 +159,7 @@ class PunteroController extends Controller
 
     public function create(Request $request, $id_equipo = null)
     {
+
         $id_dirigente = $request->query('dirigente_id');
 
         $equipos = Equipo::where('sist', Auth::user()->sistema)->get();
@@ -154,7 +173,12 @@ class PunteroController extends Controller
             ->whereHas('dirigente.equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
             })
-            ->when($id_equipo, fn($q) => $q->where('id_equipo', $id_equipo))
+            ->when($id_equipo, function ($query) use ($id_equipo) {
+                return $query->where('id_equipo', $id_equipo);
+            })
+            ->when($id_dirigente, function ($query) use ($id_dirigente) {
+                return $query->where('id_dirigente', $id_dirigente);
+            })
             ->get();
 
         foreach ($punteros as $p) {
@@ -197,9 +221,264 @@ class PunteroController extends Controller
                 ->with('errorAlert', 'No se pudo eliminar el puntero.');
         }
     }
+    public function destroyAjax(Request $request)
+    {
+        try {
+            $puntero = Puntero::findOrFail($request->id);
+            $dirigente = Dirigente::find($puntero->id_dirigente);
+
+            $puntero->votantes()->delete();
+            $puntero->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Puntero y sus votantes eliminados correctamente.',
+                'dirigente_id' => $dirigente->id
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo eliminar el puntero.'
+            ], 500);
+        }
+    }
 
     public function show(Puntero $puntero)
     {
         return view('puntero.show', compact('puntero'));
+    }
+    public function storeAjax(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            // Estos valores vienen del formulario con los hidden
+            $idDirigente = $request->id_dirigente; // Del hidden
+            $cedula = $request->cedula;
+            $idEquipo = $request->id_equipo;
+
+            // Validación básica
+            if (!$idDirigente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error: no se especificó el dirigente.'
+                ], 422);
+            }
+
+            // Buscar dirigente
+            $dirigente = Dirigente::find($idDirigente);
+
+            if (!$dirigente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error: no se encontró el dirigente.'
+                ], 404);
+            }
+
+            // Si no viene equipo, usar el del dirigente
+            if ($idEquipo == null) {
+                $idEquipo = $dirigente->id_equipo;
+            }
+
+            // Validar que el equipo exista y pertenezca al sistema del usuario
+            $equipoActual = Equipo::where('sist', Auth::user()->sistema)
+                ->find($idEquipo);
+
+            if (!$equipoActual) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El equipo seleccionado no existe.'
+                ], 404);
+            }
+
+            $sistemaActual = $equipoActual->sist ?? 'default';
+
+            // Validar si ya existe en el mismo sistema
+            $punteroMismoSistema = Puntero::where('cedula', $cedula)
+                ->whereHas('dirigente.equipo', function ($q) use ($sistemaActual) {
+                    $q->where('sist', $sistemaActual);
+                })->first();
+
+            if ($punteroMismoSistema) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: esta cédula ya está registrada en el mismo sistema bajo el dirigente '{$punteroMismoSistema->dirigente->nombre}'."
+                ], 422);
+            }
+
+            // Verificar si existe en otro sistema (solo para advertencia)
+            $punteroOtroSistema = Puntero::where('cedula', $cedula)
+                ->whereHas('dirigente.equipo', function ($q) use ($sistemaActual) {
+                    $q->where('sist', '!=', $sistemaActual);
+                })->first();
+
+            // Crear el puntero con los datos del formulario
+            $nuevoPuntero = Puntero::create([
+                'cedula' => $cedula,
+                'nombre' => $request->nombre,
+                'telefono' => $request->telefono,
+                'barrio' => $request->barrio,
+                'id_dirigente' => $idDirigente,
+                'id_equipo' => $idEquipo
+            ]);
+
+            DB::commit();
+
+            // Cargar relaciones para la respuesta
+            $nuevoPuntero->load(['dirigente', 'dirigente.equipo']);
+
+            $mensaje = 'Puntero agregado correctamente.';
+            if ($punteroOtroSistema) {
+                $mensaje = "Atención: esta cédula ya existe en otro sistema bajo el dirigente '{$punteroOtroSistema->dirigente->nombre}'.";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje,
+                'data' => $nuevoPuntero,
+                'dirigente_id' => $idDirigente,
+                'dirigente_nombre' => $dirigente->nombre
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear puntero (AJAX)', [
+                'cedula' => $request->cedula,
+                'dirigente_id' => $request->id_dirigente,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar el puntero: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    /**
+     * Obtener punteros por sistema (para el modal)
+     */
+    public function porSistema($sistemaId)
+    {
+        try {
+            $sistema = \App\Models\Sistema::findOrFail($sistemaId);
+
+            // Obtener equipos del sistema
+            $equipos = Equipo::where('sist', $sistema->nombre)
+                ->with('dirigentes.punteros')
+                ->get();
+
+            // Obtener todos los punteros del sistema
+            $punteros = Puntero::whereHas('dirigente.equipo', function ($q) use ($sistema) {
+                $q->where('sist', $sistema->nombre);
+            })->with(['dirigente', 'equipo', 'votantes'])->get();
+
+            // Contar votantes por puntero
+            foreach ($punteros as $p) {
+                $p->votantes_count = $p->votantes->count();
+            }
+
+            // Total de votantes general
+            $totalVotantesGeneral = $punteros->sum('votantes_count');
+
+            // Obtener todos los dirigentes del sistema para el filtro
+            $dirigentes = Dirigente::whereHas('equipo', function ($q) use ($sistema) {
+                $q->where('sist', $sistema->nombre);
+            })->get();
+
+            // Valores seleccionados (si vienen por request)
+            $equipoSeleccionado = request('equipo_id');
+            $dirigenteSeleccionado = request('dirigente_id');
+            $dirigenteId = request('dirigente_id');
+
+            // Aplicar filtros si vienen
+            if ($equipoSeleccionado) {
+                $punteros = $punteros->where('id_equipo', $equipoSeleccionado);
+            }
+
+            if ($dirigenteSeleccionado) {
+                $punteros = $punteros->where('id_dirigente', $dirigenteSeleccionado);
+            }
+
+            if (request()->ajax()) {
+                return view('ciudades.partials.lista_punteros', compact(
+                    'equipos',
+                    'punteros',
+                    'dirigentes',
+                    'totalVotantesGeneral',
+                    'equipoSeleccionado',
+                    'dirigenteSeleccionado',
+                    'dirigenteId'
+                ));
+            }
+
+            return view('puntero.index', compact(
+                'equipos',
+                'punteros',
+                'dirigentes',
+                'totalVotantesGeneral',
+                'equipoSeleccionado',
+                'dirigenteSeleccionado',
+                'dirigenteId'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Error en porSistema: ' . $e->getMessage());
+            if (request()->ajax()) {
+                return response()->json(['error' => 'Error al cargar punteros'], 500);
+            }
+            return redirect()->back()->with('error', 'Error al cargar punteros');
+        }
+    }
+
+    /**
+     * Filtrar punteros vía AJAX
+     */
+    public function filtrarAjax(Request $request)
+    {
+        try {
+            $equipoId = $request->equipo_id;
+            $dirigenteId = $request->dirigente_id;
+
+            $query = Puntero::with(['dirigente', 'equipo', 'votantes'])
+                ->whereHas('dirigente.equipo', function ($q) {
+                    $q->where('sist', Auth::user()->sistema);
+                });
+
+            if ($equipoId) {
+                $query->where('id_equipo', $equipoId);
+            }
+
+            if ($dirigenteId) {
+                $query->where('id_dirigente', $dirigenteId);
+            }
+
+            $punteros = $query->get();
+
+            // Contar votantes por puntero
+            foreach ($punteros as $p) {
+                $p->votantes_count = $p->votantes->count();
+            }
+
+            $totalVotantesGeneral = $punteros->sum('votantes_count');
+
+            // Obtener equipos y dirigentes para los filtros
+            $equipos = Equipo::where('sist', Auth::user()->sistema)->get();
+            $dirigentes = Dirigente::whereHas('equipo', function ($q) {
+                $q->where('sist', Auth::user()->sistema);
+            })->when($equipoId, function ($q) use ($equipoId) {
+                $q->where('id_equipo', $equipoId);
+            })->get();
+
+            return view('puntero.lista_punteros', compact(
+                'punteros',
+                'equipos',
+                'dirigentes',
+                'totalVotantesGeneral',
+                'equipoId',
+                'dirigenteId'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Error en filtrarAjax: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al filtrar punteros'], 500);
+        }
     }
 }

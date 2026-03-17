@@ -10,13 +10,11 @@
             </label>
 
             {{-- Select2 --}}
-            <x-adminlte-select2 name="equipo_id" id="equipo_id" 
-                onchange="filtrarDirigentes()" enable-old-support>
+            <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarDirigentes()" enable-old-support>
 
                 <option value="">Todos</option>
 
                 @foreach ($equipos as $eq)
-
                     <option value="{{ $eq->id }}" {{ (string) $equipoId === (string) $eq->id ? 'selected' : '' }}>
                         {{ $eq->descripcion }}
                     </option>
@@ -143,26 +141,21 @@
             </form>
         </div>
     </div>
-    <!-- Modal para punteros -->
-    <!-- Modal para punteros -->
+    <!-- Modal para punteros - AGREGAR AL FINAL DEL CONTENIDO, ANTES DEL SCRIPT -->
     <div class="modal fade" id="modalPunteros" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-
-                <!-- Header del modal -->
-                <div class="modal-header">
-                    <h5 class="modal-title">Punteros del dirigente </h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Punteros del dirigente</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
-
-                <!-- Body del modal -->
                 <div class="modal-body">
-
-                    <!-- Formulario para agregar puntero (arriba) -->
-                    <form id="formAgregarPuntero" method="POST" action="{{ route('puntero.store') }}" class="mb-3">
+                    <!-- Formulario para agregar puntero -->
+                    <form id="formAgregarPuntero" class="mb-3">
                         @csrf
-                        <input type="hidden" name="id_dirigente" id="puntero_id_dirigente">
-                        <input type="hidden" name="id_equipo" id="puntero_id_equipo">
+                        <input type="hidden" name="id_dirigente" id="puntero_id_dirigente" value="">
+                        <input type="hidden" name="id_equipo" id="puntero_id_equipo" value="">
+
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label>Cédula</label>
@@ -172,6 +165,8 @@
                                 <label>Nombre</label>
                                 <input type="text" name="nombre" id="puntero_nombre" class="form-control" required>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label>Teléfono</label>
                                 <input type="text" name="telefono" id="puntero_telefono" class="form-control">
@@ -181,25 +176,17 @@
                                 <input type="text" name="barrio" id="puntero_barrio" class="form-control">
                             </div>
                         </div>
-
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="btnGuardarPuntero">
                             <i class="fas fa-save"></i> Guardar Puntero
                         </button>
-                        @if (session('abrirModalPuntero'))
-                            <div class="alert alert-success">
-                                {{ session('successAlert') }}
-                            </div>
-                        @endif
                     </form>
-
                     <hr>
-
                     <!-- Tabla de punteros existentes -->
                     <table id="punteros-table" class="table table-striped table-bordered">
                         <thead>
                             <tr>
                                 <th style="width: 5%">#</th>
-                                <th>cedula</th>
+                                <th>Cédula</th>
                                 <th>Nombre</th>
                                 <th>Teléfono</th>
                                 <th>Barrio</th>
@@ -208,9 +195,6 @@
                         </thead>
                         <tbody></tbody>
                     </table>
-
-
-
                 </div>
             </div>
         </div>
@@ -484,33 +468,33 @@
 
                 buttons: [{
                         text: '<i class="fas fa-user-plus"></i> Agregar Dirigente',
-                        className: 'btn btn-primary',
+                        className: 'btn btn-info',
                         action: function(e, dt, node, config) {
                             $('#modalAgregarDirigente').modal('show');
                         }
                     },
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="fas fa-file-excel"></i> Excel',
-                        className: 'btn btn-info',
-                        title: 'Lista de Dirigentes del equipo ' + equipoNombre,
-                        filename: 'dirigentes_export_' + equipoNombre.replace(/\s+/g, '_') +
-                            '_{{ date('Y-m-d_H-i-s') }}',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fas fa-file-pdf"></i> PDF',
-                        className: 'btn btn-danger',
-                        title: 'Lista de Dirigentes del equipo ' + equipoNombre,
-                        filename: 'dirigentes_export_' + equipoNombre.replace(/\s+/g, '_') +
-                            '_{{ date('Y-m-d_H-i-s') }}',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
+                    // {
+                    //     extend: 'excelHtml5',
+                    //     text: '<i class="fas fa-file-excel"></i> Excel',
+                    //     className: 'btn btn-info',
+                    //     title: 'Lista de Dirigentes del equipo ' + equipoNombre,
+                    //     filename: 'dirigentes_export_' + equipoNombre.replace(/\s+/g, '_') +
+                    //         '_{{ date('Y-m-d_H-i-s') }}',
+                    //     exportOptions: {
+                    //         columns: ':visible'
+                    //     }
+                    // },
+                    // {
+                    //     extend: 'pdfHtml5',
+                    //     text: '<i class="fas fa-file-pdf"></i> PDF',
+                    //     className: 'btn btn-danger',
+                    //     title: 'Lista de Dirigentes del equipo ' + equipoNombre,
+                    //     filename: 'dirigentes_export_' + equipoNombre.replace(/\s+/g, '_') +
+                    //         '_{{ date('Y-m-d_H-i-s') }}',
+                    //     exportOptions: {
+                    //         columns: ':visible'
+                    //     }
+                    // },
                     {
                         extend: 'print',
                         text: '<i class="fas fa-print"></i> Imprimir',
@@ -533,26 +517,27 @@
             nombreDirigente = nombreDirigente ?? 'Sin nombre';
 
             let table = $('#punteros-table').DataTable({
-                dom: "<'row'<'col-md-6'l><'col-md-6 text-right'B>>" +
+                dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
                     "<'row'<'col-sm-12'tr>>" +
                     "<'row'<'col-sm-5'i><'col-sm-7'p>>",
 
-                buttons: [{
-                        extend: 'excelHtml5',
-                        text: '<i class="fas fa-file-excel"></i> Excel',
-                        className: 'btn btn-info',
-                        title: 'Punteros del dirigente ' + nombreDirigente,
-                        filename: 'punteros_' + nombreDirigente.replace(/\s+/g, '_') +
-                            '_{{ date('Y-m-d_H-i-s') }}'
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fas fa-file-pdf"></i> PDF',
-                        className: 'btn btn-danger',
-                        title: 'Punteros del dirigente ' + nombreDirigente,
-                        filename: 'punteros_' + nombreDirigente.replace(/\s+/g, '_') +
-                            '_{{ date('Y-m-d_H-i-s') }}'
-                    },
+                buttons: [
+                    // {
+                    //     extend: 'excelHtml5',
+                    //     text: '<i class="fas fa-file-excel"></i> Excel',
+                    //     className: 'btn btn-info',
+                    //     title: 'Punteros del dirigente ' + nombreDirigente,
+                    //     filename: 'punteros_' + nombreDirigente.replace(/\s+/g, '_') +
+                    //         '_{{ date('Y-m-d_H-i-s') }}'
+                    // },
+                    // {
+                    //     extend: 'pdfHtml5',
+                    //     text: '<i class="fas fa-file-pdf"></i> PDF',
+                    //     className: 'btn btn-danger',
+                    //     title: 'Punteros del dirigente ' + nombreDirigente,
+                    //     filename: 'punteros_' + nombreDirigente.replace(/\s+/g, '_') +
+                    //         '_{{ date('Y-m-d_H-i-s') }}'
+                    // },
                     {
                         extend: 'print',
                         text: '<i class="fas fa-print"></i> Imprimir',
@@ -570,12 +555,12 @@
                 columnDefs: [{
                         targets: 0,
                         orderable: false,
-                        searchable: false
+                        searchable: true
                     },
                     {
                         targets: 4,
                         orderable: false,
-                        searchable: false
+                        searchable: true
                     }
                 ]
             });

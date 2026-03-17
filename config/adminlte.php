@@ -298,7 +298,14 @@ return [
     */
 
     'menu' => [
-
+        [
+            'text'       => 'Distritos y Candidatos',
+            'icon'       => 'fas fa-map-marker-alt',
+            'icon_color' => 'primary',
+            'classes'    => 'custom-icon-box custom-icon-box-primary',
+            'content'    => '<i class="fas fa-map-marker-alt"></i>',
+            'url'        => '/ciudades',    // La ruta hacia la vista que mostramos
+        ],
         [
             'text'       => 'Equipo',
             'icon'       => 'fas fa-users',

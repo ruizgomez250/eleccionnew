@@ -64,6 +64,7 @@ class Votante extends Model
         'partido',
         'escuela',
         'ciudad',
+        'id',
         'departamento'
             ]);
     }

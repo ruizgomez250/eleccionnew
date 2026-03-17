@@ -712,6 +712,7 @@
                     <td>${i + 1}</td>
                     <td>${v.cedula}</td>
                     <td>${v.nombre ?? ''}</td>
+                    <td>${v.escuela ?? ''}</td>
                     <td>${v.tipo_votante ?? ''}</td>
                     <td>${v.mesa ?? ''}</td>
                     <td class="text-center">

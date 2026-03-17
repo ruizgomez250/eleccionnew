@@ -195,7 +195,7 @@
         function filtrarDirigentes() {
             if (bloqueaFiltro) return;
             equipoId = $('#equipo_id').val();
-            let url = "{{ url('dirigente/create') }}/" + equipoId;
+            let url = "{{ url('punterosyvotantespordirigente') }}/" + equipoId;
             window.location.href = url;
         }
 

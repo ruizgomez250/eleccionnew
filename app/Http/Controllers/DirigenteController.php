@@ -54,6 +54,7 @@ class DirigenteController extends Controller
 
     public function store(Request $request)
     {
+
         $cedula = $request->cedula;
         $idEquipo = $request->id_equipo;
         $equipoActual = Equipo::find($idEquipo);
@@ -198,5 +199,146 @@ class DirigenteController extends Controller
             return redirect()->back()
                 ->with('errorAlert', 'Error al eliminar: ' . $e->getMessage());
         } //134
+    }
+    public function dirigentesPorSistema($sistemaId, Request $request)
+    {
+        $equipoId = $request->equipo_id;
+        $equipoSeleccionado = request('equipo_id');
+        // Equipos del sistema
+        $equipos = Equipo::where('sist', $sistemaId)->get();
+
+        // Dirigentes
+        $dirigentes = Dirigente::with(['punteros.votantes', 'equipo'])
+            ->whereHas('equipo', function ($q) use ($sistemaId) {
+                $q->where('sist', $sistemaId);
+            })
+            ->when($equipoId, function ($q) use ($equipoId) {
+                $q->where('id_equipo', $equipoId);
+            })
+            ->get();
+
+        // Calcular punteros y votantes
+        foreach ($dirigentes as $dir) {
+
+            $dir->punteros_count = $dir->punteros->count();
+
+            $dir->votantes_count = $dir->punteros->sum(function ($p) {
+                return $p->votantes->count();
+            });
+        }
+
+        // Total general
+        $totalVotantesGeneral = $dirigentes->sum('votantes_count');
+
+        return view(
+            'ciudades.partials.lista_dirigentes',
+            compact(
+                'dirigentes',
+                'equipos',
+                'equipoId',
+                'totalVotantesGeneral',
+                'equipoSeleccionado',
+                'sistemaId'
+            )
+        );
+    }
+    // Agrega esta función al final del DirigenteController
+    public function storeAjax(Request $request)
+    {
+        try {
+            $cedula = $request->cedula;
+            $idEquipo = $request->id_equipo;
+            $idSistema = $request->sistema_id;
+
+            $equipoActual = Equipo::find($idEquipo);
+            if (!$equipoActual) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El equipo seleccionado no existe.'
+                ], 404);
+            }
+
+            $sistemaActual = $equipoActual->sist ?? 'default';
+
+            // Verificar si ya existe en el mismo sistema
+            $dirigenteMismoSistema = Dirigente::where('cedula', $cedula)
+                ->whereHas('equipo', function ($q) use ($sistemaActual) {
+                    $q->where('sist', $sistemaActual);
+                })
+                ->first();
+
+            if ($dirigenteMismoSistema) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Esta cédula ya está registrada en el equipo '{$dirigenteMismoSistema->equipo->descripcion}'."
+                ], 422);
+            }
+
+            // Verificar si existe en otro sistema
+            $dirigenteOtroSistema = Dirigente::where('cedula', $cedula)
+                ->whereHas('equipo', function ($q) use ($sistemaActual) {
+                    $q->where('sist', '!=', $sistemaActual);
+                })
+                ->first();
+
+            // Crear el dirigente
+            $nuevoDirigente = Dirigente::create([
+                'cedula' => $request->cedula,
+                'nombre' => $request->nombre,
+                'telefono' => $request->telefono,
+                'barrio' => $request->barrio,
+                'id_equipo' => $idEquipo
+            ]);
+
+            $mensaje = 'Dirigente agregado correctamente.';
+            if ($dirigenteOtroSistema) {
+                $mensaje = "Dirigente agregado. Nota: esta cédula ya existe en otro sistema en el equipo '{$dirigenteOtroSistema->equipo->descripcion}'.";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje,
+                'data' => $nuevoDirigente
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    // Agrega este método al final del controlador
+    public function destroyAjax($id)
+    {
+        try {
+            DB::transaction(function () use ($id) {
+                $dirigente = Dirigente::with('punteros.votantes')
+                    ->findOrFail($id);
+
+                foreach ($dirigente->punteros as $puntero) {
+                    $puntero->votantes()->delete();
+                }
+
+                $dirigente->punteros()->delete();
+                $dirigente->delete();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dirigente, punteros y votantes eliminados correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function getPunterosCount($id)
+    {
+        $dirigente = Dirigente::findOrFail($id);
+        $count = $dirigente->punteros()->count();
+
+        return response()->json(['count' => $count]);
     }
 }

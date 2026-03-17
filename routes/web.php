@@ -31,7 +31,7 @@ Route::post('/votante/buscar-simple', [VotanteController::class, 'buscarSimplePo
     ->name('votante.buscar.simple');
 
 Auth::routes();
-Route::get('/home', [EquipoController::class, 'index'])
+Route::get('/home', [SistemaController::class, 'mostrarCiudades'])
     ->name('home')
     ->middleware('auth');
 
@@ -40,7 +40,7 @@ Route::get('mesas-entrada/data1', [MesaEntradaController::class, 'getData'])->na
 
 
 Route::middleware('auth')->group(function () {
-    Route::get('punterosyvotantespordirigente', [ReportesController::class, 'index'])
+    Route::get('punterosyvotantespordirigente/{equipo?}', [ReportesController::class, 'index'])
         ->name('punterosyvotantespordirigente');
     Route::resource('equipo', EquipoController::class);
     Route::resource('useradmin', UserAdminController::class);
@@ -166,7 +166,27 @@ Route::middleware('auth')->group(function () {
     Route::post('/configuracion-montos/actualizar', [ConfiguracionMontoController::class, 'store'])
         ->name('configuracion_montos.store');
     Route::get('configuracion_montos/reporte', [ConfiguracionMontoController::class, 'reporteGeneral'])
-    ->name('configuracion_montos.reporte')
-    ->middleware(['auth','permission:Administracion General']);
+        ->name('configuracion_montos.reporte')
+        ->middleware(['auth', 'permission:Administracion General']);
     Route::resource('ciudades_electorales', CiudadElectoralController::class);
+    Route::get('/ciudades', [SistemaController::class, 'mostrarCiudades'])
+        ->name('ciudades.index'); // opcional según tu sistema de autenticación
+    Route::get('/distritos/{idCiudad}/sistemas', [SistemaController::class, 'sistemasPorDistrito'])
+        ->name('distritos.sistemas');
+    Route::get('/sistemas/{sistema}/dirigentes', [DirigenteController::class, 'dirigentesPorSistema'])
+        ->name('sistemas.dirigentes');
+    Route::post('/dirigentes/ajax', [DirigenteController::class, 'storeAjax'])->name('dirigentes.store.ajax');
+    Route::delete('/dirigentes/ajax/{id}', [DirigenteController::class, 'destroyAjax'])->name('dirigentes.destroy.ajax');
+    Route::get('/dirigente/{dirigente}/punteros/count', [DirigenteController::class, 'getPunterosCount'])->name('dirigente.punteros.count');
+    Route::post('/punteros/store-ajax', [PunteroController::class, 'storeAjax'])->name('puntero.store.ajax');
+    Route::delete('/punteros/destroy-ajax', [PunteroController::class, 'destroyAjax'])->name('puntero.destroy.ajax');
+    // Rutas para punteros (AJAX y filtros)
+    Route::prefix('punteros')->name('puntero.')->group(function () {
+        Route::get('/filtrar', [PunteroController::class, 'filtrarAjax'])->name('filtrar.ajax');
+        Route::delete('/destroy-ajax', [PunteroController::class, 'destroyAjax'])->name('destroy.ajax');
+        Route::post('/store-ajax', [PunteroController::class, 'storeAjax'])->name('store.ajax');
+    });
+
+    // Ruta para obtener punteros por sistema
+    Route::get('/sistemas/{sistema}/punteros', [PunteroController::class, 'porSistema'])->name('sistemas.punteros');
 });
