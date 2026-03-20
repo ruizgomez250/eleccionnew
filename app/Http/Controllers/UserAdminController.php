@@ -37,11 +37,16 @@ class UserAdminController extends Controller
     {
         if ($resp = $this->verificarPermiso()) {
             return $resp;
-        } // 🔹 Verificar permiso al entrar a la página
+        }
+
         $roles = Role::pluck('name', 'name')->all();
         $users = User::with('sistemaRelacion')->get();
-        $sistemas = Sistema::all();
+
+        // 👇 Cargar la relación 'usuario' junto con los sistemas
+        $sistemas = Sistema::with('usuario')->get();
+
         $ciudades = CiudadElectoral::orderBy('descripcion')->get();
+
         return view('useradmin.index', compact('users', 'sistemas', 'roles', 'ciudades'));
     }
 
@@ -76,7 +81,7 @@ class UserAdminController extends Controller
                 $user->sistema = $request->sistema;
                 $user->save();
             } else {
-                
+
                 // 🔹 CREAR
                 $userId = Auth::id();
                 $user = User::create([

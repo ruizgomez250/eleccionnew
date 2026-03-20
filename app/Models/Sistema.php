@@ -6,11 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sistema extends Model
 {
-    protected $fillable = ['nombre','id_ciudad_electoral','idusuario','tipo'];
+    protected $fillable = ['nombre', 'id_ciudad_electoral', 'idusuario', 'tipo'];
 
     public function users()
     {
         return $this->hasMany(User::class, 'sistema');
+    }
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'idusuario');
     }
     public function equipos()
     {

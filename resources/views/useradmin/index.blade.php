@@ -40,7 +40,7 @@
     <div class="row">
 
         {{-- Sección de sistemas --}}
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Sistemas</h3>
@@ -55,6 +55,7 @@
                                 <th>#</th>
                                 <th>Nombre</th>
                                 <th>Ciudad</th>
+                                <th>Su Candidato</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -64,13 +65,15 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $sistema->nombre . ' - ' . $sistema->tipo }}</td>
                                     <td>{{ $sistema->ciudad->descripcion }}</td>
+                                    <td>{{ $sistema->usuario->name ?? 'Sin asignar' }}</td>
                                     <td>
                                         <button class="btn btn-warning btn-sm"
                                             onclick="editarSistema(
                                             {{ $sistema->id }},
                                             '{{ $sistema->nombre }}',
                                             {{ $sistema->id_ciudad_electoral }},
-                                            '{{ $sistema->tipo }}'
+                                            '{{ $sistema->tipo }}',
+                                            {{ $sistema->idusuario }}
                                         )">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -92,7 +95,7 @@
         </div>
 
         {{-- Sección de usuarios --}}
-        <div class="col-md-8">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Usuarios</h3>
@@ -176,7 +179,23 @@
                             <select name="tipo" id="tipo" class="form-control" required>
                                 <option value="concejal">Concejal</option>
                                 <option value="intendente">Intendente</option>
+                                <option value="Miembro de Comite">Miembro de Comite</option>
+                                <option value="Convencional">Convencional</option>
+                                <option value="Miembro de la Juventud">Miembro de la Juventud</option>
+                                <option value="Convencional Juventud">Convencional Juventud</option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <x-adminlte-select2 name="candidatosup" label="Candidato Superior" label-class="text-lightblue"
+                                igroup-size="lg">
+                                <option value="0">Sin Dato</option>
+                                @foreach ($users as $user)
+                                    <option value="{{ $user->id }}">
+                                        {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
+                                    </option>
+                                @endforeach
+                            </x-adminlte-select2>
+
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -323,6 +342,11 @@ $selected = false;
                 placeholder: 'Seleccionar Ciudad',
                 allowClear: true
             });
+            $('#candidatosup').select2({
+                width: '100%',
+                dropdownParent: $('#modalSistema'),
+                allowClear: true
+            });
         });
 
         function abrirModalReporte() {
@@ -400,7 +424,7 @@ $selected = false;
             });
         });
 
-        function editarSistema(id, nombre, ciudad, tipo) {
+        function editarSistema(id, nombre, ciudad, tipo, idusuario) {
 
             $('#sistema_id').val(id);
             $('#nombre_sistema').val(nombre);
@@ -408,6 +432,7 @@ $selected = false;
             // seleccionar ciudad
             $('#id_ciudad_electoral').val(ciudad).trigger('change');
 
+            $('#candidatosup').val(idusuario).trigger('change');
             // seleccionar tipo
             $('#tipo').val(tipo);
 

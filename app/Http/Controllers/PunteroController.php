@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dirigente;
 use App\Models\Puntero;
 use App\Models\Equipo;
+use App\Models\Sistema;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -360,7 +361,7 @@ class PunteroController extends Controller
     public function porSistema($sistemaId)
     {
         try {
-            $sistema = \App\Models\Sistema::findOrFail($sistemaId);
+            $sistema = Sistema::findOrFail($sistemaId);
             
             // Obtener equipos del sistema
             $equipos = Equipo::where('sist', $sistema->id)
@@ -419,6 +420,149 @@ class PunteroController extends Controller
                 'equipoSeleccionado',
                 'dirigenteSeleccionado',
                 'dirigenteId'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Error en porSistema: ' . $e->getMessage());
+            if (request()->ajax()) {
+                return response()->json(['error' => 'Error al cargar punteros'], 500);
+            }
+            return redirect()->back()->with('error', 'Error al cargar punteros');
+        }
+    }
+    public function porEquipo($equipoId)
+    {
+        try {
+            $equipoAct = Equipo::findOrFail($equipoId);
+            $sistema = Sistema::findOrFail($equipoAct->sist);
+            
+            // Obtener equipos del sistema
+            $equipos = Equipo::where('sist', $sistema->id)
+                ->with('dirigentes.punteros')
+                ->get();
+            
+            // Obtener todos los punteros del sistema
+            $punteros = Puntero::where('id_equipo', $equipoId)->get();
+            
+            // Contar votantes por puntero
+            foreach ($punteros as $p) {
+                $p->votantes_count = $p->votantes->count();
+            }
+
+            // Total de votantes general
+            $totalVotantesGeneral = $punteros->sum('votantes_count');
+
+            // Obtener todos los dirigentes del sistema para el filtro
+            $dirigentes = Dirigente::whereHas('equipo', function ($q) use ($sistema) {
+                $q->where('sist', $sistema->id);
+            })->get();
+
+            // Valores seleccionados (si vienen por request)
+            $equipoSeleccionado = $equipoId;
+            $dirigenteSeleccionado = request('dirigente_id');
+            $dirigenteId = request('dirigente_id');
+
+            // Aplicar filtros si vienen
+            if ($equipoSeleccionado) {
+                $punteros = $punteros->where('id_equipo', $equipoSeleccionado);
+            }
+
+            if ($dirigenteSeleccionado) {
+                $punteros = $punteros->where('id_dirigente', $dirigenteSeleccionado);
+            }
+
+            if (request()->ajax()) {
+                return view('ciudades.partials.lista_punteros', compact(
+                    'equipos',
+                    'punteros',
+                    'dirigentes',
+                    'totalVotantesGeneral',
+                    'equipoSeleccionado',
+                    'dirigenteSeleccionado',
+                    'dirigenteId'
+                ));
+            }
+
+            return view('puntero.index', compact(
+                'equipos',
+                'punteros',
+                'dirigentes',
+                'totalVotantesGeneral',
+                'equipoSeleccionado',
+                'dirigenteSeleccionado',
+                'dirigenteId'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Error en porSistema: ' . $e->getMessage());
+            if (request()->ajax()) {
+                return response()->json(['error' => 'Error al cargar punteros'], 500);
+            }
+            return redirect()->back()->with('error', 'Error al cargar punteros');
+        }
+    }
+    public function porDirigente($dirigenteId)
+    {
+        try {
+            $dirigente= Dirigente::findOrFail($dirigenteId);
+            $equipo = Equipo::findOrFail($dirigente->id_equipo);
+            $sistema = Sistema::findOrFail($equipo->sist);
+            $nombreSistema = $sistema->nombre;
+            // Obtener equipos del sistema
+            $equipos = Equipo::where('sist', $sistema->id)
+                ->with('dirigentes.punteros')
+                ->get();
+            
+            // Obtener todos los punteros del sistema
+            $punteros = Puntero::where('id_dirigente', $dirigenteId)->get();
+            
+            // Contar votantes por puntero
+            foreach ($punteros as $p) {
+                $p->votantes_count = $p->votantes->count();
+            }
+
+            // Total de votantes general
+            $totalVotantesGeneral = $punteros->sum('votantes_count');
+
+            // Obtener todos los dirigentes del sistema para el filtro
+            $dirigentes = Dirigente::whereHas('equipo', function ($q) use ($sistema) {
+                $q->where('sist', $sistema->id);
+            })->get();
+
+            // Valores seleccionados (si vienen por request)
+            $equipoSeleccionado = $dirigente->id_equipo;
+            $dirigenteSeleccionado = $dirigenteId;
+            $dirigenteId = $dirigenteId;
+
+            // Aplicar filtros si vienen
+            if ($equipoSeleccionado) {
+                $punteros = $punteros->where('id_equipo', $equipoSeleccionado);
+            }
+
+            if ($dirigenteSeleccionado) {
+                $punteros = $punteros->where('id_dirigente', $dirigenteSeleccionado);
+            }
+
+            if (request()->ajax()) {
+                return view('ciudades.partials.lista_punteros', compact(
+                    'equipos',
+                    'punteros',
+                    'dirigentes',
+                    'totalVotantesGeneral',
+                    'equipoSeleccionado',
+                    'dirigenteSeleccionado',
+                    'nombreSistema',
+                    'dirigenteId'
+                ));
+            }
+
+            return view('puntero.index', compact(
+                'equipos',
+                'punteros',
+                'dirigentes',
+                'totalVotantesGeneral',
+                'equipoSeleccionado',
+                'dirigenteSeleccionado',
+                'dirigenteId',
+                'nombreSistema'
             ));
         } catch (\Exception $e) {
             Log::error('Error en porSistema: ' . $e->getMessage());

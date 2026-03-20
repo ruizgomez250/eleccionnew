@@ -37,6 +37,16 @@ class Dirigente extends Model
     {
         return $this->hasMany(Puntero::class, 'id_dirigente');
     }
-
-    
+    // En el modelo Dirigente.php
+    public function sistema()
+    {
+        return $this->hasOneThrough(
+            Sistema::class,
+            Equipo::class,
+            'id',      // Foreign key on equipos table (local key of equipos)
+            'id',      // Foreign key on sistemas table (local key of sistemas)
+            'id_equipo', // Local key on dirigentes table
+            'sist'     // Local key on equipos table
+        );
+    }
 }

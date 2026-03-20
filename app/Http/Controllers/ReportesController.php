@@ -136,7 +136,6 @@ class ReportesController extends Controller
                 }
             }
         }
-
         $pdf->Output('reporte_votantes_por_dirigente.pdf', 'I');
         exit;
     }

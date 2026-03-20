@@ -1,41 +1,69 @@
 {{-- resources/views/puntero/lista_punteros.blade.php --}}
-<div class="row mb-2">
-    <div class="col-md-4">
-        <label for="equipo_punteros" class="form-label fw-bold">Equipos</label>
-        <input type="hidden" id="dirigente_id" value="{{ $dirigenteId ?? '' }}">
-        <x-adminlte-select2 name="equipo_punteros" id="equipo_punteros" onchange="filtrarPunterosPorEquipo()"
-            enable-old-support>
-            <option value="">Todos</option>
-            @foreach ($equipos as $eq)
-                <option value="{{ $eq->id }}"
-                    {{ isset($equipoSeleccionado) && $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
-                    {{ $eq->descripcion }}
-                </option>
-            @endforeach
-        </x-adminlte-select2>
-    </div>
+<form id="formAgregarPunteroLista">
+    @csrf
+    <input type="hidden" name="id_dirigente" id="puntero_id_dirigente_lista" value="{{ $dirigenteId ?? '' }}">
+    <input type="hidden" name="id_equipo" id="puntero_id_equipo_lista" value="{{ $equipoSeleccionado ?? '' }}">
 
-    <div class="col-md-4">
-        <label for="dirigente_punteros" class="form-label fw-bold">Dirigentes</label>
-        <x-adminlte-select2 name="dirigente_punteros" id="dirigente_punteros" onchange="filtrarPunterosPorDirigente()"
-            enable-old-support>
-            <option value="">Todos</option>
-            @foreach ($dirigentes as $dir)
-                <option value="{{ $dir->id }}"
-                    {{ isset($dirigenteSeleccionado) && $dirigenteSeleccionado == $dir->id ? 'selected' : '' }}>
-                    {{ $dir->nombre }}
-                </option>
-            @endforeach
-        </x-adminlte-select2>
-    </div>
+    <div class="row mb-2">
+        <div class="col-md-6">
+            <label for="equipo_punteros" class="form-label fw-bold">Equipos</label>
+            {{-- Cambiar a select simple --}}
+            <select name="equipo_punteros" id="equipo_punteros" class="form-control select2-equipo" onchange="filtrarPunterosPorEquipo()">
+                <option value="">Todos</option>
+                @foreach ($equipos as $eq)
+                    <option value="{{ $eq->id }}"
+                        {{ isset($equipoSeleccionado) && $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
+                        {{ $eq->descripcion }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-    <div class="col-md-4 text-right">
-        <button class="btn btn-primary" id="btnAgregarPuntero">
-            <i class="fas fa-user-plus"></i>
-            Agregar Puntero
-        </button>
+        <div class="col-md-6">
+            <label for="dirigente_punteros" class="form-label fw-bold">Dirigentes</label>
+            {{-- Cambiar a select simple --}}
+            <select name="dirigente_punteros" id="dirigente_punteros" class="form-control select2-dirigente" onchange="filtrarPunterosPorDirigente()">
+                <option value="">Todos</option>
+                @foreach ($dirigentes as $dir)
+                    <option value="{{ $dir->id }}"
+                        {{ isset($dirigenteSeleccionado) && $dirigenteSeleccionado == $dir->id ? 'selected' : '' }}>
+                        {{ $dir->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
     </div>
-</div>
+    
+    <div class="row mb-2">
+        <div class="col-md-2">
+            <label>Cédula</label>
+            <input type="text" name="cedula" id="puntero_cedula_lista" class="form-control" required>
+            <small class="text-danger" id="error-cedula"></small>
+        </div>
+        <div class="col-md-4">
+            <label>Nombre</label>
+            <input type="text" name="nombre" id="puntero_nombre_lista" class="form-control" required>
+            <small class="text-danger" id="error-nombre"></small>
+        </div>
+        <div class="col-md-2">
+            <label>Teléfono</label>
+            <input type="text" name="telefono" id="puntero_telefono_lista" class="form-control">
+            <small class="text-danger" id="error-telefono"></small>
+        </div>
+        <div class="col-md-4">
+            <label>Barrio</label>
+            <input type="text" name="barrio" id="puntero_barrio_lista" class="form-control">
+            <small class="text-danger" id="error-barrio"></small>
+        </div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-md-4">
+            <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+        </div>
+    </div>
+</form>
 
 <h4 class="mb-3">
     Total General de Votos:
@@ -90,57 +118,46 @@
     </div>
 </div>
 
-<!-- Modal agregar puntero -->
-<div class="modal fade" id="modalAgregarPunteroLista" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Agregar Puntero</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="formAgregarPunteroLista">
-                    @csrf
-                    <input type="hidden" name="id_dirigente" id="puntero_id_dirigente_lista"
-                        value="{{ $dirigenteId ?? '' }}">
-                    <input type="hidden" name="id_equipo" id="puntero_id_equipo_lista"
-                        value="{{ $equipoSeleccionado ?? '' }}">
-
-                    <div class="form-group">
-                        <label>Cédula</label>
-                        <input type="text" name="cedula" id="puntero_cedula_lista" class="form-control" required>
-                        <small class="text-danger" id="error-puntero-cedula"></small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" name="nombre" id="puntero_nombre_lista" class="form-control" required>
-                        <small class="text-danger" id="error-puntero-nombre"></small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="text" name="telefono" id="puntero_telefono_lista" class="form-control">
-                        <small class="text-danger" id="error-puntero-telefono"></small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Barrio</label>
-                        <input type="text" name="barrio" id="puntero_barrio_lista" class="form-control">
-                        <small class="text-danger" id="error-puntero-barrio"></small>
-                    </div>
-
-                    <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
-                        <i class="fas fa-save"></i> Guardar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     $(document).ready(function() {
+        // Inicializar Select2 para equipos
+        // if ($('#equipo_punteros').length) {
+        //     $('#equipo_punteros').select2({
+        //         width: '100%',
+        //         dropdownParent: $('#modalPunterosLista'),
+        //         allowClear: true,
+        //         minimumResultsForSearch: 1,
+        //         placeholder: 'Selecciona un equipo...',
+        //         language: {
+        //             noResults: function() {
+        //                 return "No se encontraron resultados";
+        //             },
+        //             searching: function() {
+        //                 return "Buscando...";
+        //             }
+        //         }
+        //     });
+        // }
+        
+        // Inicializar Select2 para dirigentes
+        // if ($('#dirigente_punteros').length) {
+        //     $('#dirigente_punteros').select2({
+        //         width: '100%',
+        //         dropdownParent: $('#modalPunterosLista'),
+        //         allowClear: true,
+        //         minimumResultsForSearch: 1,
+        //         placeholder: 'Selecciona un dirigente...',
+        //         language: {
+        //             noResults: function() {
+        //                 return "No se encontraron resultados";
+        //             },
+        //             searching: function() {
+        //                 return "Buscando...";
+        //             }
+        //         }
+        //     });
+        // }
+        
         // Inicializar DataTable
         if ($.fn.DataTable && $('#punteros-lista-table').length) {
             $('#punteros-lista-table').DataTable({
@@ -148,28 +165,17 @@
                 dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
                     "<'row'<'col-sm-12'tr>>" +
                     "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [{
-                        extend: 'excelHtml5',
-                        className: 'btn btn-info btn-sm',
-                        text: '<i class="fas fa-file-excel"></i> Excel',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        className: 'btn btn-danger btn-sm',
-                        text: '<i class="fas fa-file-pdf"></i> PDF',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                        }
-                    },
+                buttons: [
                     {
                         extend: 'print',
                         className: 'btn btn-secondary btn-sm',
                         text: '<i class="fas fa-print"></i> Imprimir',
                         exportOptions: {
                             columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                        },
+                        customize: function(win) {
+                            $(win.document.body).find('table').addClass('table table-bordered');
+                            $(win.document.body).find('h1').css('text-align', 'center');
                         }
                     }
                 ],
@@ -180,11 +186,16 @@
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "Todos"]
-                ]
+                ],
+                columnDefs: [{
+                    targets: [8],
+                    orderable: false,
+                    searchable: false
+                }]
             });
         }
 
-        // Buscar por cédula en el modal
+        // Buscar por cédula en el formulario
         $('#puntero_cedula_lista').on('blur', function() {
             buscarPunteroPorCedulaLista();
         });
@@ -216,22 +227,17 @@
         $('#btnGuardarPunteroLista').on('click', function() {
             guardarPunteroListaAjax();
         });
-
-        // Abrir modal
-        $('#btnAgregarPuntero').on('click', function() {
-            let equipoId = $('#equipo_punteros').val();
-            let dirigenteId = $('#dirigente_punteros').val();
-
+        
+        // Cuando se cambie el equipo, actualizar el hidden
+        $('#equipo_punteros').on('change', function() {
+            let equipoId = $(this).val();
             $('#puntero_id_equipo_lista').val(equipoId);
+        });
+        
+        // Cuando se cambie el dirigente, actualizar el hidden
+        $('#dirigente_punteros').on('change', function() {
+            let dirigenteId = $(this).val();
             $('#puntero_id_dirigente_lista').val(dirigenteId);
-
-            $('#formAgregarPunteroLista')[0].reset();
-            limpiarErroresPuntero();
-            $('#modalAgregarPunteroLista').modal('show');
-
-            setTimeout(function() {
-                $('#puntero_cedula_lista').focus();
-            }, 500);
         });
     });
 
@@ -244,6 +250,11 @@
                 $('#puntero_nombre_lista').val(response.data.nombre ?? '');
                 $('#puntero_telefono_lista').val(response.data.telefono ?? '');
                 $('#puntero_barrio_lista').val(response.data.direccion ?? '');
+            } else {
+                // Opcional: limpiar campos si no se encuentra
+                $('#puntero_nombre_lista').val('');
+                $('#puntero_telefono_lista').val('');
+                $('#puntero_barrio_lista').val('');
             }
         });
     }
@@ -281,8 +292,6 @@
             data: formData,
             dataType: 'json',
             success: function(response) {
-                $('#modalAgregarPunteroLista').modal('hide');
-
                 Swal.fire({
                     icon: 'success',
                     title: 'Éxito',
@@ -291,6 +300,10 @@
                     showConfirmButton: false
                 });
 
+                // Limpiar formulario
+                $('#formAgregarPunteroLista')[0].reset();
+                $('#puntero_cedula_lista').focus();
+                
                 // Recargar la lista
                 filtrarPunterosGeneral();
 
@@ -299,11 +312,17 @@
             error: function(xhr) {
                 btnGuardar.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar');
 
-                if (xhr.status === 422) {
+                if (xhr.status === 422 && xhr.responseJSON.errors) {
+                    // Mostrar errores de validación
+                    $.each(xhr.responseJSON.errors, function(key, value) {
+                        $(`#error-${key}`).text(value[0]);
+                        $(`#puntero_${key}_lista`).addClass('is-invalid');
+                    });
+                    
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: xhr.responseJSON?.message || 'Error de validación'
+                        title: 'Error de validación',
+                        text: 'Por favor verifica los campos marcados'
                     });
                 } else {
                     Swal.fire({
@@ -361,8 +380,6 @@
         cargarPunterosLista(url);
     }
 
-
-
     function cargarPunterosLista(url) {
         $('#contenidoPunteros').html(
             '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando punteros...</p></div>'
@@ -371,10 +388,13 @@
         $.get(url, function(data) {
             $('#contenidoPunteros').html(data);
         }).fail(function(xhr) {
+            console.error('Error cargando punteros:', xhr);
             $('#contenidoPunteros').html(
                 '<div class="alert alert-danger text-center p-4">' +
                 '<i class="fas fa-exclamation-circle fa-2x mb-3"></i>' +
                 '<p>Error cargando punteros. Intente nuevamente.</p>' +
+                '<button class="btn btn-sm btn-outline-danger mt-2" onclick="filtrarPunterosGeneral()">' +
+                '<i class="fas fa-sync"></i> Reintentar</button>' +
                 '</div>'
             );
         });
@@ -438,6 +458,7 @@
     }
 
     function abrirModalVotantesPuntero(punteroId, nombre) {
+        $('#votante_id_puntero').val(punteroId);
         // Llamar a la función cargarVotantes que está en el archivo principal
         if (typeof window.cargarVotantes === 'function') {
             window.cargarVotantes(punteroId, nombre);
@@ -447,8 +468,52 @@
             if (typeof cargarVotantes === 'function') {
                 cargarVotantes(punteroId, nombre);
             } else {
-                alert('Error: No se puede cargar la función de votantes');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se puede cargar la función de votantes'
+                });
             }
         }
+    }
+    
+    // Función para buscar por cédula de votante (si es necesaria)
+    function buscarPorCedulaV() {
+        let cedula = $('#votante_cedula').val().trim();
+        if (cedula.length < 3) return;
+
+        $.get("{{ url('votante/buscar-por-cedula') }}/" + cedula, function(response) {
+            if (!response.encontrado) {
+                $('#votante_nombre').val('');
+                $('#direccion').val('');
+                $('#mesa').val('');
+                $('#orden').val('');
+                $('#partido').val('');
+                $('#escuela').val('');
+                $('#ciudad').val('');
+                $('#departamento').val('');
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Cédula no encontrada',
+                    text: 'No se encontró ningún votante con la cédula ingresada',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                });
+                return;
+            }
+
+            let v = response.data;
+            $('#votante_nombre').val(v.nombre);
+            $('#direccion').val(v.direccion);
+            $('#mesa').val(v.mesa);
+            $('#orden').val(v.orden);
+            $('#partido').val(v.partido);
+            $('#escuela').val(v.escuela);
+            $('#ciudad').val(v.ciudad);
+            $('#departamento').val(v.departamento);
+        });
     }
 </script>

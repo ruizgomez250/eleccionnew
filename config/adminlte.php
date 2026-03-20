@@ -312,8 +312,8 @@ return [
             'icon_color' => 'info',
             'classes'    => 'custom-icon-box custom-icon-box-blue',
             'content'    => '<i class="fas fa-users"></i>',
-            'can'        => 'Equipo',
-            'url'        => 'home',
+            'can'        => 'Menu Equipo',
+            'url'        => 'equipo',
         ],
 
         [
@@ -322,7 +322,7 @@ return [
             'icon_color' => 'warning',
             'classes'    => 'custom-icon-box custom-icon-box-warning',
             'content'    => '<i class="fas fa-user-tie"></i>',
-            'can'        => 'Dirigente',
+            'can'        => 'Menu Dirigente',
             'url'        => '/dirigente/create',
         ],
 
@@ -332,7 +332,7 @@ return [
             'icon_color' => 'light',
             'classes'    => 'custom-icon-box custom-icon-box-dark',
             'content'    => '<i class="fas fa-user-friends"></i>',
-            'can'        => 'Puntero',
+            'can'        => 'Menu Puntero',
             'url'        => '/puntero/create',
         ],
         [

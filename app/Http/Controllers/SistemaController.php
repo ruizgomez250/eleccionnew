@@ -47,17 +47,23 @@ class SistemaController extends Controller
                 $sistema->nombre = $request->nombre;
                 $sistema->id_ciudad_electoral = $request->id_ciudad_electoral;
                 $sistema->tipo = $request->tipo;
+                if ($request->candidatosup != 0) {
+                    $sistema->idusuario = $request->candidatosup;
+                }
                 $sistema->save();
 
                 DB::commit();
                 return back()->with('success', 'Sistema actualizado correctamente');
             } else {
-
+                $idaguardar=Auth::id();
+                if ($request->candidatosup != 0) {
+                    $idaguardar = $request->candidatosup;
+                }
                 // 🔹 Crear sistema
                 $sistema = Sistema::create([
                     'nombre' => $request->nombre,
                     'id_ciudad_electoral' => $request->id_ciudad_electoral,
-                    'idusuario' => Auth::id(),
+                    'idusuario' => $idaguardar,
                     'tipo' => $request->tipo
                 ]);
 
@@ -129,8 +135,7 @@ class SistemaController extends Controller
     {
         try {
             $userId = Auth::id();
-            $userSistema = Auth::user()->sistema_id;
-
+            $userSistema = Auth::user()->sistema;
             // 🔹 Obtener los sistemas permitidos según el usuario
             $sistemas = Sistema::with(['equipos.dirigentes.punteros.votantes', 'ciudad'])
                 ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
@@ -185,9 +190,35 @@ class SistemaController extends Controller
             return back()->with('error', 'Ocurrió un error al cargar las ciudades: ' . $e->getMessage());
         }
     }
+    // public function sistemasPorDistrito($idCiudad)
+    // {
+    //     $userId = Auth::id();
+    //     $userSistema = Auth::user()->sistema;
+    //     // 🔹 Buscamos la ciudad electoral por ID
+    //     $ciudad = CiudadElectoral::find($idCiudad);
+    //     if (!$ciudad) {
+    //         return response()->json([
+    //             'error' => 'Distrito no encontrado'
+    //         ], 404);
+    //     }
+
+    //     // 🔹 Solo los sistemas que el usuario puede ver
+    //     if (in_array($userId, [1, 4])) {
+    //         $sistemas = Sistema::where('id_ciudad_electoral', $ciudad->id)->get();
+    //     } else {
+    //         $sistemas = Sistema::where('id_ciudad_electoral', $ciudad->id)
+    //             ->where('idusuario', $userId)
+    //             ->orWhere('id', $userSistema)
+    //             ->get();
+    //     }
+
+    //     // 🔹 Retornamos solo el HTML parcial para el modal
+    //     return view('ciudades.partials.sistemas_modal', compact('sistemas'))->render();
+    // }
     public function sistemasPorDistrito($idCiudad)
     {
         $userId = Auth::id();
+        $userSistema = Auth::user()->sistema;
 
         // 🔹 Buscamos la ciudad electoral por ID
         $ciudad = CiudadElectoral::find($idCiudad);
@@ -197,16 +228,43 @@ class SistemaController extends Controller
             ], 404);
         }
 
-        // 🔹 Solo los sistemas que el usuario puede ver
+        // 🔹 Sistemas visibles según usuario
         if (in_array($userId, [1, 4])) {
             $sistemas = Sistema::where('id_ciudad_electoral', $ciudad->id)->get();
         } else {
             $sistemas = Sistema::where('id_ciudad_electoral', $ciudad->id)
-                ->where('idusuario', $userId)
+                ->where(function ($q) use ($userId, $userSistema) {
+                    $q->where('idusuario', $userId)
+                        ->orWhere('id', $userSistema);
+                })
                 ->get();
         }
 
-        // 🔹 Retornamos solo el HTML parcial para el modal
-        return view('ciudades.partials.sistemas_modal', compact('sistemas'))->render();
+        // 🔹 Calculamos totales por sistema
+        $totalesSistemas = [];
+
+        foreach ($sistemas as $sistema) {
+
+            $totalDirigentes = $sistema->equipos->flatMap->dirigentes->count();
+
+            $totalPunteros = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
+                return $d->punteros->count();
+            });
+
+            $totalVotantes = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
+                return $d->punteros->sum(function ($p) {
+                    return $p->votantes->count();
+                });
+            });
+
+            $totalesSistemas[$sistema->id] = [
+                'dirigentes' => $totalDirigentes,
+                'punteros' => $totalPunteros,
+                'votantes' => $totalVotantes,
+            ];
+        }
+
+        // 🔹 Retornamos la vista con sistemas + totales
+        return view('ciudades.partials.sistemas_modal', compact('sistemas', 'totalesSistemas'))->render();
     }
 }
