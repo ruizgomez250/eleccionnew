@@ -243,8 +243,9 @@
 
     function buscarPunteroPorCedulaLista() {
         let cedula = $('#puntero_cedula_lista').val().trim();
+        //console.log(cedula.'cedula');
         if (cedula.length < 3) return;
-
+        
         $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
             if (response.encontrado) {
                 $('#puntero_nombre_lista').val(response.data.nombre ?? '');

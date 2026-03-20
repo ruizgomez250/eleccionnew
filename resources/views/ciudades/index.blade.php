@@ -226,21 +226,19 @@
         </div>
     </div> --}}
     {{-- MODAL VOTANTES --}}
-    <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-labelledby="tituloVotantes"
-        aria-hidden="true">
+    <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="tituloVotantes">
                         <i class="fas fa-users"></i> Votantes del Puntero
                     </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" data-dismiss="modal">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class=" p-4">
-                    <form id="formAgregarVotante" method="POST">
+                <div class="p-4">
+                    <form id="formAgregarVotante">
                         @csrf
                         <input type="hidden" name="idpuntero" id="votante_id_puntero">
                         <input type="hidden" name="idusuario" value="{{ auth()->id() }}">
@@ -294,15 +292,12 @@
                             </div>
                         </div>
 
-                        <button class="btn btn-primary mt-2">
+                        <button type="submit" class="btn btn-primary mt-2">
                             <i class="fas fa-save"></i> Guardar Votante
                         </button>
                     </form>
                 </div>
-
                 <div class="modal-body" id="contenidoVotantes">
-
-
                     <div class="text-center p-4">
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
                         <p class="mt-2">Cargando votantes...</p>
@@ -494,8 +489,103 @@
                     }
                 });
             });
-        });
+            $('#votante_cedula').on('blur', function() {
+                buscarVotantePorCedula();
+            });
 
+            // Buscar votante por cédula (Enter)
+            $('#votante_cedula').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    buscarVotantePorCedula();
+                    $('#tipo_votante').focus();
+                }
+            });
+        });
+        // Función para buscar votante por cédula (agregar en index.blade)
+        function buscarVotantePorCedula() {
+            let cedula = $('#votante_cedula').val().trim();
+
+            // Validar que la cédula tenga al menos 3 dígitos
+            if (cedula.length < 3) {
+                if (cedula.length > 0 && cedula.length < 3) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Cédula muy corta',
+                        text: 'Ingresa al menos 3 dígitos para buscar',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+                return;
+            }
+
+            // Mostrar loading en el campo de nombre
+            $('#votante_nombre').val('Buscando...');
+
+            $.get("{{ url('votante/buscar-por-cedula') }}/" + cedula, function(response) {
+                if (!response.encontrado) {
+                    // Limpiar campos
+                    limpiarCamposVotante();
+
+                    // Mostrar mensaje de votante no encontrado
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Votante no encontrado',
+                        text: `No se encontró ningún votante con la cédula ${cedula}`,
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                    return;
+                }
+
+                let v = response.data;
+                $('#votante_nombre').val(v.nombre);
+                $('#direccion').val(v.direccion || '');
+                $('#mesa').val(v.mesa || '');
+                $('#orden').val(v.orden || '');
+                $('#partido').val(v.partido || '');
+                $('#escuela').val(v.escuela || '');
+                $('#ciudad').val(v.ciudad || '');
+                $('#departamento').val(v.departamento || '');
+
+                // Mensaje de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Votante encontrado',
+                    text: `Nombre: ${v.nombre}`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }).fail(function(error) {
+                console.error('Error buscando votante:', error);
+                limpiarCamposVotante();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al buscar la cédula. Intente nuevamente.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            });
+        }
+
+        function limpiarCamposVotante() {
+            $('#votante_nombre').val('');
+            $('#direccion').val('');
+            $('#mesa').val('');
+            $('#orden').val('');
+            $('#partido').val('');
+            $('#escuela').val('');
+            $('#ciudad').val('');
+            $('#departamento').val('');
+        }
         // Función para actualizar el contador de punteros en la tabla de dirigentes
         // function actualizarContadorPunteros(dirigenteId) {
         //     // Verificar si existe la tabla de dirigentes (puede no estar en todas las vistas)
@@ -722,7 +812,7 @@
             );
 
             $("#modalDirigentes").modal("show");
-            
+
 
             let url = `{{ url('/') }}/sistemas/${sistema}/dirigentes`;
 
@@ -783,7 +873,7 @@
                 );
             });
         });
-       
+
 
         // Función para abrir modal de punteros
         // function abrirModalPunteros(dirigenteId, nombreDirigente) {
