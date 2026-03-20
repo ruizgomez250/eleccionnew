@@ -410,23 +410,13 @@
             });
             $('#formAgregarVotante').on('submit', function(e) {
                 e.preventDefault();
-
                 let formData = $(this).serialize();
-                let submitBtn = $(this).find('button[type="submit"]'); // Definir submitBtn correctamente
-
-                // Obtener el nombre del puntero (debes tenerlo en algún lado)
+                let submitBtn = $(this).find('button[type="submit"]');
                 let nombrePuntero = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '')
-                    .trim();
-
-                // Alternativa: si tienes el nombre en un data attribute o variable global
-                if (!nombrePuntero || nombrePuntero === 'Votantes del Puntero:') {
-                    nombrePuntero = ''; // O un valor por defecto
-                }
-
-                console.log('Datos a enviar:', formData);
+            .trim();
 
                 submitBtn.prop('disabled', true).html(
-                    '<i class="fas fa-spinner fa-spin"></i> Guardando...');
+                '<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
                 $.ajax({
                     url: "{{ route('votante.store.ajax') }}",
@@ -436,51 +426,28 @@
                         'X-CSRF-TOKEN': $('input[name="_token"]').val()
                     },
                     success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Éxito',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
 
-                            // Limpiar el formulario
-                            $('#formAgregarVotante')[0].reset();
+                        // ✅ LIMPIAR EL FORMULARIO COMPLETAMENTE
+                        limpiarFormularioVotante();
 
-                            // Opcional: Limpiar campos específicos si es necesario
-                            // $('#votante_cedula, #votante_nombre, #direccion, #mesa, #orden, #partido, #escuela, #ciudad, #departamento').val('');
-
-                            // Recargar la tabla de votantes
-                            setTimeout(function() {
-                                if (response.punteroId) {
-                                    cargarVotantes(response.punteroId, nombrePuntero);
-                                } else {
-                                    // Si no viene punteroId en la respuesta, obtenerlo del campo oculto
-                                    let punteroId = $('#votante_id_puntero').val();
-                                    cargarVotantes(punteroId, nombrePuntero);
-                                }
-                            }, 100);
-                        }
+                        setTimeout(() => {
+                            let punteroId = $('#votante_id_puntero').val();
+                            window.cargarVotantes(punteroId, nombrePuntero);
+                        }, 100);
                     },
                     error: function(xhr) {
-                        let errorMessage = 'Error al guardar el votante';
-
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = '<ul>';
-                            $.each(xhr.responseJSON.errors, function(key, value) {
-                                errorMessage += '<li>' + value + '</li>';
-                            });
-                            errorMessage += '</ul>';
-                        }
-
+                        let errorMsg = xhr.responseJSON?.message || 'Error al guardar';
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            html: errorMessage,
-                            confirmButtonColor: '#dc3545'
+                            text: errorMsg
                         });
                     },
                     complete: function() {
@@ -488,6 +455,48 @@
                             '<i class="fas fa-save"></i> Guardar Votante');
                     }
                 });
+            });
+
+            // Función para limpiar el formulario de votantes
+            function limpiarFormularioVotante() {
+                $('#votante_cedula').val('');
+                $('#votante_nombre').val('');
+                $('#direccion').val('');
+                $('#mesa').val('');
+                $('#orden').val('');
+                $('#partido').val('');
+                $('#escuela').val('');
+                $('#ciudad').val('');
+                $('#departamento').val('');
+                $('#tipo_votante').val('seguro');
+
+                // Opcional: Quitar clases de error si las hay
+                $('#votante_cedula').removeClass('is-invalid');
+
+                // Enfocar el campo de cédula para la siguiente entrada
+                $('#votante_cedula').focus();
+            }
+
+            // Buscar votante por cédula (blur)
+            $('#votante_cedula').on('blur', function() {
+                buscarVotantePorCedula();
+            });
+
+            // Buscar votante por cédula (Enter)
+            $('#votante_cedula').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    buscarVotantePorCedula();
+                    $('#tipo_votante').focus();
+                }
+            });
+
+            // También puedes limpiar cuando se cierra el modal
+            $('#modalVotantes').on('hidden.bs.modal', function() {
+                limpiarFormularioVotante();
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#votantes-table')) {
+                    $('#votantes-table').DataTable().destroy();
+                }
             });
             $('#votante_cedula').on('blur', function() {
                 buscarVotantePorCedula();
