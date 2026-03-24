@@ -2,24 +2,31 @@
     <div class="row mb-2">
         <div class="col-md-6">
             <input type="hidden" id="sistema_id" value="{{ $sistemaId }}">
-            
+
             {{-- Cambiar a un select simple para mejor control --}}
-            <label class="form-label fw-bold">Equipos</label>
-            <select name="equipo_id_dir" id="equipo_id_dir" class="form-control" onchange="filtrarDirigentes()">
-                <option value="">Todos</option>
-                @foreach ($equipos as $eq)
-                    <option value="{{ $eq->id }}" {{ $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
-                        {{ $eq->descripcion }}
-                    </option>
-                @endforeach
-            </select>
+            <div class="input-group">
+                <label class="form-label fw-bold">Equipos: </label>
+                <select name="equipo_id_dir" id="equipo_id_dir" class="form-control" onchange="filtrarDirigentes()">
+                    <option value="">Todos</option>
+                    @foreach ($equipos as $eq)
+                        <option value="{{ $eq->id }}" {{ $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
+                            {{ $eq->descripcion }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-info" onclick="abrirModalEquipos()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-    
+
     <div class="row mb-2">
         <div class="col-md-2">
             <label>Cédula</label>
-            <input type="text" name="cedula" class="form-control" required>
+            <input type="text" name="cedula" class="form-control" required autofocus>
             <small class="text-danger" id="error-cedula"></small>
         </div>
         <div class="col-md-4">
@@ -46,7 +53,50 @@
         </div>
     </div>
 </form>
+{{-- MODAL DE BÚSQUEDA DE EQUIPOS --}}
+<div class="modal fade" id="modalEquipos" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-search"></i> Buscar Equipo
+                </h5>
+                {{-- <button type="button" class="close text-white" data-dismiss="modal">&times;</button> --}}
+            </div>
 
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table id="tablaEquipos" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($equipos as $eq)
+                                <tr>
+                                    <td>{{ $eq->id }}</td>
+                                    <td>{{ $eq->descripcion }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-success btn-sm"
+                                            onclick="seleccionarEquipo({{ $eq->id }}, '{{ addslashes($eq->descripcion) }}')">
+                                            <i class="fas fa-check"></i> Seleccionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <h4 class="mb-3">
     Total General de Votos:
     <span class="badge badge-success">
@@ -58,7 +108,7 @@
     <div class="card-body">
         <table id="dirigentes-table" class="table table-striped table-bordered">
             <thead>
-                 <tr>
+                <tr>
                     <th>#</th>
                     <th>Cédula</th>
                     <th>Nombre</th>
@@ -103,10 +153,10 @@
 
 <script>
     $(document).ready(function() {
-        
+
         // Inicializar Select2 cuando se abre el modal (esto va en la página principal, no aquí)
         // Pero como este script se carga por AJAX, necesitamos inicializar después de cargar
-        
+
         // Inicializar DataTable
         $('#dirigentes-table').DataTable({
             destroy: true,
@@ -145,7 +195,7 @@
                 searchable: false
             }]
         });
-        
+
         // Inicializar Select2 después de cargar el contenido
         // if ($('#equipo_id_dir').length) {
         //     $('#equipo_id_dir').select2({
@@ -163,7 +213,7 @@
         //         }
         //     });
         // }
-        
+
         //buscador de dirigentes
         $('#formAgregarDirigente input[name="cedula"]').on('blur', function() {
             buscarPorCedula(
@@ -173,14 +223,14 @@
                 '#formAgregarDirigente input[name="barrio"]'
             );
         });
-        
+
         // Enter funciona como TAB y al final envía el formulario
         $('#formAgregarDirigente').on('keydown', 'input', function(e) {
             if (e.key === "Enter") {
                 e.preventDefault();
                 let inputs = $('#formAgregarDirigente').find('input:visible');
                 let index = inputs.index(this);
-                
+
                 if (index === inputs.length - 1) {
                     guardarDirigenteAjax();
                 } else {
@@ -188,19 +238,19 @@
                 }
             }
         });
-        
+
         // Guardar con AJAX
         $('#btnGuardarDirigente').on('click', function() {
             guardarDirigenteAjax();
         });
     });
-    
+
     function guardarDirigenteAjax() {
         let btnGuardar = $('#btnGuardarDirigente');
         btnGuardar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
-        
+
         limpiarErrores();
-        
+
         let formData = {
             cedula: $('input[name="cedula"]').val(),
             nombre: $('input[name="nombre"]').val(),
@@ -210,7 +260,7 @@
             sistema_id: $('#sistema_id').val(),
             _token: '{{ csrf_token() }}'
         };
-        
+
         $.ajax({
             url: '{{ route('dirigentes.store.ajax') }}',
             type: 'POST',
@@ -224,25 +274,25 @@
                     timer: 2000,
                     showConfirmButton: false
                 });
-                
+
                 // Limpiar formulario
                 $('#formAgregarDirigente')[0].reset();
-                
+
                 // Recargar la lista
                 filtrarDirigentes();
-                
+
                 btnGuardar.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar');
             },
             error: function(xhr) {
                 btnGuardar.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar');
-                
+
                 if (xhr.status === 422 && xhr.responseJSON.errors) {
                     // Mostrar errores de validación en cada campo
                     $.each(xhr.responseJSON.errors, function(key, value) {
                         $(`#error-${key}`).text(value[0]);
                         $(`input[name="${key}"]`).addClass('is-invalid');
                     });
-                    
+
                     Swal.fire({
                         icon: 'error',
                         title: 'Error de validación',
@@ -258,16 +308,16 @@
             }
         });
     }
-    
+
     function limpiarErrores() {
         $('.text-danger').text('');
         $('.is-invalid').removeClass('is-invalid');
     }
-    
+
     function buscarPorCedula(inputCedula, inputNombre, inputTelefono, inputBarrio) {
         let cedula = $(inputCedula).val().trim();
         if (cedula.length < 3) return;
-        
+
         $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
             if (response.encontrado) {
                 $(inputNombre).val(response.data.nombre);
@@ -276,20 +326,56 @@
             }
         });
     }
-    
+
     function filtrarDirigentes() {
         let equipoId = $('#equipo_id_dir').val();
         let sistemaId = $('#sistema_id').val();
         let url = `{{ url('/') }}/sistemas/${sistemaId}/dirigentes?equipo_id=${equipoId}`;
-        
+
         $("#contenidoDirigentes").html(
             '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>');
-        
+
         $.get(url, function(data) {
             $("#contenidoDirigentes").html(data);
         }).fail(function(xhr) {
-            console.log(xhr.responseText);
+           // console.log(xhr.responseText);
             $("#contenidoDirigentes").html('<div class="alert alert-danger">Error cargando dirigentes</div>');
         });
     }
+
+    function abrirModalEquipos() {
+        $('#modalEquipos').modal('show');
+
+        // Inicializar DataTable de equipos solo si no está inicializado
+        if (!$.fn.DataTable.isDataTable('#tablaEquipos')) {
+            $('#tablaEquipos').DataTable({
+                responsive: true,
+                pageLength: 10,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                    search: "Buscar equipo:",
+                    searchPlaceholder: "Nombre, descripción..."
+                },
+                lengthMenu: [
+                    [5, 10, 25, 50, -1],
+                    [5, 10, 25, 50, "Todos"]
+                ],
+                order: [
+                    [1, 'asc']
+                ]
+            });
+        }
+    }
+    function seleccionarEquipo(id, descripcion) {
+    // Seleccionar la opción en el select
+    $('#equipo_id_dir').val(id);
+    equipoSeleccionadoActual = id;
+    
+    // Cerrar el modal
+    $('#modalEquipos').modal('hide');
+    
+    
+    // DISPARAR EL FILTRO
+    $('#equipo_id_dir').trigger('change');
+}
 </script>

@@ -156,75 +156,6 @@
         </div>
     </div>
 
-    <!-- Modal para punteros -->
-    {{-- <div class="modal fade" id="modalPunteros" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-
-                <!-- Header del modal -->
-                <div class="modal-header bg-success">
-                    <h5 class="modal-title">Punteros del dirigente</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-
-                <!-- Body del modal -->
-                <div class="modal-body">
-
-                    <!-- Formulario para agregar puntero -->
-                    <form id="formAgregarPuntero" class="mb-3">
-                        @csrf
-                        <!-- Hidden del id_dirigente - se llena cuando se abre el modal -->
-                        <input type="hidden" name="id_dirigente" id="puntero_id_dirigente" value="">
-
-                        <!-- El id_equipo se puede obtener del dirigente o del contexto -->
-                        <input type="hidden" name="id_equipo" id="puntero_id_equipo" value="">
-
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <label>Cédula</label>
-                                <input type="text" name="cedula" id="puntero_cedula" class="form-control" required>
-                            </div>
-                            <div class="form-group col-md-9">
-                                <label>Nombre</label>
-                                <input type="text" name="nombre" id="puntero_nombre" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Teléfono</label>
-                                <input type="text" name="telefono" id="puntero_telefono" class="form-control">
-                            </div>
-                            <div class="form-group col-md-8">
-                                <label>Barrio</label>
-                                <input type="text" name="barrio" id="puntero_barrio" class="form-control">
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary" id="btnGuardarPuntero">
-                            <i class="fas fa-save"></i> Guardar Puntero
-                        </button>
-                    </form>
-
-                    <hr>
-
-                    <!-- Tabla de punteros existentes -->
-                    <table id="punteros-table" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%">#</th>
-                                <th>Cédula</th>
-                                <th>Nombre</th>
-                                <th>Teléfono</th>
-                                <th>Barrio</th>
-                                <th style="width: 10%">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div> --}}
     {{-- MODAL VOTANTES --}}
     <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -324,6 +255,8 @@
                 max-width: 1140px;
             }
         }
+
+       
     </style>
 @stop
 
@@ -413,10 +346,10 @@
                 let formData = $(this).serialize();
                 let submitBtn = $(this).find('button[type="submit"]');
                 let nombrePuntero = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '')
-            .trim();
+                    .trim();
 
                 submitBtn.prop('disabled', true).html(
-                '<i class="fas fa-spinner fa-spin"></i> Guardando...');
+                    '<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
                 $.ajax({
                     url: "{{ route('votante.store.ajax') }}",
@@ -511,6 +444,8 @@
                 }
             });
         });
+        localStorage.setItem('modaldirigenteAbierto', 'false');
+
         // Función para buscar votante por cédula (agregar en index.blade)
         function buscarVotantePorCedula() {
             let cedula = $('#votante_cedula').val().trim();
@@ -595,23 +530,6 @@
             $('#ciudad').val('');
             $('#departamento').val('');
         }
-        // Función para actualizar el contador de punteros en la tabla de dirigentes
-        // function actualizarContadorPunteros(dirigenteId) {
-        //     // Verificar si existe la tabla de dirigentes (puede no estar en todas las vistas)
-        //     if ($.fn.DataTable && $.fn.DataTable.isDataTable('#dirigentes-table')) {
-        //         // Hacer una petición para obtener el nuevo conteo
-        //         $.get(`/dirigente/${dirigenteId}/punteros/count`, function(response) {
-        //             // Buscar la fila que contiene el botón de este dirigente
-        //             let button = $(`button[onclick*="abrirModalPunteros(${dirigenteId},"]`);
-        //             if (button.length) {
-        //                 button.closest('tr').find('td:eq(6) .badge').text(response.count);
-        //             }
-        //         }).fail(function() {
-        //             console.log('No se pudo actualizar el contador');
-        //         });
-        //     }
-        // }
-
 
         // Mostrar mensaje de éxito si existe
         const successAlert = @json(session('success'));
@@ -827,7 +745,7 @@
 
             $.get(url, function(data) {
                 $("#contenidoDirigentes").html(data);
-                inicializarSelect2();
+               // inicializarSelect2();
                 // Reinicializar DataTable si existe en el contenido cargado
                 setTimeout(function() {
                     if ($.fn.DataTable && $('#dirigentes-table').length) {
@@ -883,182 +801,128 @@
             });
         });
 
-
-        // Función para abrir modal de punteros
-        // function abrirModalPunteros(dirigenteId, nombreDirigente) {
-        //     // Abrir modal
-        //     $('#modalPunteros').modal('show');
-
-        //     // Establecer el ID del dirigente en el campo hidden
-        //     $('#puntero_id_dirigente').val(dirigenteId);
-
-        //     // También podemos establecer el equipo si está disponible
-        //     let equipoId = $('#equipo_id').val(); // Si existe un select de equipos
-        //     if (equipoId) {
-        //         $('#puntero_id_equipo').val(equipoId);
-        //     }
-
-        //     // Cambiar el título del modal
-        //     $('#modalPunteros .modal-title')
-        //         .text('Punteros del dirigente: ' + nombreDirigente);
-
-        //     // Limpiar formulario
-        //     $('#formAgregarPuntero')[0].reset();
-
-        //     // Enfocar el campo cédula cuando se abra el modal
-        //     $('#modalPunteros').off('shown.bs.modal').on('shown.bs.modal', function() {
-        //         $('#puntero_cedula').trigger('focus');
-        //     });
-
-        //     // Cargar punteros existentes
-        //     cargarPunteros(dirigenteId);
-        // }
-
-        // Función para cargar punteros
         // Función para cargar punteros
         function cargarPunteros(dirigenteId) {
-            // console.log('Cargando punteros para dirigente:', dirigenteId);
-
             let tbody = $('#punteros-table tbody');
             tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
 
-            // Agregar un parámetro timestamp para evitar cache
             let timestamp = new Date().getTime();
             let url = "{{ url('dirigente') }}/" + dirigenteId + "/punteros?t=" + timestamp;
 
             $.get(url, function(data) {
-                //console.log('Datos recibidos:', data);
-
                 tbody.empty();
 
                 if (data.length === 0) {
                     tbody.html('<tr><td colspan="6" class="text-center">No hay punteros registrados</td></tr>');
 
-                    // Destruir DataTable si existe
                     if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
                         $('#punteros-table').DataTable().destroy();
-                        $('#punteros-table').empty(); // Limpiar completamente
+                        $('#punteros-table').empty();
                     }
                     return;
                 }
 
-                // Construir el HTML de la tabla
                 let html = '';
                 data.forEach(function(puntero, index) {
                     html += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${puntero.cedula}</td>
-                    <td>${puntero.nombre}</td>
-                    <td>${puntero.telefono ?? ''}</td>
-                    <td>${puntero.barrio ?? ''}</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${puntero.cedula}</td>
+                        <td>${puntero.nombre}</td>
+                        <td>${puntero.telefono ?? ''}</td>
+                        <td>${puntero.barrio ?? ''}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
                 });
 
                 tbody.html(html);
 
-                // Destruir DataTable anterior si existe
                 if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
                     $('#punteros-table').DataTable().destroy();
-                    $('#punteros-table').empty(); // Limpiar
-                    tbody.html(html); // Volver a poner el HTML
+                    $('#punteros-table').empty();
+                    tbody.html(html);
                 }
 
-                // Inicializar DataTable
                 $('#punteros-table').DataTable({
                     responsive: true,
                     language: {
                         url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                     },
                     pageLength: 5,
-                    destroy: true, // Forzar destrucción si existe
-                    retrieve: false // No recuperar instancia anterior
+                    destroy: true,
+                    retrieve: false
                 });
-
-                //console.log('DataTable reinicializado');
             }).fail(function(error) {
                 console.error('Error cargando punteros:', error);
                 tbody.html(
-                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
+                '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
             });
         }
 
         function cargarPunterosporEq(equipoId) {
-            // console.log('Cargando punteros para dirigente:', dirigenteId);
-
             let tbody = $('#punteros-table tbody');
             tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
 
-            // Agregar un parámetro timestamp para evitar cache
             let timestamp = new Date().getTime();
             let url = "{{ url('equipo') }}/" + equipoId + "/punteros?t=" + timestamp;
 
             $.get(url, function(data) {
-                //console.log('Datos recibidos:', data);
-
                 tbody.empty();
 
                 if (data.length === 0) {
                     tbody.html('<tr><td colspan="6" class="text-center">No hay punteros registrados</td></tr>');
 
-                    // Destruir DataTable si existe
                     if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
                         $('#punteros-table').DataTable().destroy();
-                        $('#punteros-table').empty(); // Limpiar completamente
+                        $('#punteros-table').empty();
                     }
                     return;
                 }
 
-                // Construir el HTML de la tabla
                 let html = '';
                 data.forEach(function(puntero, index) {
                     html += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${puntero.cedula}</td>
-                    <td>${puntero.nombre}</td>
-                    <td>${puntero.telefono ?? ''}</td>
-                    <td>${puntero.barrio ?? ''}</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${puntero.cedula}</td>
+                        <td>${puntero.nombre}</td>
+                        <td>${puntero.telefono ?? ''}</td>
+                        <td>${puntero.barrio ?? ''}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                         </td>
+                    </tr>
+                `;
                 });
 
                 tbody.html(html);
 
-                // Destruir DataTable anterior si existe
                 if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
                     $('#punteros-table').DataTable().destroy();
-                    $('#punteros-table').empty(); // Limpiar
-                    tbody.html(html); // Volver a poner el HTML
+                    $('#punteros-table').empty();
+                    tbody.html(html);
                 }
 
-                // Inicializar DataTable
                 $('#punteros-table').DataTable({
                     responsive: true,
                     language: {
                         url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                     },
                     pageLength: 5,
-                    destroy: true, // Forzar destrucción si existe
-                    retrieve: false // No recuperar instancia anterior
+                    destroy: true,
+                    retrieve: false
                 });
-
-                //console.log('DataTable reinicializado');
             }).fail(function(error) {
                 console.error('Error cargando punteros:', error);
                 tbody.html(
-                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
+                '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
             });
         }
 
@@ -1075,7 +939,6 @@
         }
 
         // Función para eliminar puntero
-        // Función para eliminar puntero
         function eliminarPuntero(punteroId, dirigenteId) {
             Swal.fire({
                 title: '¿Estás seguro?',
@@ -1088,7 +951,6 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Mostrar loading
                     Swal.fire({
                         title: 'Eliminando...',
                         text: 'Por favor espera',
@@ -1108,13 +970,8 @@
                             id: punteroId
                         },
                         success: function(response) {
-                            //console.log('Respuesta éxito:', response);
-
                             if (response.success) {
-                                // Cerrar el loading
                                 Swal.close();
-
-                                // Mostrar mensaje de éxito
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Eliminado',
@@ -1122,22 +979,16 @@
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
-
-                                // ✅ SIMPLEMENTE LLAMAR A LA FUNCIÓN EXISTENTE
-                                //console.log('Recargando punteros para dirigente:', dirigenteId);
                                 cargarPunteros(dirigenteId);
                             }
                         },
                         error: function(xhr) {
                             console.error('Error en eliminación:', xhr);
-
                             Swal.close();
-
                             let mensaje = 'No se pudo eliminar el puntero';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 mensaje = xhr.responseJSON.message;
                             }
-
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
@@ -1162,7 +1013,6 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Mostrar loading
                     Swal.fire({
                         title: 'Eliminando...',
                         text: 'Por favor espera',
@@ -1191,7 +1041,6 @@
                                 showConfirmButton: false
                             });
 
-                            // Recargar la lista usando la función que ya funciona
                             if (typeof filtrarDirigentes === 'function') {
                                 filtrarDirigentes();
                             } else {
@@ -1203,7 +1052,6 @@
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 mensaje = xhr.responseJSON.message;
                             }
-
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
@@ -1216,7 +1064,6 @@
         }
 
         // Exponer funciones globalmente
-        //window.abrirModalPunteros = abrirModalPunteros;
         window.eliminarDirigente = eliminarDirigente;
         window.filtrarPunteros = filtrarPunteros;
         window.eliminarPuntero = eliminarPuntero;
@@ -1235,37 +1082,60 @@
             }
         });
 
-        // $('#modalPunteros').on('hidden.bs.modal', function() {
-        //     if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
-        //         $('#punteros-table').DataTable().destroy();
-        //     }
-        // });
-
         function buscarPorCedula(inputCedula, inputNombre, inputTelefono, inputBarrio) {
-
             let cedula = $(inputCedula).val().trim();
-
             if (cedula.length < 3) return;
 
             $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
-
                 if (response.encontrado) {
-
                     $(inputNombre).val(response.data.nombre);
                     $(inputTelefono).val(response.data.telefono);
                     $(inputBarrio).val(response.data.direccion);
-
                 }
-
             });
         }
 
-        function inicializarSelect2() {
-            $('.select2').select2({
-                width: '100%',
-                allowClear: true
-            });
-        }
+        // MODIFICACIÓN: Función inicializarSelect2 mejorada
+        // function inicializarSelect2() {
+        //     // Verificar si estamos dentro de un modal abierto
+        //     if ($('#modalDirigentes').is(':visible')) {
+        //         // Si el modal de dirigentes está visible, inicializar el select de equipos
+        //         if (typeof inicializarSelect2Equipos === 'function') {
+        //             inicializarSelect2Equipos();
+        //         }
+
+        //         // Inicializar otros selects con clase .select2 dentro del modal
+        //         $('.select2').not('#equipo_id_dir').each(function() {
+        //             if ($(this).data('select2')) {
+        //                 $(this).select2('destroy');
+        //             }
+        //             $(this).select2({
+        //                 width: '100%',
+        //                 allowClear: true,
+        //                 dropdownParent: $('#modalDirigentes .modal-body')
+        //             });
+        //         });
+        //     } else if ($('#modalPunterosLista').is(':visible')) {
+        //         // Si está abierto el modal de punteros
+        //         $('.select2').each(function() {
+        //             if ($(this).data('select2')) {
+        //                 $(this).select2('destroy');
+        //             }
+        //             $(this).select2({
+        //                 width: '100%',
+        //                 allowClear: true,
+        //                 dropdownParent: $('#modalPunterosLista .modal-body')
+        //             });
+        //         });
+        //     } else {
+        //         // Si no hay modal visible, inicializar normalmente
+        //         $('.select2').select2({
+        //             width: '100%',
+        //             allowClear: true
+        //         });
+        //     }
+        // }
+
         // Función para abrir modal de punteros (lista completa)
         function abrirModalPunterosLista(sistemaId, nombreSistema) {
             let modalTitle = document.querySelector('#modalPunterosLista .modal-title');
@@ -1283,7 +1153,7 @@
 
             $.get(url, function(data) {
                 $("#contenidoPunteros").html(data);
-                inicializarSelect2();
+                //inicializarSelect2();
             }).fail(function(xhr) {
                 console.log(xhr.responseText);
                 $("#contenidoPunteros").html(
@@ -1310,7 +1180,7 @@
 
             $.get(url, function(data) {
                 $("#contenidoPunteros").html(data);
-                inicializarSelect2();
+                //inicializarSelect2();
             }).fail(function(xhr) {
                 console.log(xhr.responseText);
                 $("#contenidoPunteros").html(
@@ -1321,55 +1191,40 @@
                 );
             });
         }
+
         $('#modalPunterosLista').on('hidden.bs.modal', function() {
             if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-lista-table')) {
                 $('#punteros-lista-table').DataTable().destroy();
             }
         });
+
         // Exponer la función globalmente
         window.abrirModalPunterosLista = abrirModalPunterosLista;
         window.abrirModalVotantes = function(punteroId, nombre) {
-            //console.log('Abriendo modal para:', punteroId, nombre);
-
-            // Ejemplo básico (ajustá a tu lógica real)
             $('#modalVotantes').modal('show');
-
-            // Si cargás datos por AJAX:
             $('#contenidoVotantes').html(
                 '<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>');
-
             let url = `{{ url('/') }}/punteros/${punteroId}/votantes`;
-
             $.get(url, function(data) {
                 $('#contenidoVotantes').html(data);
             });
         };
+
         // Función para cargar votantes de un puntero específico
         function cargarVotantes(idPuntero, nombrePuntero = '') {
-            //console.log('Cargando votantes para puntero:', idPuntero);
-
-            // Actualizar título del modal
             $('#tituloVotantes').html(`
                 <i class="fas fa-users"></i> Votantes del Puntero: ${nombrePuntero}
             `);
-
-            // Mostrar modal con spinner
             $('#modalVotantes').modal('show');
-
-            // Mostrar loading en el body
             $('#contenidoVotantes').html(`
-            <div class="text-center p-4">
-                <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
-                    <span class="sr-only">Cargando...</span>
-                </div>
-                <p class="mt-2">Cargando votantes del puntero...</p>
+                <div class="text-center p-4">
+                    <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="sr-only">Cargando...</span>
                     </div>
+                    <p class="mt-2">Cargando votantes del puntero...</p>
+                </div>
             `);
-
-            // Construir URL usando la ruta de Laravel
             let url = `{{ url('puntero') }}/${idPuntero}/votantes`;
-
-            // Petición AJAX
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -1378,114 +1233,86 @@
                     'Accept': 'application/json'
                 },
                 success: function(data) {
-                    //console.log('Votantes recibidos:', data);
-
                     let contenido = `
-                <div class="table-responsive">
-                    <table id="votantes-table" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%">#</th>
-                                <th>Cédula</th>
-                                <th>Nombre</th>
-                                <th>Escuela</th>
-                                <th>Tipo Votante</th>
-                                <th>Mesa</th>
-                                <th style="width: 10%">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
+                        <div class="table-responsive">
+                            <table id="votantes-table" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%">#</th>
+                                        <th>Cédula</th>
+                                        <th>Nombre</th>
+                                        <th>Escuela</th>
+                                        <th>Tipo Votante</th>
+                                        <th>Mesa</th>
+                                        <th style="width: 10%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
                     if (data.length === 0) {
                         contenido += `
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-info-circle fa-2x mb-2"></i>
-                            <p>No hay votantes registrados para este puntero</p>
-                        </td>
-                    </tr>
-                `;
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                    <p>No hay votantes registrados para este puntero</p>
+                                </td>
+                            </tr>
+                        `;
                     } else {
                         data.forEach((v, i) => {
                             contenido += `
-                        <tr>
-                            <td>${i + 1}</td>
-                            <td>${v.cedula}</td>
-                            <td>${v.nombre ?? ''}</td>
-                            <td>${v.escuela ?? ''}</td>
-                            <td>
-                                <span class="badge badge-${v.tipo_votante === 'RESERVADO' ? 'warning' : 'info'}">
-                                    ${v.tipo_votante ?? ''}
-                                </span>
-                            </td>
-                            <td>${v.mesa ?? ''}</td>
-                            <td class="text-center">
-                                <button class="btn btn-danger btn-sm" 
-                                    onclick="eliminarVotante(${v.id},'${nombrePuntero}')"
-                                    title="Eliminar votante">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td>${v.cedula}</td>
+                                    <td>${v.nombre ?? ''}</td>
+                                    <td>${v.escuela ?? ''}</td>
+                                    <td>
+                                        <span class="badge badge-${v.tipo_votante === 'RESERVADO' ? 'warning' : 'info'}">
+                                            ${v.tipo_votante ?? ''}
+                                        </span>
+                                    </td>
+                                    <td>${v.mesa ?? ''}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-danger btn-sm" 
+                                            onclick="eliminarVotante(${v.id},'${nombrePuntero}')"
+                                            title="Eliminar votante">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
                         });
                     }
-
                     contenido += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
                     $('#contenidoVotantes').html(contenido);
-
-                    // Inicializar DataTable después de un pequeño delay
                     setTimeout(function() {
                         if ($.fn.DataTable && $('#votantes-table').length) {
                             if ($.fn.DataTable.isDataTable('#votantes-table')) {
                                 $('#votantes-table').DataTable().destroy();
                             }
-
                             $('#votantes-table').DataTable({
                                 responsive: true,
                                 dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
                                     "<'row'<'col-sm-12'tr>>" +
                                     "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                                buttons: [
-                                    // {
-                                    //     extend: 'excelHtml5',
-                                    //     className: 'btn btn-success btn-sm',
-                                    //     text: '<i class="fas fa-file-excel"></i> Excel',
-                                    //     title: 'Votantes del Puntero',
-                                    //     exportOptions: {
-                                    //         columns: [0, 1, 2, 3, 4, 5]
-                                    //     }
-                                    // },
-                                    // {
-                                    //     extend: 'pdfHtml5',
-                                    //     className: 'btn btn-danger btn-sm',
-                                    //     text: '<i class="fas fa-file-pdf"></i> PDF',
-                                    //     title: 'Votantes del Puntero',
-                                    //     exportOptions: {
-                                    //         columns: [0, 1, 2, 3, 4, 5]
-                                    //     }
-                                    // },
-                                    {
-                                        extend: 'print',
-                                        className: 'btn btn-secondary btn-sm',
-                                        text: '<i class="fas fa-print"></i> Imprimir',
-                                        exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5]
-                                        },
-                                        customize: function(win) {
-                                            $(win.document.body).find('table').addClass(
-                                                'table table-bordered');
-                                            $(win.document.body).find('h1').css(
-                                                'text-align', 'center');
-                                        }
+                                buttons: [{
+                                    extend: 'print',
+                                    className: 'btn btn-secondary btn-sm',
+                                    text: '<i class="fas fa-print"></i> Imprimir',
+                                    exportOptions: {
+                                        columns: [0, 1, 2, 3, 4, 5]
+                                    },
+                                    customize: function(win) {
+                                        $(win.document.body).find('table').addClass(
+                                            'table table-bordered');
+                                        $(win.document.body).find('h1').css(
+                                            'text-align', 'center');
                                     }
-                                ],
+                                }],
                                 language: {
                                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                                 },
@@ -1500,18 +1327,16 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error cargando votantes:', error);
-                    console.error('Respuesta:', xhr.responseText);
-
                     $('#contenidoVotantes').html(`
-                <div class="alert alert-danger text-center p-4">
-                    <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                    <h5>Error al cargar los votantes</h5>
-                    <p class="mb-0">${xhr.responseJSON?.message || 'Intente nuevamente más tarde'}</p>
-                    <button class="btn btn-sm btn-outline-danger mt-3" onclick="cargarVotantes(${idPuntero}, '${nombrePuntero}')">
-                        <i class="fas fa-sync"></i> Reintentar
-                    </button>
-                </div>
-            `);
+                        <div class="alert alert-danger text-center p-4">
+                            <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                            <h5>Error al cargar los votantes</h5>
+                            <p class="mb-0">${xhr.responseJSON?.message || 'Intente nuevamente más tarde'}</p>
+                            <button class="btn btn-sm btn-outline-danger mt-3" onclick="cargarVotantes(${idPuntero}, '${nombrePuntero}')">
+                                <i class="fas fa-sync"></i> Reintentar
+                            </button>
+                        </div>
+                    `);
                 }
             });
         }
@@ -1531,34 +1356,21 @@
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(response) {
-                            Swal.fire(
-                                'Eliminado',
-                                response.message ?? 'Votante eliminado correctamente',
-                                'success'
-                            );
-                            // ✅ RECARGAR LISTA DE VOTANTES DEL PUNTERO
+                            Swal.fire('Eliminado', response.message ??
+                                'Votante eliminado correctamente', 'success');
                             if (response.punteroId) {
                                 cargarVotantes(response.punteroId, nombre);
                             }
-                            // ✅ ABRIR MODAL
                             if (response.abrirModalVotante) {
                                 $('#modalVotante').modal('show');
                             }
-
-
-                            // 2️⃣ o remover fila sin recargar (si usás DataTable)
-                            // $('#fila-votante-' + id).remove();
                         },
                         error: function(xhr) {
-                            Swal.fire(
-                                'Error',
-                                xhr.responseJSON?.message ?? 'No se pudo eliminar el votante',
-                                'error'
-                            );
+                            Swal.fire('Error', xhr.responseJSON?.message ??
+                                'No se pudo eliminar el votante', 'error');
                         }
                     });
                 }
-
             });
         }
 
@@ -1572,5 +1384,6 @@
         // Exponer funciones globalmente
         window.cargarVotantes = cargarVotantes;
         window.eliminarVotante = eliminarVotante;
+        window.abrirModalPunterosListapordir = abrirModalPunterosListapordir;
     </script>
 @stop

@@ -6,34 +6,48 @@
 
     <div class="row mb-2">
         <div class="col-md-6">
-            <label for="equipo_punteros" class="form-label fw-bold">Equipos</label>
-            {{-- Cambiar a select simple --}}
-            <select name="equipo_punteros" id="equipo_punteros" class="form-control select2-equipo" onchange="filtrarPunterosPorEquipo()">
-                <option value="">Todos</option>
-                @foreach ($equipos as $eq)
-                    <option value="{{ $eq->id }}"
-                        {{ isset($equipoSeleccionado) && $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
-                        {{ $eq->descripcion }}
-                    </option>
-                @endforeach
-            </select>
+            <div class="input-group">
+                <label class="form-label fw-bold">Equipos: </label>
+                <select name="equipo_punteros" id="equipo_punteros" class="form-control"
+                    onchange="filtrarPunterosPorEquipo()">
+                    <option value="">Todos</option>
+                    @foreach ($equipos as $eq)
+                        <option value="{{ $eq->id }}"
+                            {{ isset($equipoSeleccionado) && $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
+                            {{ $eq->descripcion }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-info" onclick="abrirModalEquiposPunteros()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="col-md-6">
-            <label for="dirigente_punteros" class="form-label fw-bold">Dirigentes</label>
-            {{-- Cambiar a select simple --}}
-            <select name="dirigente_punteros" id="dirigente_punteros" class="form-control select2-dirigente" onchange="filtrarPunterosPorDirigente()">
-                <option value="">Todos</option>
-                @foreach ($dirigentes as $dir)
-                    <option value="{{ $dir->id }}"
-                        {{ isset($dirigenteSeleccionado) && $dirigenteSeleccionado == $dir->id ? 'selected' : '' }}>
-                        {{ $dir->nombre }}
-                    </option>
-                @endforeach
-            </select>
+            <div class="input-group">
+                <label class="form-label fw-bold">Dirigentes: </label>
+                <select name="dirigente_punteros" id="dirigente_punteros" class="form-control"
+                    onchange="filtrarPunterosPorDirigente()">
+                    <option value="">Todos</option>
+                    @foreach ($dirigentes as $dir)
+                        <option value="{{ $dir->id }}"
+                            {{ isset($dirigenteSeleccionado) && $dirigenteSeleccionado == $dir->id ? 'selected' : '' }}>
+                            {{ $dir->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-info" onclick="abrirModalDirigentesPunteros()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-    
+
     <div class="row mb-2">
         <div class="col-md-2">
             <label>Cédula</label>
@@ -117,6 +131,93 @@
         </table>
     </div>
 </div>
+{{-- MODAL DE BÚSQUEDA DE EQUIPOS PARA PUNTEROS --}}
+<div class="modal fade" id="modalEquiposPunteros" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-search"></i> Buscar Equipo
+                </h5>
+                {{-- <button type="button" class="close text-white" data-dismiss="modal">&times;</button> --}}
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table id="tablaEquiposPunteros" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción</th>
+                                <th>Acción</th>
+                        </thead>
+                        <tbody>
+                            @foreach ($equipos as $eq)
+                                <tr>
+                                    <td>{{ $eq->id }}</td>
+                                    <td>{{ $eq->descripcion }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-success btn-sm"
+                                            onclick="seleccionarEquipoPunteros({{ $eq->id }}, '{{ addslashes($eq->descripcion) }}')">
+                                            <i class="fas fa-check"></i> Seleccionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{-- MODAL DE BÚSQUEDA DE DIRIGENTES PARA PUNTEROS --}}
+<div class="modal fade" id="modalDirigentesPunteros" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-search"></i> Buscar Dirigente
+                </h5>
+                {{-- <button type="button" class="close text-white" data-dismiss="modal">&times;</button> --}}
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table id="tablaDirigentesPunteros" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Cédula</th>
+                                <th>Equipo</th>
+                                <th>Acción</th>
+                        </thead>
+                        <tbody>
+                            @foreach ($dirigentes as $dir)
+                                <td>{{ $dir->id }}</td>
+                                <td>{{ $dir->nombre }}</td>
+                                <td>{{ $dir->cedula }}</td>
+                                <td>{{ $dir->equipo->descripcion ?? '' }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-success btn-sm"
+                                        onclick="seleccionarDirigentePunteros({{ $dir->id }}, '{{ addslashes($dir->nombre) }}')">
+                                        <i class="fas fa-check"></i> Seleccionar
+                                    </button>
+                                </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     $(document).ready(function() {
@@ -138,7 +239,7 @@
         //         }
         //     });
         // }
-        
+
         // Inicializar Select2 para dirigentes
         // if ($('#dirigente_punteros').length) {
         //     $('#dirigente_punteros').select2({
@@ -157,7 +258,7 @@
         //         }
         //     });
         // }
-        
+
         // Inicializar DataTable
         if ($.fn.DataTable && $('#punteros-lista-table').length) {
             $('#punteros-lista-table').DataTable({
@@ -165,20 +266,18 @@
                 dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
                     "<'row'<'col-sm-12'tr>>" +
                     "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [
-                    {
-                        extend: 'print',
-                        className: 'btn btn-secondary btn-sm',
-                        text: '<i class="fas fa-print"></i> Imprimir',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                        },
-                        customize: function(win) {
-                            $(win.document.body).find('table').addClass('table table-bordered');
-                            $(win.document.body).find('h1').css('text-align', 'center');
-                        }
+                buttons: [{
+                    extend: 'print',
+                    className: 'btn btn-secondary btn-sm',
+                    text: '<i class="fas fa-print"></i> Imprimir',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    },
+                    customize: function(win) {
+                        $(win.document.body).find('table').addClass('table table-bordered');
+                        $(win.document.body).find('h1').css('text-align', 'center');
                     }
-                ],
+                }],
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                 },
@@ -227,25 +326,92 @@
         $('#btnGuardarPunteroLista').on('click', function() {
             guardarPunteroListaAjax();
         });
-        
+
         // Cuando se cambie el equipo, actualizar el hidden
         $('#equipo_punteros').on('change', function() {
             let equipoId = $(this).val();
             $('#puntero_id_equipo_lista').val(equipoId);
         });
-        
+
         // Cuando se cambie el dirigente, actualizar el hidden
         $('#dirigente_punteros').on('change', function() {
             let dirigenteId = $(this).val();
             $('#puntero_id_dirigente_lista').val(dirigenteId);
         });
     });
+    // ABRIR MODAL DE EQUIPOS
+    function abrirModalEquiposPunteros() {
+        $('#modalEquiposPunteros').modal('show');
+
+        if (!$.fn.DataTable.isDataTable('#tablaEquiposPunteros')) {
+            $('#tablaEquiposPunteros').DataTable({
+                responsive: true,
+                pageLength: 10,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                    search: "Buscar equipo:",
+                    searchPlaceholder: "Nombre, descripción..."
+                },
+                lengthMenu: [
+                    [5, 10, 25, 50, -1],
+                    [5, 10, 25, 50, "Todos"]
+                ],
+                order: [
+                    [1, 'asc']
+                ]
+            });
+        }
+    }
+    // ABRIR MODAL DE DIRIGENTES
+    function abrirModalDirigentesPunteros() {
+        $('#modalDirigentesPunteros').modal('show');
+
+        if (!$.fn.DataTable.isDataTable('#tablaDirigentesPunteros')) {
+            $('#tablaDirigentesPunteros').DataTable({
+                responsive: true,
+                pageLength: 10,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                    search: "Buscar dirigente:",
+                    searchPlaceholder: "Nombre, cédula..."
+                },
+                lengthMenu: [
+                    [5, 10, 25, 50, -1],
+                    [5, 10, 25, 50, "Todos"]
+                ],
+                order: [
+                    [1, 'asc']
+                ]
+            });
+        }
+    }
+    // SELECCIONAR EQUIPO DESDE MODAL
+    function seleccionarEquipoPunteros(id, descripcion) {
+        $('#equipo_punteros').val(id);
+        $('#puntero_id_equipo_lista').val(id);
+        equipoSeleccionadoActualPunteros = id;
+
+        $('#modalEquiposPunteros').modal('hide');
+
+        $('#equipo_punteros').trigger('change');
+        //filtrarPunterosPorEquipo();
+    }
+    // SELECCIONAR DIRIGENTE DESDE MODAL
+    function seleccionarDirigentePunteros(id, nombre) {
+        $('#dirigente_punteros').val(id);
+        $('#puntero_id_dirigente_lista').val(id);
+        dirigenteSeleccionadoActualPunteros = id;
+
+        $('#modalDirigentesPunteros').modal('hide');
+
+        $('#dirigente_punteros').trigger('change');
+    }
 
     function buscarPunteroPorCedulaLista() {
         let cedula = $('#puntero_cedula_lista').val().trim();
         //console.log(cedula.'cedula');
         if (cedula.length < 3) return;
-        
+
         $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
             if (response.encontrado) {
                 $('#puntero_nombre_lista').val(response.data.nombre ?? '');
@@ -304,7 +470,7 @@
                 // Limpiar formulario
                 $('#formAgregarPunteroLista')[0].reset();
                 $('#puntero_cedula_lista').focus();
-                
+
                 // Recargar la lista
                 filtrarPunterosGeneral();
 
@@ -319,7 +485,7 @@
                         $(`#error-${key}`).text(value[0]);
                         $(`#puntero_${key}_lista`).addClass('is-invalid');
                     });
-                    
+
                     Swal.fire({
                         icon: 'error',
                         title: 'Error de validación',
@@ -335,6 +501,7 @@
             }
         });
     }
+
 
     function limpiarErroresPuntero() {
         $('.text-danger').text('');
@@ -477,7 +644,7 @@
             }
         }
     }
-    
+
     // Función para buscar por cédula de votante (si es necesaria)
     function buscarPorCedulaV() {
         let cedula = $('#votante_cedula').val().trim();
