@@ -332,6 +332,7 @@
                 .then(r => r.json())
                 .then(data => {
                     // Select
+                    console.log(data);
                     $('#selectPunteros').empty();
                     data.todos.forEach(p => {
                         $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`);
