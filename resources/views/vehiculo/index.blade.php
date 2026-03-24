@@ -48,7 +48,7 @@
                         <option value="FURGONETA">FURGONETA</option>
                     </x-adminlte-select>
 
-                    <x-adminlte-input name="capacidad" label="Capacidad" type="number" value="4"
+                    <x-adminlte-input name="capacidad" label="Capacidad" type="number" value="5"
                         fgroup-class="col-md-2" required>
                         <x-slot name="appendSlot">
                             <div class="input-group-text"><i class="fas fa-users"></i></div>
