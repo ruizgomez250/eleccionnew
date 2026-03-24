@@ -281,9 +281,9 @@ Este recibo constituye constancia de pago parcial o total conforme al contrato d
     public function punteros(Request $request, $vehiculo)
     {
         $vehiculo = Vehiculo::with('punteros', 'equipo')->findOrFail($vehiculo);
-    dd($vehiculo);
+    
         $equipoId = $request->query('equipo', $vehiculo->id_equipo);
-
+        dd($equipoId);
         // Punteros ya asignados
         $asignados = $vehiculo->punteros;
 
