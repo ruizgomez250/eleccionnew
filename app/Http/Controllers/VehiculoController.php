@@ -283,7 +283,7 @@ Este recibo constituye constancia de pago parcial o total conforme al contrato d
         $vehiculo = Vehiculo::with('punteros', 'equipo')->findOrFail($vehiculo);
     
         $equipoId = $request->query('equipo', $vehiculo->id_equipo);
-        dd($equipoId);
+        
         // Punteros ya asignados
         $asignados = $vehiculo->punteros;
 
@@ -291,7 +291,7 @@ Este recibo constituye constancia de pago parcial o total conforme al contrato d
         $todos = Puntero::where('id_equipo', $equipoId)
             ->whereNotIn('id', $asignados->pluck('id'))
             ->get();
-
+        dd($todos);
         return response()->json([
             'asignados' => $asignados,
             'todos' => $todos
