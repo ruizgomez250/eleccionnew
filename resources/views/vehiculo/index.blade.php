@@ -328,15 +328,49 @@
 
             $('#modalPunterosLabel').text(`Punteros - ${nombreVehiculo}`);
 
-            fetch(`${BASE_URL}/vehiculosasignar/${vehiculoActual}/punteros?equipo=${equipoActual}`)
-                .then(r => r.json())
+            const url = `${BASE_URL}/vehiculosasignar/${vehiculoActual}/punteros?equipo=${equipoActual}`;
+            console.log('URL:', url); // 👈 Verifica la URL que se está llamando
+
+            fetch(url)
+                .then(response => {
+                    console.log('Status:', response.status); // 👈 Ver el código HTTP
+                    console.log('Headers:', response.headers.get('content-type')); // 👈 Ver el tipo de contenido
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // Verifica si es JSON antes de parsear
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        // Si no es JSON, devuelve el texto para depurar
+                        return response.text().then(text => {
+                            console.error('Respuesta no es JSON:', text);
+                            throw new Error('La respuesta no es JSON');
+                        });
+                    }
+                })
                 .then(data => {
+                    console.log('DATA COMPLETA:', data); // 👈 Ver toda la respuesta
+
+                    // Verifica la estructura
+                    console.log('todos:', data.todos);
+                    console.log('asignados:', data.asignados);
+
                     // Select
-                    console.log(data);
                     $('#selectPunteros').empty();
-                    data.todos.forEach(p => {
-                        $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`);
-                    });
+
+                    // Verifica si data.todos existe y es un array
+                    if (data.todos && Array.isArray(data.todos)) {
+                        data.todos.forEach(p => {
+                            $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`);
+                        });
+                    } else {
+                        console.error('data.todos no es un array:', data.todos);
+                    }
+
                     $('#selectPunteros').select2({
                         dropdownParent: $('#modalPunteros'),
                         width: '100%'
@@ -344,22 +378,45 @@
 
                     // Tabla
                     if (tabla) tabla.destroy();
-                    tabla = $('#tablaAsignados').DataTable({
-                        data: data.asignados,
-                        columns: [{
-                                data: 'nombre'
-                            },
-                            {
-                                data: 'id',
-                                render: id => `
-                    <button class="btn btn-danger btn-sm" onclick="quitarPuntero(${id})">
-                        <i class="fas fa-trash"></i>
-                    </button>`
-                            }
-                        ]
-                    });
+
+                    // Verifica si data.asignados existe y es un array
+                    if (data.asignados && Array.isArray(data.asignados)) {
+                        tabla = $('#tablaAsignados').DataTable({
+                            data: data.asignados,
+                            columns: [{
+                                    data: 'nombre'
+                                },
+                                {
+                                    data: 'id',
+                                    render: id => `
+                                <button class="btn btn-danger btn-sm" onclick="quitarPuntero(${id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>`
+                                }
+                            ]
+                        });
+                    } else {
+                        console.error('data.asignados no es un array:', data.asignados);
+                        // Inicializa tabla vacía si no hay datos
+                        tabla = $('#tablaAsignados').DataTable({
+                            data: [],
+                            columns: [{
+                                    data: 'nombre'
+                                },
+                                {
+                                    data: 'id',
+                                    render: () => ''
+                                }
+                            ]
+                        });
+                    }
 
                     $('#modalPunteros').modal('show');
+                })
+                .catch(error => {
+                    console.error('ERROR en la petición:', error); // 👈 Captura cualquier error
+                    // Muestra un mensaje al usuario
+                    alert('Error al cargar los punteros: ' + error.message);
                 });
         }
 
