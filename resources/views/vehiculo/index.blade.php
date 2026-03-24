@@ -178,7 +178,7 @@
 
                     {{-- Botón Punteros --}}
                     <button class="btn btn-warning btn-sm mt-1"
-                        onclick="abrirModalPunteros({{ $vehiculo->id }}, '{{ $vehiculo->nombre }}', {{ $vehiculo->id_equipo }})">
+                        onclick="window.abrirModalPunteros({{ $vehiculo->id }}, '{{ addslashes($vehiculo->nombre) }}', {{ $vehiculo->id_equipo }})">
                         <i class="fas fa-users-cog"></i> Punteros
                     </button>
 
@@ -204,6 +204,7 @@
             </div>
         @endforeach
     </div>
+
     <div class="modal fade" id="modalReporteEquipos" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-md" role="document">
             <div class="modal-content">
@@ -246,28 +247,34 @@
     </div>
 
     {{-- Modal genérico punteros --}}
-    <div class="modal fade" id="modalPunteros">
+    <div class="modal fade" id="modalPunteros" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-warning">
                     <h5 class="modal-title" id="modalPunterosLabel"></h5>
-                    <button class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>Agregar puntero</label>
+                        <label><i class="fas fa-user-plus"></i> Agregar puntero</label>
                         <select id="selectPunteros" class="form-control"></select>
                     </div>
                     <button class="btn btn-success mb-3" id="btnAsignar"><i class="fas fa-plus"></i> Asignar</button>
-                    <table class="table table-bordered" id="tablaAsignados">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th width="80">Acción</th>
+                    <table class="table table-bordered table-striped" id="tablaAsignados">
+                        <thead class="thead-dark">
+                            <th>Nombre</th>
+                            <th width="80">Acción</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
                 </div>
             </div>
         </div>
@@ -282,6 +289,207 @@
         let nombreVehiculoActual = '';
         let equipoActual = null;
         let tabla = null;
+
+        // =================== FUNCIONES GLOBALES ===================
+
+        window.abrirModalPunteros = function(idVehiculo, nombreVehiculo, idEquipo) {
+            vehiculoActual = idVehiculo;
+            nombreVehiculoActual = nombreVehiculo;
+            equipoActual = idEquipo;
+
+            $('#modalPunterosLabel').text(`Punteros - ${nombreVehiculo}`);
+
+            const url = `${BASE_URL}/vehiculosasignar/${vehiculoActual}/punteros?equipo=${equipoActual}`;
+            console.log('URL:', url);
+
+            fetch(url)
+                .then(response => {
+                    console.log('Status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('DATA COMPLETA:', data);
+
+                    // Limpiar y llenar select
+                    $('#selectPunteros').empty();
+
+                    if (data.todos && data.todos.length > 0) {
+                        data.todos.forEach(p => {
+                            $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`);
+                        });
+                    } else {
+                        $('#selectPunteros').append(
+                            '<option value="">No hay punteros disponibles en este equipo</option>');
+                    }
+
+                    // Inicializar Select2
+                    if ($('#selectPunteros').data('select2')) {
+                        $('#selectPunteros').select2('destroy');
+                    }
+
+                    $('#selectPunteros').select2({
+                        dropdownParent: $('#modalPunteros'),
+                        width: '100%',
+                        placeholder: 'Seleccione un puntero'
+                    });
+
+                    // Inicializar DataTable
+                    if (tabla) {
+                        tabla.destroy();
+                        tabla = null;
+                    }
+
+                    const asignados = data.asignados || [];
+
+                    tabla = $('#tablaAsignados').DataTable({
+                        data: asignados,
+                        columns: [{
+                                data: 'nombre',
+                                title: 'Nombre'
+                            },
+                            {
+                                data: 'id',
+                                title: 'Acción',
+                                width: '80px',
+                                render: function(id) {
+                                    return `<button class="btn btn-danger btn-sm" onclick="window.quitarPuntero(${id})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>`;
+                                }
+                            }
+                        ],
+                        language: {
+                            emptyTable: 'No hay punteros asignados',
+                            info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+                            infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+                            search: 'Buscar:',
+                            zeroRecords: 'No se encontraron registros'
+                        }
+                    });
+
+                    $('#modalPunteros').modal('show');
+                })
+                .catch(error => {
+                    console.error('ERROR en la petición:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cargar los punteros: ' + error.message
+                    });
+                });
+        };
+
+        window.quitarPuntero = function(punteroId) {
+            if (!vehiculoActual) return;
+
+            Swal.fire({
+                title: '¿Quitar puntero?',
+                text: 'Este puntero ya no estará asignado a este vehículo',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Sí, quitar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(() => {
+                            Swal.fire('Eliminado', 'Puntero removido exitosamente', 'success');
+                            window.abrirModalPunteros(vehiculoActual, nombreVehiculoActual, equipoActual);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'No se pudo quitar el puntero', 'error');
+                        });
+                }
+            });
+        };
+
+        // =================== FUNCIONES AUXILIARES ===================
+
+        function generarPDFContratoVehicular(id) {
+            window.open(`${BASE_URL}/vehiculos/contrato/${id}`, '_blank');
+        }
+
+        // =================== EVENTOS ===================
+
+        $(document).ready(function() {
+
+            // Select2 para reporte
+            $('#selectEquipoReporte').select2({
+                dropdownParent: $('#modalReporteEquipos'),
+                theme: 'bootstrap4',
+                placeholder: 'Seleccione un equipo'
+            });
+
+            // Botón abrir reporte
+            $('#btnAbrirReporte').on('click', function() {
+                let equipoId = $('#selectEquipoReporte').val();
+
+                if (!equipoId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atención',
+                        text: 'Debe seleccionar un equipo'
+                    });
+                    return;
+                }
+
+                let url = `{{ url('reportes/vehiculos-equipo') }}/${equipoId}`;
+                window.open(url, '_blank');
+            });
+
+            // Asignar puntero
+            $('#btnAsignar').on('click', function() {
+                const punteroId = $('#selectPunteros').val();
+                if (!punteroId) {
+                    Swal.fire('Error', 'Debe seleccionar un puntero', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Asignar puntero',
+                    text: '¿Deseas asignar este puntero al vehículo?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, asignar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(() => {
+                                Swal.fire('Asignado', 'Puntero asignado exitosamente',
+                                    'success');
+                                window.abrirModalPunteros(vehiculoActual, nombreVehiculoActual,
+                                    equipoActual);
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire('Error', 'No se pudo asignar el puntero', 'error');
+                            });
+                    }
+                });
+            });
+
+        });
 
         // Mensaje SweetAlert al crear/actualizar
         const successAlert = @json(session('success'));
@@ -301,6 +509,7 @@
                 let form = this.closest('.form-delete');
                 Swal.fire({
                     title: '¿Eliminar vehículo?',
+                    text: 'Esta acción no se puede deshacer',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -313,171 +522,23 @@
         });
 
         // Buscador dinámico
-        document.getElementById('buscadorVehiculo').addEventListener('keyup', function() {
-            let texto = this.value.toLowerCase();
-            document.querySelectorAll('.vehiculo-card').forEach(card => {
-                card.style.display = card.dataset.search.includes(texto) ? '' : 'none';
-            });
-        });
-
-        // Modal punteros
-        function abrirModalPunteros(idVehiculo, nombreVehiculo, idEquipo) {
-            vehiculoActual = idVehiculo;
-            nombreVehiculoActual = nombreVehiculo;
-            equipoActual = idEquipo;
-
-            $('#modalPunterosLabel').text(`Punteros - ${nombreVehiculo}`);
-
-            const url = `${BASE_URL}/vehiculosasignar/${vehiculoActual}/punteros?equipo=${equipoActual}`;
-            console.log('URL:', url); // 👈 Verifica la URL que se está llamando
-
-            fetch(url)
-                .then(response => {
-                    console.log('Status:', response.status); // 👈 Ver el código HTTP
-                    console.log('Headers:', response.headers.get('content-type')); // 👈 Ver el tipo de contenido
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    // Verifica si es JSON antes de parsear
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        return response.json();
-                    } else {
-                        // Si no es JSON, devuelve el texto para depurar
-                        return response.text().then(text => {
-                            console.error('Respuesta no es JSON:', text);
-                            throw new Error('La respuesta no es JSON');
-                        });
-                    }
-                })
-                .then(data => {
-                    console.log('DATA COMPLETA:', data); // 👈 Ver toda la respuesta
-
-                    // Verifica la estructura
-                    console.log('todos:', data.todos);
-                    console.log('asignados:', data.asignados);
-
-                    // Select
-                    $('#selectPunteros').empty();
-
-                    // Verifica si data.todos existe y es un array
-                    if (data.todos && Array.isArray(data.todos)) {
-                        data.todos.forEach(p => {
-                            $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`);
-                        });
-                    } else {
-                        console.error('data.todos no es un array:', data.todos);
-                    }
-
-                    $('#selectPunteros').select2({
-                        dropdownParent: $('#modalPunteros'),
-                        width: '100%'
-                    });
-
-                    // Tabla
-                    if (tabla) tabla.destroy();
-
-                    // Verifica si data.asignados existe y es un array
-                    if (data.asignados && Array.isArray(data.asignados)) {
-                        tabla = $('#tablaAsignados').DataTable({
-                            data: data.asignados,
-                            columns: [{
-                                    data: 'nombre'
-                                },
-                                {
-                                    data: 'id',
-                                    render: id => `
-                                <button class="btn btn-danger btn-sm" onclick="quitarPuntero(${id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>`
-                                }
-                            ]
-                        });
-                    } else {
-                        console.error('data.asignados no es un array:', data.asignados);
-                        // Inicializa tabla vacía si no hay datos
-                        tabla = $('#tablaAsignados').DataTable({
-                            data: [],
-                            columns: [{
-                                    data: 'nombre'
-                                },
-                                {
-                                    data: 'id',
-                                    render: () => ''
-                                }
-                            ]
-                        });
-                    }
-
-                    $('#modalPunteros').modal('show');
-                })
-                .catch(error => {
-                    console.error('ERROR en la petición:', error); // 👈 Captura cualquier error
-                    // Muestra un mensaje al usuario
-                    alert('Error al cargar los punteros: ' + error.message);
+        const buscador = document.getElementById('buscadorVehiculo');
+        if (buscador) {
+            buscador.addEventListener('keyup', function() {
+                let texto = this.value.toLowerCase();
+                document.querySelectorAll('.vehiculo-card').forEach(card => {
+                    card.style.display = card.dataset.search.includes(texto) ? '' : 'none';
                 });
+            });
         }
 
-        // Asignar puntero
-        $('#btnAsignar').click(() => {
-            const punteroId = $('#selectPunteros').val();
-            if (!punteroId) {
-                Swal.fire('Error', 'Debe seleccionar un puntero', 'warning');
-                return;
+        
+        // Asegurar que el modal de punteros se cierre correctamente
+        $('#modalPunteros').on('hidden.bs.modal', function() {
+            if (tabla) {
+                tabla.destroy();
+                tabla = null;
             }
-
-            fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(r => r.json())
-                .then(() => abrirModalPunteros(vehiculoActual, nombreVehiculoActual, equipoActual));
-        });
-
-        // Quitar puntero
-        function quitarPuntero(punteroId) {
-            fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            }).then(() => abrirModalPunteros(vehiculoActual, nombreVehiculoActual, equipoActual));
-        }
-
-        // Generar PDF contrato vehicular
-        function generarPDFContratoVehicular(id) {
-            window.open(`${BASE_URL}/vehiculos/contrato/${id}`, '_blank');
-        }
-        $(document).ready(function() {
-
-            $('#selectEquipoReporte').select2({
-                dropdownParent: $('#modalReporteEquipos'),
-                theme: 'bootstrap4',
-                placeholder: 'Seleccione un equipo'
-            });
-
-            $('#btnAbrirReporte').on('click', function() {
-                let equipoId = $('#selectEquipoReporte').val();
-
-                if (!equipoId) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Atención',
-                        text: 'Debe seleccionar un equipo'
-                    });
-                    return;
-                }
-
-                let url = `{{ url('reportes/vehiculos-equipo') }}/${equipoId}`;
-                window.open(url, '_blank');
-            });
-
         });
     </script>
 @endsection
