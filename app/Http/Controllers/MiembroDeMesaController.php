@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MiembroDeMesa;
 use App\Models\Equipo;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -61,6 +62,7 @@ class MiembroDeMesaController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'cedula'   => 'required',
             'nombre'   => 'required',
@@ -68,6 +70,7 @@ class MiembroDeMesaController extends Controller
             'funcion'  => 'required|in:Titular,Suplente',
             'idequipo' => 'required'
         ]);
+
         try {
             MiembroDeMesa::create($request->all());
 
@@ -76,13 +79,30 @@ class MiembroDeMesaController extends Controller
                 ->with('successAlert', 'Miembro de mesa agregado correctamente')
                 ->with('abrirModalMiembro', true)
                 ->with('equipoId', $request->idequipo);
-        } catch (\Exception $e) {
-            // Opcional: registrar el error en el log
-            Log::error('Error al agregar miembro de mesa: ' . $e->getMessage());
+        } catch (QueryException $e) {
+            // Verificar si es un error de duplicado
+            if ($e->errorInfo[1] == 1062) { // Código de error MySQL para duplicado
+                return redirect()
+                    ->back()
+                    ->with('errorAlert', 'La cédula ' . $request->cedula . ' ya está registrada como miembro de mesa.')
+                    ->with('abrirModalMiembro', true)
+                    ->with('equipoId', $request->idequipo)
+                    ->withInput(); // Mantener los datos ingresados
+            }
 
+            // Para otros errores de base de datos
+            Log::error('Error al agregar miembro de mesa: ' . $e->getMessage());
             return redirect()
                 ->back()
                 ->with('errorAlert', 'Ocurrió un error al intentar agregar el miembro de mesa. Intente nuevamente.')
+                ->with('abrirModalMiembro', true)
+                ->with('equipoId', $request->idequipo);
+        } catch (\Exception $e) {
+            // Capturar cualquier otro error
+            Log::error('Error inesperado: ' . $e->getMessage());
+            return redirect()
+                ->back()
+                ->with('errorAlert', 'Ocurrió un error inesperado. Intente nuevamente.')
                 ->with('abrirModalMiembro', true)
                 ->with('equipoId', $request->idequipo);
         }
