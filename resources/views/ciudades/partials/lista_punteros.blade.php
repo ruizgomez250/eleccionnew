@@ -139,7 +139,7 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Equipo
                 </h5>
-                {{-- <button type="button" class="close text-white" data-dismiss="modal">&times;</button> --}}
+                 <button type="button" class="close text-white" onclick="cerrarequipopunteros()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
@@ -181,7 +181,7 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Dirigente
                 </h5>
-                {{-- <button type="button" class="close text-white" data-dismiss="modal">&times;</button> --}}
+                <button type="button" class="close text-white" onclick="cerrarmodaldirigentespunteros()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
@@ -339,6 +339,9 @@
             $('#puntero_id_dirigente_lista').val(dirigenteId);
         });
     });
+    function cerrarequipopunteros(){
+        $('#modalEquiposPunteros').modal('hide');
+    }
     // ABRIR MODAL DE EQUIPOS
     function abrirModalEquiposPunteros() {
         $('#modalEquiposPunteros').modal('show');
@@ -361,6 +364,9 @@
                 ]
             });
         }
+    }
+    function cerrarmodaldirigentespunteros(){
+        $('#modalDirigentesPunteros').modal('hide');
     }
     // ABRIR MODAL DE DIRIGENTES
     function abrirModalDirigentesPunteros() {

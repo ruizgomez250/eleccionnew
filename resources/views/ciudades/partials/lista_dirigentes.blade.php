@@ -61,7 +61,7 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Equipo
                 </h5>
-                {{-- <button type="button" class="close text-white" data-dismiss="modal">&times;</button> --}}
+                 <button type="button" class="close text-white" onclick="cerrarmodalequipo()">&times;</button>
             </div>
 
             <div class="modal-body">
@@ -342,7 +342,9 @@
             $("#contenidoDirigentes").html('<div class="alert alert-danger">Error cargando dirigentes</div>');
         });
     }
-
+    function cerrarmodalequipo(){
+        $('#modalEquipos').modal('hide');
+    }
     function abrirModalEquipos() {
         $('#modalEquipos').modal('show');
 

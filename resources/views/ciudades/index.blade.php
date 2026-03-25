@@ -1244,6 +1244,7 @@
                                         <th>Escuela</th>
                                         <th>Tipo Votante</th>
                                         <th>Mesa</th>
+                                        <th>Orden</th>
                                         <th style="width: 10%">Acciones</th>
                                     </tr>
                                 </thead>
@@ -1272,6 +1273,7 @@
                                         </span>
                                     </td>
                                     <td>${v.mesa ?? ''}</td>
+                                    <td>${v.orden ?? ''}</td>
                                     <td class="text-center">
                                         <button class="btn btn-danger btn-sm" 
                                             onclick="eliminarVotante(${v.id},'${nombrePuntero}')"
