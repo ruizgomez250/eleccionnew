@@ -190,6 +190,65 @@ class SistemaController extends Controller
             return back()->with('error', 'Ocurrió un error al cargar las ciudades: ' . $e->getMessage());
         }
     }
+    public function mostrarArbol()
+    {
+        try {
+            $userId = Auth::id();
+            $userSistema = Auth::user()->sistema;
+            // 🔹 Obtener los sistemas permitidos según el usuario
+            $sistemas = Sistema::with(['equipos.dirigentes.punteros.votantes', 'ciudad'])
+                ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
+                    $query->where(function ($q) use ($userId, $userSistema) {
+                        $q->where('idusuario', $userId)
+                            ->orWhere('id', $userSistema);
+                    });
+                })
+                ->get();
+            // 🔹 Agrupar por ciudad y calcular totales
+            $totalesDistritos = [];
+
+            foreach ($sistemas as $sistema) {
+                $ciudadNombre = $sistema->ciudad->descripcion ?? 'Sin ciudad';
+
+                $totalDirigentes = $sistema->equipos->flatMap->dirigentes->count();
+                $totalPunteros = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
+                    return $d->punteros->count();
+                });
+                $totalVotantes = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
+                    return $d->punteros->sum(function ($p) {
+                        return $p->votantes->count();
+                    });
+                });
+
+                // 🔹 Si la ciudad ya existe, sumamos los totales
+                if (!isset($totalesDistritos[$ciudadNombre])) {
+                    $totalesDistritos[$ciudadNombre] = [
+                        'dirigentes' => $totalDirigentes,
+                        'punteros' => $totalPunteros,
+                        'votantes' => $totalVotantes,
+                        'id_ciudad_electoral' => $sistema->id_ciudad_electoral,
+                        'departamento' => $sistema->ciudad->departamento ?? ''
+                    ];
+                } else {
+                    $totalesDistritos[$ciudadNombre]['dirigentes'] += $totalDirigentes;
+                    $totalesDistritos[$ciudadNombre]['punteros'] += $totalPunteros;
+                    $totalesDistritos[$ciudadNombre]['votantes'] += $totalVotantes;
+                }
+            }
+
+            // 🔹 Ordenar por departamento y nombre de ciudad
+            $totalesDistritos = collect($totalesDistritos)
+                ->sortBy(['departamento', function ($item) {
+                    return $item['descripcion'] ?? '';
+                }]);
+
+            return view('ciudades.index', [
+                'totalesDistritos' => $totalesDistritos
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Ocurrió un error al cargar las ciudades: ' . $e->getMessage());
+        }
+    }
     // public function sistemasPorDistrito($idCiudad)
     // {
     //     $userId = Auth::id();

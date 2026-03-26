@@ -18,6 +18,7 @@
                     <button type="button" class="btn btn-info" onclick="abrirModalEquipos()">
                         <i class="fas fa-search"></i>
                     </button>
+
                 </div>
             </div>
         </div>
@@ -45,13 +46,22 @@
             <small class="text-danger" id="error-barrio"></small>
         </div>
     </div>
-    <div class="row mb-2">
-        <div class="col-md-4">
-            <button type="button" class="btn btn-primary" id="btnGuardarDirigente">
-                <i class="fas fa-save"></i> Guardar
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <button type="button" class="btn btn-primary" id="btnGuardarDirigente">
+                <i class="fas fa-save"></i> Guardar Dirigente
             </button>
+
+
+            </div>
+            <div class="col-md-6 text-right">
+
+
+                <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
+                    <i class="fas fa-arrow-left"></i> Volver a Atras
+                </button>
+            </div>
         </div>
-    </div>
 </form>
 {{-- MODAL DE BÚSQUEDA DE EQUIPOS --}}
 <div class="modal fade" id="modalEquipos" tabindex="-1">
@@ -61,7 +71,7 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Equipo
                 </h5>
-                 <button type="button" class="close text-white" onclick="cerrarmodalequipo()">&times;</button>
+                <button type="button" class="close text-white" onclick="cerrarmodalequipo()">&times;</button>
             </div>
 
             <div class="modal-body">
@@ -130,16 +140,18 @@
                         <td>{{ $dir->barrio }}</td>
                         <td>{{ $dir->equipo->descripcion ?? '' }}</td>
                         <td class="text-center">
-                            <span class="badge badge-info">{{ $dir->punteros_count }}</span>
+                            <button class="btn btn-sm btn-info"
+                                onclick="abrirModalPunterosListapordir({{ $dir->id }},'{{ $dir->sistema->nombre }}')">
+                                <i class="fas fa-users"> <span
+                                        class="badge badge-info">{{ $dir->punteros_count }}</span></i>
+                            </button>
+
                         </td>
                         <td class="text-center">
                             <span class="badge badge-success">{{ $dir->votantes_count ?? 0 }}</span>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-info"
-                                onclick="abrirModalPunterosListapordir({{ $dir->id }},'{{ $dir->sistema->nombre }}')">
-                                <i class="fas fa-users"></i>
-                            </button>
+
                             <button class="btn btn-danger btn-sm" onclick="eliminarDirigente({{ $dir->id }})">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -338,13 +350,15 @@
         $.get(url, function(data) {
             $("#contenidoDirigentes").html(data);
         }).fail(function(xhr) {
-           // console.log(xhr.responseText);
+            // console.log(xhr.responseText);
             $("#contenidoDirigentes").html('<div class="alert alert-danger">Error cargando dirigentes</div>');
         });
     }
-    function cerrarmodalequipo(){
+
+    function cerrarmodalequipo() {
         $('#modalEquipos').modal('hide');
     }
+
     function abrirModalEquipos() {
         $('#modalEquipos').modal('show');
 
@@ -368,16 +382,17 @@
             });
         }
     }
+
     function seleccionarEquipo(id, descripcion) {
-    // Seleccionar la opción en el select
-    $('#equipo_id_dir').val(id);
-    equipoSeleccionadoActual = id;
-    
-    // Cerrar el modal
-    $('#modalEquipos').modal('hide');
-    
-    
-    // DISPARAR EL FILTRO
-    $('#equipo_id_dir').trigger('change');
-}
+        // Seleccionar la opción en el select
+        $('#equipo_id_dir').val(id);
+        equipoSeleccionadoActual = id;
+
+        // Cerrar el modal
+        $('#modalEquipos').modal('hide');
+
+
+        // DISPARAR EL FILTRO
+        $('#equipo_id_dir').trigger('change');
+    }
 </script>

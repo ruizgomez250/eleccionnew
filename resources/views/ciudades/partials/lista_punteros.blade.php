@@ -71,11 +71,20 @@
         </div>
     </div>
     <div class="row mb-2">
-        <div class="col-md-4">
-            <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
-                <i class="fas fa-save"></i> Guardar
+            <div class="col-md-6">
+                <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
+                <i class="fas fa-save"></i> Guardar Puntero
             </button>
-        </div>
+
+
+            </div>
+            <div class="col-md-6 text-right">
+
+
+                <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
+                    <i class="fas fa-arrow-left"></i> Volver Atras
+                </button>
+            </div>
     </div>
 </form>
 
@@ -113,13 +122,15 @@
                         <td>{{ $p->dirigente->nombre ?? '' }}</td>
                         <td>{{ $p->equipo->descripcion ?? '' }}</td>
                         <td class="text-center">
-                            <span class="badge badge-success">{{ $p->votantes_count }}</span>
-                        </td>
-                        <td>
                             <button class="btn btn-success btn-sm"
                                 onclick="abrirModalVotantesPuntero({{ $p->id }}, '{{ $p->nombre }}')">
-                                <i class="fas fa-users"></i>
+                                <i class="fas fa-users"><span
+                                        class="badge badge-success">{{ $p->votantes_count }}</span></i>
                             </button>
+
+                        </td>
+                        <td>
+
                             <button class="btn btn-danger btn-sm"
                                 onclick="eliminarPunteroModal({{ $p->id }}, {{ $p->id_dirigente }})">
                                 <i class="fas fa-trash"></i>
@@ -139,7 +150,7 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Equipo
                 </h5>
-                 <button type="button" class="close text-white" onclick="cerrarequipopunteros()">&times;</button>
+                <button type="button" class="close text-white" onclick="cerrarequipopunteros()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
@@ -181,7 +192,8 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Dirigente
                 </h5>
-                <button type="button" class="close text-white" onclick="cerrarmodaldirigentespunteros()">&times;</button>
+                <button type="button" class="close text-white"
+                    onclick="cerrarmodaldirigentespunteros()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
@@ -339,7 +351,8 @@
             $('#puntero_id_dirigente_lista').val(dirigenteId);
         });
     });
-    function cerrarequipopunteros(){
+
+    function cerrarequipopunteros() {
         $('#modalEquiposPunteros').modal('hide');
     }
     // ABRIR MODAL DE EQUIPOS
@@ -365,7 +378,8 @@
             });
         }
     }
-    function cerrarmodaldirigentespunteros(){
+
+    function cerrarmodaldirigentespunteros() {
         $('#modalDirigentesPunteros').modal('hide');
     }
     // ABRIR MODAL DE DIRIGENTES

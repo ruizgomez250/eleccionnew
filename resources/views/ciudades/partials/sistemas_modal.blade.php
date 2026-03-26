@@ -23,7 +23,6 @@
                     <th class="text-center">Dirigentes</th>
                     <th class="text-center">Punteros</th>
                     <th class="text-center">Votantes</th>
-                    <th>Acciones</th>
                 </tr>
             </thead>
 
@@ -41,33 +40,24 @@
                         <td>{{ $s->tipo ?? 'No especificado' }}</td>
 
                         <td class="text-center">
-                            <span class="badge badge-warning">{{ $dir }}</span>
+                            <button class="btn btn-warning btn-sm btn-dirigentes" data-sistema="{{ $s->id }}"
+                                data-nombre="{{ $s->nombre }}" data-toggle="modal" data-target="#modalDirigentes">
+                                <i class="fas fa-user-tie"><span class="badge badge-warning">{{ $dir }}</span></i>
+                            </button>
+                            
                         </td>
 
                         <td class="text-center">
-                            <span class="badge badge-info">{{ $pun }}</span>
+                            <button class="btn btn-info btn-sm"
+                                onclick="abrirModalPunterosLista({{ $s->id }}, '{{ $s->nombre }}')">
+                                <i class="fas fa-users"><span class="badge badge-info">{{ $pun }}</span></i>
+                            </button>
+                            
                         </td>
 
                         <td class="text-center">
                             <span class="badge badge-success">{{ $vot }}</span>
-                        </td>
-
-                        <td>
-
-                            {{-- DIRIGENTES --}}
-                            <button class="btn btn-warning btn-sm btn-dirigentes" data-sistema="{{ $s->id }}"
-                                data-nombre="{{ $s->nombre }}" data-toggle="modal" data-target="#modalDirigentes">
-                                <i class="fas fa-user-tie"></i>
-                            </button>
-                           
-
-                            {{-- PUNTEROS --}}
-                            <button class="btn btn-info btn-sm"
-                                onclick="abrirModalPunterosLista({{ $s->id }}, '{{ $s->nombre }}')">
-                                <i class="fas fa-users"></i>
-                            </button>
-
-                        </td>
+                        </td>                        
                     </tr>
                 @endforeach
             </tbody>

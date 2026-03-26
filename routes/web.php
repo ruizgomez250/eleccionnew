@@ -40,6 +40,8 @@ Route::get('mesas-entrada/data1', [MesaEntradaController::class, 'getData'])->na
 
 
 Route::middleware('auth')->group(function () {
+    Route::get('/arbol', [SistemaController::class, 'mostrarArbol'])
+    ->name('home');
     Route::get('punterosyvotantespordirigente/{equipo?}', [ReportesController::class, 'index'])
         ->name('punterosyvotantespordirigente');
     Route::resource('equipo', EquipoController::class);

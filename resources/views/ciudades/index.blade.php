@@ -104,6 +104,9 @@
                         <p>Selecciona un distrito para ver sus sistemas</p>
                     </div>
                 </div>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">
+                    <i class="fas fa-arrow-left"></i>Volver Atras
+                </button>
             </div>
         </div>
     </div>
@@ -128,6 +131,12 @@
                         <p class="mt-2">Cargando dirigentes...</p>
                     </div>
                 </div>
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i>Volver Atras
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -151,6 +160,12 @@
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
                         <p class="mt-2">Selecciona una opción para ver los punteros...</p>
                     </div>
+                </div>
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i>Volver Atras
+                    </button>
                 </div>
             </div>
         </div>
@@ -223,16 +238,37 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary mt-2">
-                            <i class="fas fa-save"></i> Guardar Votante
-                        </button>
+                        {{-- 👇 BOTONES ORGANIZADOS EN UNA FILA --}}
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Votante
+                                </button>
+
+
+                            </div>
+                            <div class="col-md-6 text-right">
+
+
+                                <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
+                                    <i class="fas fa-arrow-left"></i> Volver a Punteros
+                                </button>
+                            </div>
+                        </div>
                     </form>
+
                 </div>
                 <div class="modal-body" id="contenidoVotantes">
                     <div class="text-center p-4">
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
                         <p class="mt-2">Cargando votantes...</p>
                     </div>
+                </div>
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i>Volver a Punteros
+                    </button>
                 </div>
             </div>
         </div>
@@ -255,8 +291,6 @@
                 max-width: 1140px;
             }
         }
-
-       
     </style>
 @stop
 
@@ -745,7 +779,7 @@
 
             $.get(url, function(data) {
                 $("#contenidoDirigentes").html(data);
-               // inicializarSelect2();
+                // inicializarSelect2();
                 // Reinicializar DataTable si existe en el contenido cargado
                 setTimeout(function() {
                     if ($.fn.DataTable && $('#dirigentes-table').length) {
@@ -860,7 +894,7 @@
             }).fail(function(error) {
                 console.error('Error cargando punteros:', error);
                 tbody.html(
-                '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
+                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
             });
         }
 
@@ -922,7 +956,7 @@
             }).fail(function(error) {
                 console.error('Error cargando punteros:', error);
                 tbody.html(
-                '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
+                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
             });
         }
 
