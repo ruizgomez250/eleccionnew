@@ -6,13 +6,13 @@ use App\Models\CiudadElectoral;
 use App\Models\Equipo;
 use App\Models\PrePadron;
 use App\Models\Sistema;
+use App\Models\Sistemaspadre;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class SistemaController extends Controller
 {
@@ -245,23 +245,13 @@ class SistemaController extends Controller
         // 🔹 Retornamos la vista con sistemas + totales
         return view('ciudades.partials.sistemas_modal', compact('sistemas', 'totalesSistemas'))->render();
     }
-    public function mostrarArbol()
+        public function mostrarArbol()
     {
         try {
             $userId = Auth::id();
             $userSistema = Auth::user()->sistema;
 
-            // 🔹 Definir los tipos de candidaturas permitidas
-            $tiposCandidaturas = [
-                'Intendente',
-                'Concejal',
-                'Convencional',
-                'Convencional Juventud',
-                'Miembro de Comite',
-                'Miembro de la Juventud'
-            ];
-
-            // 🔹 Obtener los sistemas permitidos según el usuario
+            // Obtener los sistemas permitidos según el usuario
             $sistemas = Sistema::with(['equipos.dirigentes.punteros.votantes', 'ciudad', 'usuario'])
                 ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
                     $query->where(function ($q) use ($userId, $userSistema) {
@@ -271,239 +261,258 @@ class SistemaController extends Controller
                 })
                 ->get();
 
-            // 🔹 DEPURACIÓN: Ver cuántos sistemas hay en total
-            Log::info('Total sistemas encontrados: ' . $sistemas->count());
-            Log::info('Tipos de sistemas encontrados:', $sistemas->pluck('tipo')->toArray());
+            // Definir los tipos de candidaturas
+            $tiposCandidaturas = [
+                'intendente',
+                'concejal',
+                'convencional',
+                'convencional juventud',
+                'miembro de comite',
+                'miembro de la juventud'
+            ];
 
-            // 🔹 Filtrar solo candidaturas
+            // Filtrar solo candidaturas
             $sistemasCandidaturas = $sistemas->filter(function ($sistema) use ($tiposCandidaturas) {
-                return in_array($sistema->tipo, $tiposCandidaturas);
+                $tipo = strtolower(trim($sistema->tipo ?? ''));
+                return in_array($tipo, $tiposCandidaturas);
             });
 
-            // 🔹 DEPURACIÓN: Ver cuántas candidaturas hay
-            Log::info('Total candidaturas filtradas: ' . $sistemasCandidaturas->count());
+            // Construir árbol jerárquico basado en sistemaspadres
+            $arbolJerarquico = $this->construirArbolConSistemaspadres($sistemasCandidaturas);
 
-            // 🔹 Construir árbol jerárquico
-            $arbolJerarquico = $this->construirArbolPorUsuario($sistemasCandidaturas);
-
-            // 🔹 DEPURACIÓN: Ver el árbol construido
-            Log::info('Árbol jerárquico:', ['count' => count($arbolJerarquico), 'data' => $arbolJerarquico]);
-
-            // 🔹 Calcular totales por distrito
-            $totalesDistritos = $this->calcularTotalesPorDistrito($sistemas);
-
-            // 🔹 DEPURACIÓN: También puedes pasar los sistemas a la vista para debug
             return view('arbol.index', [
-                'arbolJerarquico' => $arbolJerarquico,
-                'totalesDistritos' => $totalesDistritos,
-                'debug_sistemas' => $sistemas, // Para depuración
-                'debug_candidaturas' => $sistemasCandidaturas // Para depuración
+                'arbolJerarquico' => $arbolJerarquico
             ]);
         } catch (\Exception $e) {
-            Log::error('Error en mostrarArbol: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error al cargar las ciudades: ' . $e->getMessage());
+            dd('Error capturado: ' . $e->getMessage(), $e->getTraceAsString());
         }
     }
+
     /**
-     * Construir árbol jerárquico basado en el usuario que creó cada sistema
+     * Construir árbol jerárquico usando sistemaspadres
      */
-    private function construirArbolPorUsuario(Collection $sistemas)
+    private function construirArbolConSistemaspadres(Collection $sistemas)
     {
-        // Si no hay sistemas, retornar array vacío
         if ($sistemas->isEmpty()) {
             return [];
         }
 
-        // Agrupar sistemas por usuario (idusuario)
-        $sistemasPorUsuario = $sistemas->groupBy('idusuario');
-
+        // Agrupar por ciudad (distrito)
+        $sistemasPorCiudad = $sistemas->groupBy(function($sistema) {
+            return $sistema->id_ciudad_electoral ?? 'sin_ciudad';
+        });
+        
         $arbol = [];
-
-        foreach ($sistemasPorUsuario as $usuarioId => $sistemasUsuario) {
-            // Obtener información del usuario
-            $usuario = $sistemasUsuario->first()->usuario;
-            $nombreUsuario = $usuario ? $usuario->name : 'Usuario ' . $usuarioId;
-
-            // Buscar intendentes de este usuario
-            $intendentes = $sistemasUsuario->filter(function ($sistema) {
-                return $sistema->tipo === 'Intendente';
-            });
-
-            // Si hay intendentes, agregarlos como nodos principales
-            if ($intendentes->count() > 0) {
-                foreach ($intendentes as $intendente) {
-                    $nodoIntendente = [
-                        'id' => $intendente->id,
-                        'nombre' => $intendente->nombre,
-                        'tipo' => 'intendente',
-                        'tipo_nivel' => 'Intendente',
-                        'ciudad' => $intendente->ciudad ? $intendente->ciudad->descripcion : 'Sin ciudad',
-                        'departamento' => $intendente->ciudad ? $intendente->ciudad->departamento : 'Sin departamento',
-                        'candidatos' => $this->obtenerCandidatos($intendente),
-                        'concejales' => $this->getHijosPorTipo($sistemasUsuario, $intendente->id, 'Concejal'),
-                        'hijos' => []
-                    ];
-
-                    $arbol[] = $nodoIntendente;
-                }
-            } else {
-                // Si no hay intendentes, buscar concejales directamente
-                $concejales = $sistemasUsuario->filter(function ($sistema) {
-                    return $sistema->tipo === 'Concejal';
-                });
-
-                if ($concejales->count() > 0) {
-                    // Crear nodo virtual para agrupar concejales sin intendente
-                    $nodoVirtual = [
-                        'id' => null,
-                        'nombre' => 'Sin Intendente',
-                        'tipo' => 'intendente_virtual',
-                        'tipo_nivel' => 'Sin Intendente',
-                        'ciudad' => $sistemasUsuario->first()->ciudad ? $sistemasUsuario->first()->ciudad->descripcion : 'Sin ciudad',
-                        'departamento' => $sistemasUsuario->first()->ciudad ? $sistemasUsuario->first()->ciudad->departamento : 'Sin departamento',
-                        'candidatos' => [],
-                        'concejales' => $this->getHijosPorTipo($sistemasUsuario, null, 'Concejal'),
-                        'hijos' => []
-                    ];
-
-                    $arbol[] = $nodoVirtual;
-                } else {
-                    // Si no hay intendentes ni concejales, mostrar otros niveles
-                    $otrosNiveles = $this->getOtrosNiveles($sistemasUsuario);
-                    if (!empty($otrosNiveles)) {
-                        $nodoVirtual = [
-                            'id' => null,
-                            'nombre' => 'Sin Intendente',
-                            'tipo' => 'intendente_virtual',
-                            'tipo_nivel' => 'Sin Intendente',
-                            'ciudad' => $sistemasUsuario->first()->ciudad ? $sistemasUsuario->first()->ciudad->descripcion : 'Sin ciudad',
-                            'departamento' => $sistemasUsuario->first()->ciudad ? $sistemasUsuario->first()->ciudad->departamento : 'Sin departamento',
-                            'candidatos' => [],
-                            'hijos' => $otrosNiveles,
-                            'concejales' => []
-                        ];
-
-                        $arbol[] = $nodoVirtual;
-                    }
-                }
-            }
+        
+        foreach ($sistemasPorCiudad as $ciudadId => $sistemasCiudad) {
+            $ciudad = $sistemasCiudad->first()->ciudad;
+            $nombreCiudad = $ciudad ? $ciudad->descripcion : 'Sin Ciudad';
+            $departamento = $ciudad ? $ciudad->departamento : 'Sin Departamento';
+            
+            // Construir la jerarquía dentro del distrito usando sistemaspadres
+            $jerarquia = $this->construirJerarquiaPorDistrito($sistemasCiudad);
+            
+            // Calcular totales del distrito
+            $totales = $this->calcularTotalesDistrito($sistemasCiudad);
+            
+            $nodoDistrito = [
+                'id' => $ciudadId,
+                'nombre' => $nombreCiudad,
+                'tipo' => 'distrito',
+                'tipo_nivel' => 'Distrito',
+                'departamento' => $departamento,
+                'totales' => $totales,
+                'hijos' => $jerarquia // Los nodos raíz del distrito
+            ];
+            
+            $arbol[] = $nodoDistrito;
         }
-
-        // Ordenar por departamento y ciudad
-        usort($arbol, function ($a, $b) {
+        
+        // Ordenar distritos por departamento y nombre
+        usort($arbol, function($a, $b) {
             if ($a['departamento'] == $b['departamento']) {
-                return strcmp($a['ciudad'], $b['ciudad']);
+                return strcmp($a['nombre'], $b['nombre']);
             }
             return strcmp($a['departamento'], $b['departamento']);
         });
-
+        
         return $arbol;
     }
 
     /**
-     * Obtener hijos de un tipo específico para un usuario
+     * Construir jerarquía dentro de un distrito usando sistemaspadres
      */
-    private function getHijosPorTipo(Collection $sistemas, $parentId, $tipo)
+    private function construirJerarquiaPorDistrito(Collection $sistemas)
     {
-        // Filtrar sistemas del mismo usuario y del tipo especificado
-        $hijos = $sistemas->filter(function ($sistema) use ($tipo) {
-            return $sistema->tipo === $tipo;
-        });
-
-        $hijosNodos = [];
-
-        foreach ($hijos as $hijo) {
-            $nodo = [
-                'id' => $hijo->id,
-                'nombre' => $hijo->nombre,
-                'tipo' => $this->getTipoSlug($tipo),
-                'tipo_nivel' => $tipo,
-                'candidatos' => $this->obtenerCandidatos($hijo),
-                'hijos' => []
+        // Crear un mapa de sistemas por ID
+        $sistemasMap = [];
+        foreach ($sistemas as $sistema) {
+            $sistemasMap[$sistema->id] = $sistema;
+        }
+        
+        // Obtener todas las relaciones padre-hijo de sistemaspadres para estos sistemas
+        $relaciones = Sistemaspadre::whereIn('idsistema', array_keys($sistemasMap))
+            ->get()
+            ->keyBy('idsistema');
+        
+        // Construir estructura jerárquica
+        $nodos = [];
+        $hijosPorPadre = [];
+        
+        // Primero, crear todos los nodos
+        foreach ($sistemas as $sistema) {
+            $nodos[$sistema->id] = $this->crearNodoSistema($sistema);
+        }
+        
+        // Luego, establecer las relaciones padre-hijo
+        foreach ($sistemas as $sistema) {
+            $relacion = $relaciones->get($sistema->id);
+            $idPadre = $relacion ? $relacion->idsistemapadre : null;
+            
+            if ($idPadre && isset($nodos[$idPadre])) {
+                // Este sistema tiene un padre válido dentro del mismo distrito
+                $hijosPorPadre[$idPadre][] = $nodos[$sistema->id];
+            }
+        }
+        
+        // Asignar hijos a sus padres
+        foreach ($hijosPorPadre as $padreId => $hijos) {
+            if (isset($nodos[$padreId])) {
+                // Ordenar hijos por tipo (para mantener consistencia)
+                usort($hijos, function($a, $b) {
+                    $orden = [
+                        'intendente' => 1,
+                        'concejal' => 2,
+                        'convencional' => 3,
+                        'convencional_juventud' => 4,
+                        'miembro_comite' => 5,
+                        'miembro_juventud' => 6
+                    ];
+                    $ordenA = $orden[$a['tipo']] ?? 99;
+                    $ordenB = $orden[$b['tipo']] ?? 99;
+                    return $ordenA <=> $ordenB;
+                });
+                $nodos[$padreId]['hijos'] = $hijos;
+            }
+        }
+        
+        // Encontrar los nodos raíz (los que no tienen padre en este distrito)
+        $raices = [];
+        foreach ($sistemas as $sistema) {
+            $relacion = $relaciones->get($sistema->id);
+            $idPadre = $relacion ? $relacion->idsistemapadre : null;
+            
+            // Es raíz si no tiene padre o el padre no está en este distrito
+            if (!$idPadre || !isset($nodos[$idPadre])) {
+                $raices[] = $nodos[$sistema->id];
+            }
+        }
+        
+        // Ordenar raíces por tipo (intendentes primero, luego concejales, etc.)
+        usort($raices, function($a, $b) {
+            $orden = [
+                'intendente' => 1,
+                'concejal' => 2,
+                'convencional' => 3,
+                'convencional_juventud' => 4,
+                'miembro_comite' => 5,
+                'miembro_juventud' => 6
             ];
+            $ordenA = $orden[$a['tipo']] ?? 99;
+            $ordenB = $orden[$b['tipo']] ?? 99;
+            return $ordenA <=> $ordenB;
+        });
+        
+        return $raices;
+    }
 
-            // Agregar subniveles según el tipo
+    /**
+     * Crear nodo para un sistema
+     */
+    private function crearNodoSistema($sistema)
+    {
+        $tipo = strtolower(trim($sistema->tipo ?? ''));
+        
+        // Mapeo de tipos a nombres legibles
+        $nombresTipos = [
+            'intendente' => 'Intendente',
+            'concejal' => 'Concejal',
+            'convencional' => 'Convencional',
+            'convencional juventud' => 'Convencional Juventud',
+            'miembro de comite' => 'Miembro de Comité',
+            'miembro de la juventud' => 'Miembro de la Juventud'
+        ];
+        
+        return [
+            'id' => $sistema->id,
+            'nombre' => $sistema->nombre,
+            'tipo' => $this->getTipoSlug($tipo),
+            'tipo_nivel' => $nombresTipos[$tipo] ?? ucfirst($tipo),
+            'candidatos' => $this->obtenerCandidatos($sistema),
+            'hijos' => [] // Se llenará después
+        ];
+    }
+
+    /**
+     * Calcular totales de un distrito
+     */
+    private function calcularTotalesDistrito(Collection $sistemas)
+    {
+        $totales = [
+            'intendentes' => 0,
+            'concejales' => 0,
+            'convencionales' => 0,
+            'convencionales_juventud' => 0,
+            'miembros_comite' => 0,
+            'miembros_juventud' => 0,
+            'total_candidaturas' => 0,
+            'total_dirigentes' => 0,
+            'total_punteros' => 0,
+            'total_votantes' => 0
+        ];
+        
+        foreach ($sistemas as $sistema) {
+            $tipo = strtolower(trim($sistema->tipo ?? ''));
+            
             switch ($tipo) {
-                case 'Concejal':
-                    $nodo['convencionales'] = $this->getHijosPorTipo($sistemas, $hijo->id, 'Convencional');
+                case 'intendente':
+                    $totales['intendentes']++;
                     break;
-                case 'Convencional':
-                    $nodo['convencionales_juventud'] = $this->getHijosPorTipo($sistemas, $hijo->id, 'Convencional Juventud');
+                case 'concejal':
+                    $totales['concejales']++;
                     break;
-                case 'Convencional Juventud':
-                    $nodo['miembros_comite'] = $this->getHijosPorTipo($sistemas, $hijo->id, 'Miembro de Comite');
+                case 'convencional':
+                    $totales['convencionales']++;
                     break;
-                case 'Miembro de Comite':
-                    $nodo['miembros_juventud'] = $this->getHijosPorTipo($sistemas, $hijo->id, 'Miembro de la Juventud');
+                case 'convencional juventud':
+                    $totales['convencionales_juventud']++;
+                    break;
+                case 'miembro de comite':
+                    $totales['miembros_comite']++;
+                    break;
+                case 'miembro de la juventud':
+                    $totales['miembros_juventud']++;
                     break;
             }
-
-            $hijosNodos[] = $nodo;
-        }
-
-        return $hijosNodos;
-    }
-
-    /**
-     * Obtener otros niveles cuando no hay intendentes ni concejales
-     */
-    private function getOtrosNiveles(Collection $sistemas)
-    {
-        $niveles = [
-            'Convencional' => 'convencionales',
-            'Convencional Juventud' => 'convencionales_juventud',
-            'Miembro de Comite' => 'miembros_comite',
-            'Miembro de la Juventud' => 'miembros_juventud'
-        ];
-
-        $resultado = [];
-
-        foreach ($niveles as $tipo => $key) {
-            $items = $sistemas->filter(function ($sistema) use ($tipo) {
-                return $sistema->tipo === $tipo;
+            
+            // Sumar dirigentes, punteros y votantes
+            $candidatosSistema = $this->obtenerCandidatos($sistema);
+            $totales['total_dirigentes'] += count($candidatosSistema);
+            $totales['total_punteros'] += collect($candidatosSistema)->sum(function($d) {
+                return count($d['punteros'] ?? []);
             });
-
-            foreach ($items as $item) {
-                $nodo = [
-                    'id' => $item->id,
-                    'nombre' => $item->nombre,
-                    'tipo' => $this->getTipoSlug($tipo),
-                    'tipo_nivel' => $tipo,
-                    'candidatos' => $this->obtenerCandidatos($item),
-                    'hijos' => []
-                ];
-
-                // Agregar subniveles si existen
-                if ($tipo === 'Convencional') {
-                    $nodo['convencionales_juventud'] = $this->getHijosPorTipo($sistemas, $item->id, 'Convencional Juventud');
-                } elseif ($tipo === 'Convencional Juventud') {
-                    $nodo['miembros_comite'] = $this->getHijosPorTipo($sistemas, $item->id, 'Miembro de Comite');
-                } elseif ($tipo === 'Miembro de Comite') {
-                    $nodo['miembros_juventud'] = $this->getHijosPorTipo($sistemas, $item->id, 'Miembro de la Juventud');
-                }
-
-                $resultado[] = $nodo;
-            }
+            $totales['total_votantes'] += collect($candidatosSistema)->sum(function($d) {
+                return collect($d['punteros'] ?? [])->sum(function($p) {
+                    return count($p['votantes'] ?? []);
+                });
+            });
         }
-
-        return $resultado;
-    }
-
-    /**
-     * Convertir tipo a slug para clases CSS
-     */
-    private function getTipoSlug($tipo)
-    {
-        $map = [
-            'Intendente' => 'intendente',
-            'Concejal' => 'concejal',
-            'Convencional' => 'convencional',
-            'Convencional Juventud' => 'convencional_juventud',
-            'Miembro de Comite' => 'miembro_comite',
-            'Miembro de la Juventud' => 'miembro_juventud'
-        ];
-
-        return $map[$tipo] ?? strtolower(str_replace(' ', '_', $tipo));
+        
+        $totales['total_candidaturas'] = $totales['intendentes'] + $totales['concejales'] + 
+                                         $totales['convencionales'] + $totales['convencionales_juventud'] +
+                                         $totales['miembros_comite'] + $totales['miembros_juventud'];
+        
+        return $totales;
     }
 
     /**
@@ -552,42 +561,21 @@ class SistemaController extends Controller
     }
 
     /**
-     * Calcular totales por distrito (funcionalidad existente)
+     * Convertir tipo a slug para clases CSS
      */
-    private function calcularTotalesPorDistrito(Collection $sistemas)
+    private function getTipoSlug($tipo)
     {
-        $totalesDistritos = [];
+        $map = [
+            'intendente' => 'intendente',
+            'concejal' => 'concejal',
+            'convencional' => 'convencional',
+            'convencional juventud' => 'convencional_juventud',
+            'miembro de comite' => 'miembro_comite',
+            'miembro de la juventud' => 'miembro_juventud',
+            'distrito' => 'distrito'
+        ];
 
-        foreach ($sistemas as $sistema) {
-            $ciudadNombre = $sistema->ciudad->descripcion ?? 'Sin ciudad';
-
-            $totalDirigentes = $sistema->equipos->flatMap->dirigentes->count();
-            $totalPunteros = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
-                return $d->punteros->count();
-            });
-            $totalVotantes = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
-                return $d->punteros->sum(function ($p) {
-                    return $p->votantes->count();
-                });
-            });
-
-            if (!isset($totalesDistritos[$ciudadNombre])) {
-                $totalesDistritos[$ciudadNombre] = [
-                    'dirigentes' => $totalDirigentes,
-                    'punteros' => $totalPunteros,
-                    'votantes' => $totalVotantes,
-                    'id_ciudad_electoral' => $sistema->id_ciudad_electoral,
-                    'departamento' => $sistema->ciudad->departamento ?? '',
-                    'descripcion' => $ciudadNombre
-                ];
-            } else {
-                $totalesDistritos[$ciudadNombre]['dirigentes'] += $totalDirigentes;
-                $totalesDistritos[$ciudadNombre]['punteros'] += $totalPunteros;
-                $totalesDistritos[$ciudadNombre]['votantes'] += $totalVotantes;
-            }
-        }
-
-        return collect($totalesDistritos)->sortBy(['departamento', 'descripcion']);
+        return $map[$tipo] ?? strtolower(str_replace(' ', '_', $tipo));
     }
 
     /**
@@ -617,7 +605,7 @@ class SistemaController extends Controller
 
             return view('arbol.partials.dirigentes', compact('dirigentes', 'sistema'));
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al cargar dirigentes: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al cargar dirigentes'], 500);
         }
     }
 
@@ -650,32 +638,7 @@ class SistemaController extends Controller
 
             return view('arbol.partials.punteros', compact('punteros', 'sistema'));
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al cargar punteros: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * API: Obtener sistemas por ciudad
-     */
-    public function getSistemasByCiudad($ciudadId)
-    {
-        try {
-            $userId = Auth::id();
-            $userSistema = Auth::user()->sistema;
-
-            $sistemas = Sistema::with(['ciudad', 'usuario'])
-                ->where('id_ciudad_electoral', $ciudadId)
-                ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
-                    $query->where(function ($q) use ($userId, $userSistema) {
-                        $q->where('idusuario', $userId)
-                            ->orWhere('id', $userSistema);
-                    });
-                })
-                ->get();
-
-            return view('arbol.partials.sistemas-ciudad', compact('sistemas'));
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al cargar sistemas: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al cargar punteros'], 500);
         }
     }
 }

@@ -307,6 +307,14 @@ return [
             'url'        => '/ciudades',    // La ruta hacia la vista que mostramos
         ],
         [
+            'text'       => 'Árbol de Candidaturas',
+            'icon'       => 'fas fa-sitemap',  // Cambié a fa-sitemap que es más apropiado para un árbol
+            'icon_color' => 'primary',
+            'url'        => '/arbol',    // Usando el nombre de la ruta en lugar de la URL directa
+            'active'     => ['arbol'],         // Marca como activo cuando estás en esa ruta
+            'can'        => 'Arbol',
+        ],
+        [
             'text'       => 'Equipo',
             'icon'       => 'fas fa-users',
             'icon_color' => 'info',

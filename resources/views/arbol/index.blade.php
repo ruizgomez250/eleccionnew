@@ -5,13 +5,13 @@
 
 @section('content_header')
     <h1 class="m-0">
-        <i class="fas fa-sitemap text-primary"></i> Árbol de Candidaturas
+        <i class="fas fa-sitemap text-primary"></i> Árbol de Candidaturas por Distrito
     </h1>
 @stop
 
 @section('content')
 
-    {{-- BUSCADOR DE CANDIDATURAS --}}
+    {{-- BUSCADOR --}}
     <div class="card mb-3">
         <div class="card-body">
             <div class="input-group">
@@ -20,16 +20,24 @@
                         <i class="fas fa-search text-white"></i>
                     </span>
                 </div>
-                <input type="text" id="buscadorArbol" class="form-control" placeholder="Buscar candidatura por nombre, tipo o ciudad...">
+                <input type="text" id="buscadorArbol" class="form-control" placeholder="Buscar distrito, candidatura, intendente, concejal...">
+            </div>
+            <div class="mt-2">
+                <button type="button" id="expandirTodos" class="btn btn-sm btn-success">
+                    <i class="fas fa-expand-alt"></i> Expandir Todos
+                </button>
+                <button type="button" id="colapsarTodos" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-compress-alt"></i> Colapsar Todos
+                </button>
             </div>
         </div>
     </div>
 
     {{-- ÁRBOL JERÁRQUICO --}}
-    <div class="card mb-4">
+    <div class="card">
         <div class="card-header bg-primary text-white">
             <h3 class="card-title mb-0">
-                <i class="fas fa-sitemap"></i> Estructura Jerárquica por Usuario
+                <i class="fas fa-sitemap"></i> Estructura Jerárquica por Distrito
             </h3>
             <div class="card-tools">
                 <button type="button" class="btn btn-tool text-white" data-card-widget="collapse">
@@ -37,12 +45,11 @@
                 </button>
             </div>
         </div>
-        <div class="card-body" id="arbolContainer">
+        <div class="card-body">
             @if(isset($arbolJerarquico) && count($arbolJerarquico) > 0)
                 <div class="tree">
-                    <ul>
-                        {{-- IMPORTANTE: Aquí pasamos la variable correctamente --}}
-                        @include('arbol.partials.tree-nodes', ['nodes' => $arbolJerarquico])
+                    <ul class="tree-root">
+                        @include('arbol.partials.tree-nodes', ['nodes' => $arbolJerarquico, 'nivel' => 0])
                     </ul>
                 </div>
             @else
@@ -54,101 +61,8 @@
         </div>
     </div>
 
-    {{-- LISTA DISTRITOS --}}
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            <h3 class="card-title mb-0">
-                <i class="fas fa-map-marker-alt"></i> Totales por Distrito
-            </h3>
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool text-white" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row" id="listaDistritos">
-                @foreach ($totalesDistritos as $distrito => $totales)
-                    <div class="col-md-3 mb-3">
-                        <div class="card distrito-card h-100 shadow-sm border-primary"
-                            style="cursor:pointer; transition: transform 0.2s;"
-                            data-ciudad-id="{{ $totales['id_ciudad_electoral'] }}" data-distrito="{{ $distrito }}">
-                            <div class="card-body text-center">
-                                <div class="row mb-2 justify-content-center align-items-center">
-                                    <div class="col-12">
-                                        <h5 class="card-title font-weight-bold">
-                                            <i class="fas fa-map-marker-alt fa-2x text-primary"></i> {{ $distrito }}
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div class="row mb-1 justify-content-center">
-                                    <div class="col-12">
-                                        <p class="mb-0">
-                                            <i class="fas fa-user-tie text-warning"></i>
-                                            <strong>Dirigentes:</strong>
-                                            <span class="badge badge-warning badge-pill">
-                                                {{ number_format($totales['dirigentes'], 0, '', '.') }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="row mb-1 justify-content-center">
-                                    <div class="col-12">
-                                        <p class="mb-0">
-                                            <i class="fas fa-user-friends text-success"></i>
-                                            <strong>Punteros:</strong>
-                                            <span class="badge badge-success badge-pill">
-                                                {{ number_format($totales['punteros'], 0, '', '.') }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="row justify-content-center">
-                                    <div class="col-12">
-                                        <p class="mb-0">
-                                            <i class="fas fa-vote-yea text-primary"></i>
-                                            <strong>Votantes:</strong>
-                                            <span class="badge badge-primary badge-pill">
-                                                {{ number_format($totales['votantes'], 0, '', '.') }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
     {{-- MODALES --}}
-    <div class="modal fade" id="modalSistemas" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-map-marker-alt"></i> Sistemas del Distrito
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modalSistemasBody">
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-hand-pointer fa-3x mb-3"></i>
-                        <p>Selecciona un distrito para ver sus sistemas</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">
-                        <i class="fas fa-arrow-left"></i> Volver Atrás
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Modal de Dirigentes -->
     <div class="modal fade" id="modalDirigentes" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-xl" style="max-width: 98%; width: 98%; margin: 10px auto;">
             <div class="modal-content" style="height: 98vh; max-height: 98vh;">
@@ -175,6 +89,7 @@
         </div>
     </div>
 
+    <!-- Modal de Punteros -->
     <div class="modal fade" id="modalPunterosLista" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-xl" style="max-width: 98%; width: 98%; margin: 10px auto;">
             <div class="modal-content" style="height: 98vh; max-height: 98vh;">
@@ -201,6 +116,7 @@
         </div>
     </div>
 
+    <!-- Modal de Votantes -->
     <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -227,26 +143,9 @@
         </div>
     </div>
 @stop
-{{-- Agrega esto justo después de @section('content') --}}
-@if(isset($debug_sistemas))
-<div class="alert alert-info mb-3">
-    <h5>Información de depuración:</h5>
-    <p><strong>Total sistemas:</strong> {{ $debug_sistemas->count() }}</p>
-    <p><strong>Total candidaturas filtradas:</strong> {{ isset($debug_candidaturas) ? $debug_candidaturas->count() : 0 }}</p>
-    <p><strong>Tipos encontrados:</strong> 
-        @foreach($debug_sistemas->groupBy('tipo') as $tipo => $items)
-            <span class="badge badge-info">{{ $tipo }}: {{ $items->count() }}</span>
-        @endforeach
-    </p>
-    <p><strong>Árbol jerárquico nodos:</strong> {{ count($arbolJerarquico) }}</p>
-    <details>
-        <summary>Ver detalles de sistemas</summary>
-        <pre>{{ json_encode($debug_sistemas->map(function($s) { return ['id' => $s->id, 'nombre' => $s->nombre, 'tipo' => $s->tipo, 'idusuario' => $s->idusuario]; })->toArray(), JSON_PRETTY_PRINT) }}</pre>
-    </details>
-</div>
-@endif
 @section('css')
     <style>
+        /* Estilos base del árbol */
         .tree {
             min-height: 20px;
             padding: 19px;
@@ -259,6 +158,11 @@
         .tree ul {
             padding-left: 30px;
             list-style: none;
+        }
+        
+        /* Estilos para ramas colapsadas */
+        .tree ul.collapsed {
+            display: none;
         }
         
         .tree li {
@@ -314,6 +218,270 @@
             padding: 12px 15px;
         }
         
+        /* Estilo específico para los distritos - MEJORADO */
+        .level-distrito .card {
+            border-left-color: #007bff;
+        }
+        
+        .level-distrito .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+        }
+        
+        /* Texto blanco para todo el contenido del distrito */
+        .level-distrito .card-header,
+        .level-distrito .card-header .card-title,
+        .level-distrito .card-header .text-muted,
+        .level-distrito .card-header small,
+        .level-distrito .card-header .badge,
+        .level-distrito .card-header .stats-distrito,
+        .level-distrito .card-header .stats-distrito span,
+        .level-distrito .card-header .d-flex,
+        .level-distrito .card-header .row,
+        .level-distrito .card-header .col-12 {
+            color: white !important;
+        }
+        
+        /* Estilos para los badges dentro del distrito */
+        .level-distrito .card-header .badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+        
+        .level-distrito .card-header .badge-orange,
+        .level-distrito .card-header .badge-purple {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+        
+        /* Texto de las estadísticas en el distrito */
+        .level-distrito .card-header .text-warning,
+        .level-distrito .card-header .text-success,
+        .level-distrito .card-header .text-primary,
+        .level-distrito .card-header .text-info,
+        .level-distrito .card-header .text-danger {
+            color: white !important;
+            font-weight: 500;
+        }
+        
+        /* Iconos en el distrito */
+        .level-distrito .card-header i {
+            color: white !important;
+        }
+        
+        /* Línea separadora en el distrito */
+        .level-distrito .card-header .border-top {
+            border-top-color: rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        /* Icono de expandir/colapsar */
+        .toggle-icon {
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+            color: #6c757d;
+            transition: transform 0.3s;
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .toggle-icon:hover {
+            color: #007bff;
+        }
+        
+        .toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        
+        /* Estilos para el icono dentro del distrito */
+        .level-distrito .toggle-icon {
+            color: white !important;
+        }
+        
+        .level-distrito .toggle-icon:hover {
+            color: #ffc107 !important;
+        }
+        
+        /* Niveles jerárquicos para otros nodos */
+        .level-intendente .card { border-left-color: #dc3545; }
+        .level-intendente_virtual .card { border-left-color: #6c757d; }
+        .level-concejal .card { border-left-color: #28a745; }
+        .level-convencional .card { border-left-color: #17a2b8; }
+        .level-convencional_juventud .card { border-left-color: #ffc107; }
+        .level-miembro_comite .card { border-left-color: #fd7e14; }
+        .level-miembro_juventud .card { border-left-color: #6f42c1; }
+        
+        .badge-nivel {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+        }
+        
+        /* Badges personalizados */
+        .badge-orange {
+            background-color: #fd7e14;
+            color: white;
+        }
+        
+        .badge-purple {
+            background-color: #6f42c1;
+            color: white;
+        }
+        
+        /* Clases utilitarias */
+        .border-top {
+            border-top: 1px solid #dee2e6 !important;
+        }
+        
+        .mr-3 {
+            margin-right: 1rem !important;
+        }
+        
+        .mb-1 {
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem !important;
+        }
+        
+        .mt-3 {
+            margin-top: 1rem !important;
+        }
+        
+        .pt-2 {
+            padding-top: 0.5rem !important;
+        }
+        
+        /* Otros estilos */
+        .distrito-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .nodo-buscar {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107 !important;
+        }
+        
+        .text-orange {
+            color: #fd7e14;
+        }
+        
+        .text-purple {
+            color: #6f42c1;
+        }
+        
+        .stats-distrito {
+            font-size: 0.75rem;
+        }
+        
+        .stats-distrito span {
+            margin-right: 10px;
+        }
+        
+        .cursor-pointer {
+            cursor: pointer;
+        }
+    </style>
+@stop
+@section('css')
+    <style>
+        .tree {
+            min-height: 20px;
+            padding: 19px;
+            margin-bottom: 20px;
+            background-color: #f5f5f5;
+            border: 1px solid #e3e3e3;
+            border-radius: 4px;
+        }
+        
+        .tree ul {
+            padding-left: 30px;
+            list-style: none;
+        }
+        
+        /* Estilos para ramas colapsadas */
+        .tree ul.collapsed {
+            display: none;
+        }
+        
+        .tree li {
+            position: relative;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 20px;
+            box-sizing: border-box;
+        }
+        
+        .tree li:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 1px;
+            border-left: 1px solid #ccc;
+        }
+        
+        .tree li:after {
+            content: "";
+            position: absolute;
+            top: 25px;
+            left: 0;
+            width: 20px;
+            height: 1px;
+            border-top: 1px solid #ccc;
+        }
+        
+        .tree li:last-child:before {
+            height: 25px;
+        }
+        
+        .tree-node {
+            cursor: pointer;
+            margin: 5px 0;
+            transition: all 0.3s;
+        }
+        
+        .tree-node:hover {
+            transform: translateX(5px);
+        }
+        
+        .tree-node .card {
+            border-left: 4px solid #007bff;
+            transition: all 0.3s;
+        }
+        
+        .tree-node .card-header {
+            background-color: #fff;
+            border-bottom: none;
+            padding: 12px 15px;
+        }
+        
+        /* Icono de expandir/colapsar */
+        .toggle-icon {
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+            color: #6c757d;
+            transition: transform 0.3s;
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .toggle-icon:hover {
+            color: #007bff;
+        }
+        
+        .toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        
+        /* Niveles jerárquicos */
+        .level-distrito .card { border-left-color: #007bff; }
+        .level-distrito .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         .level-intendente .card { border-left-color: #dc3545; }
         .level-intendente_virtual .card { border-left-color: #6c757d; }
         .level-concejal .card { border-left-color: #28a745; }
@@ -354,13 +522,112 @@
         .text-purple {
             color: #6f42c1;
         }
+        
+        .stats-distrito {
+            font-size: 0.75rem;
+        }
+        
+        .stats-distrito span {
+            margin-right: 10px;
+        }
+        
+        .border-top {
+            border-top: 1px solid #dee2e6 !important;
+        }
+        
+        .mr-3 {
+            margin-right: 1rem !important;
+        }
+        
+        .mb-1 {
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem !important;
+        }
+        
+        .mt-3 {
+            margin-top: 1rem !important;
+        }
+        
+        .pt-2 {
+            padding-top: 0.5rem !important;
+        }
+        
+        .cursor-pointer {
+            cursor: pointer;
+        }
     </style>
 @stop
 
 @section('js')
 <script>
 $(document).ready(function() {
-    // Buscador de árbol
+    // Inicializar: todos los nodos hijos colapsados (excepto el primer nivel)
+    $('.tree li > ul').each(function() {
+        $(this).addClass('collapsed');
+    });
+    
+    // Agregar iconos de expandir/colapsar solo a los nodos que tienen hijos
+    $('.tree li').each(function() {
+        var $li = $(this);
+        if ($li.children('ul').length > 0) {
+            var $node = $li.children('.tree-node');
+            var $icon = $('<span class="toggle-icon">▶</span>');
+            $icon.prependTo($node.find('.card-title').parent());
+            $node.addClass('has-children');
+            
+            // Al hacer clic en el icono o en el nodo
+            $icon.click(function(e) {
+                e.stopPropagation();
+                toggleNode($li);
+            });
+            
+            $node.click(function(e) {
+                e.stopPropagation();
+                var sistemaId = $(this).data('id');
+                var sistemaTipo = $(this).data('tipo');
+                
+                // Si es un sistema (tiene ID y no es distrito) abrir modal
+                if (sistemaId && sistemaTipo !== 'Distrito') {
+                    abrirModalDirigentes(sistemaId, $(this).find('.card-title').text(), sistemaTipo);
+                } else {
+                    // Si es distrito, expandir/colapsar
+                    toggleNode($li);
+                }
+            });
+        }
+    });
+    
+    function toggleNode($li) {
+        var $ul = $li.children('ul');
+        var $icon = $li.find('.toggle-icon');
+        
+        if ($ul.hasClass('collapsed')) {
+            $ul.removeClass('collapsed');
+            $icon.text('▼');
+            $icon.addClass('expanded');
+        } else {
+            $ul.addClass('collapsed');
+            $icon.text('▶');
+            $icon.removeClass('expanded');
+        }
+    }
+    
+    // Expandir todos los nodos
+    $('#expandirTodos').click(function() {
+        $('.tree li > ul').removeClass('collapsed');
+        $('.toggle-icon').text('▼').addClass('expanded');
+    });
+    
+    // Colapsar todos los nodos (excepto el primer nivel)
+    $('#colapsarTodos').click(function() {
+        $('.tree li > ul').addClass('collapsed');
+        $('.toggle-icon').text('▶').removeClass('expanded');
+    });
+    
+    // Buscador
     $('#buscadorArbol').on('keyup', function() {
         let query = $(this).val().toLowerCase().trim();
         let encontrados = 0;
@@ -368,13 +635,21 @@ $(document).ready(function() {
         $('.tree-node').each(function() {
             let nombre = $(this).find('.card-title').text().toLowerCase();
             let tipo = $(this).find('.badge-nivel').text().toLowerCase();
-            let ciudad = $(this).find('.text-muted').text().toLowerCase();
+            let textoCompleto = $(this).text().toLowerCase();
             
-            if (nombre.includes(query) || tipo.includes(query) || ciudad.includes(query)) {
+            if (nombre.includes(query) || tipo.includes(query) || textoCompleto.includes(query)) {
                 $(this).show();
                 $(this).addClass('nodo-buscar');
                 encontrados++;
-                $(this).parents('li, ul').show();
+                // Expandir los ancestros para mostrar el nodo encontrado
+                $(this).parents('li').each(function() {
+                    var $li = $(this);
+                    var $ul = $li.children('ul');
+                    if ($ul.hasClass('collapsed')) {
+                        $ul.removeClass('collapsed');
+                        $li.find('.toggle-icon').text('▼').addClass('expanded');
+                    }
+                });
             } else {
                 $(this).hide();
                 $(this).removeClass('nodo-buscar');
@@ -383,9 +658,9 @@ $(document).ready(function() {
         
         if (encontrados === 0 && query !== '') {
             if ($('#sinResultadosArbol').length === 0) {
-                $('#treeView').append(`
+                $('.tree').append(`
                     <div id="sinResultadosArbol" class="alert alert-warning text-center py-3 mt-3">
-                        <i class="fas fa-search"></i> No se encontraron candidaturas que coincidan con "${query}"
+                        <i class="fas fa-search"></i> No se encontraron resultados que coincidan con "${query}"
                     </div>
                 `);
             }
@@ -394,17 +669,10 @@ $(document).ready(function() {
         }
     });
     
-    // Click en nodo del árbol
-    $(document).on('click', '.tree-node', function(e) {
-        e.stopPropagation();
-        let sistemaId = $(this).data('id');
-        let sistemaNombre = $(this).find('.card-title').text();
-        let sistemaTipo = $(this).find('.badge-nivel').text();
-        
-        if (!sistemaId) return;
-        
+    // Funciones para modales
+    window.abrirModalDirigentes = function(sistemaId, nombre, tipo) {
         $('#tituloDirigentes').html(`
-            <i class="fas fa-users"></i> Dirigentes - ${sistemaTipo}: ${sistemaNombre}
+            <i class="fas fa-users"></i> Dirigentes - ${tipo}: ${nombre}
         `);
         $('#contenidoDirigentes').html(`
             <div class="text-center p-4">
@@ -426,37 +694,7 @@ $(document).ready(function() {
                 </div>
             `);
         });
-    });
-    
-    // Click en tarjeta de distrito
-    $('.distrito-card').click(function() {
-        let ciudadId = $(this).data('ciudad-id');
-        let distritoNombre = $(this).data('distrito');
-        
-        $('#modalSistemas .modal-title').html(`
-            <i class="fas fa-map-marker-alt"></i> Sistemas del Distrito: ${distritoNombre}
-        `);
-        $('#modalSistemasBody').html(`
-            <div class="text-center text-muted py-5">
-                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
-                <p>Cargando sistemas...</p>
-            </div>
-        `);
-        $('#modalSistemas').modal('show');
-        
-        let url = `/distritos/${ciudadId}/sistemas`;
-        
-        $.get(url, function(data) {
-            $('#modalSistemasBody').html(data);
-        }).fail(function() {
-            $('#modalSistemasBody').html(`
-                <div class="alert alert-danger text-center py-5">
-                    <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                    <p>Error al cargar los sistemas.</p>
-                </div>
-            `);
-        });
-    });
+    };
     
     window.abrirModalPunterosLista = function(sistemaId, nombreSistema) {
         $('#tituloPunterosLista').html(`
@@ -508,9 +746,8 @@ $(document).ready(function() {
                                 <th>Cédula</th>
                                 <th>Nombre</th>
                                 <th>Tipo Votante</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
             `;
             
             if (data.length === 0) {

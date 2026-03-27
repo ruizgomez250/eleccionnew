@@ -3,7 +3,7 @@
     @foreach($nodes as $node)
         <li>
             <div class="tree-node level-{{ $node['tipo'] }}" 
-                 data-id="{{ $node['id'] }}" 
+                 data-id="{{ $node['id'] ?? '' }}" 
                  data-tipo="{{ $node['tipo_nivel'] }}">
                 <div class="card">
                     <div class="card-header">
@@ -11,8 +11,8 @@
                             <div>
                                 @php
                                     $iconos = [
-                                        'intendente' => 'fa-city',
-                                        'intendente_virtual' => 'fa-question-circle',
+                                        'distrito' => 'fa-city',
+                                        'intendente' => 'fa-user-tie',
                                         'concejal' => 'fa-user-tie',
                                         'convencional' => 'fa-users',
                                         'convencional_juventud' => 'fa-child',
@@ -27,8 +27,8 @@
                             <div>
                                 @php
                                     $colorNivel = [
+                                        'distrito' => 'primary',
                                         'intendente' => 'danger',
-                                        'intendente_virtual' => 'secondary',
                                         'concejal' => 'success',
                                         'convencional' => 'info',
                                         'convencional_juventud' => 'warning',
@@ -43,17 +43,7 @@
                             </div>
                         </div>
                         
-                        @if(isset($node['ciudad']))
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <i class="fas fa-map-marker-alt"></i> {{ $node['ciudad'] }}
-                                    @if(isset($node['departamento']) && $node['departamento'] != 'Sin departamento')
-                                        | {{ $node['departamento'] }}
-                                    @endif
-                                </small>
-                            </div>
-                        @endif
-                        
+                        {{-- Mostrar estadísticas de candidatos --}}
                         @php
                             $totalDirigentes = count($node['candidatos'] ?? []);
                             $totalPunteros = collect($node['candidatos'] ?? [])->sum(function($d) {
@@ -97,41 +87,12 @@
                 </div>
             </div>
             
-            @if(isset($node['concejales']) && count($node['concejales']) > 0)
+            {{-- Renderizar hijos recursivamente --}}
+            @if(isset($node['hijos']) && count($node['hijos']) > 0)
                 <ul>
-                    @include('arbol.partials.tree-nodes', ['nodes' => $node['concejales']])
-                </ul>
-            @endif
-            
-            @if(isset($node['convencionales']) && count($node['convencionales']) > 0)
-                <ul>
-                    @include('arbol.partials.tree-nodes', ['nodes' => $node['convencionales']])
-                </ul>
-            @endif
-            
-            @if(isset($node['convencionales_juventud']) && count($node['convencionales_juventud']) > 0)
-                <ul>
-                    @include('arbol.partials.tree-nodes', ['nodes' => $node['convencionales_juventud']])
-                </ul>
-            @endif
-            
-            @if(isset($node['miembros_comite']) && count($node['miembros_comite']) > 0)
-                <ul>
-                    @include('arbol.partials.tree-nodes', ['nodes' => $node['miembros_comite']])
-                </ul>
-            @endif
-            
-            @if(isset($node['miembros_juventud']) && count($node['miembros_juventud']) > 0)
-                <ul>
-                    @include('arbol.partials.tree-nodes', ['nodes' => $node['miembros_juventud']])
+                    @include('arbol.partials.tree-nodes', ['nodes' => $node['hijos']])
                 </ul>
             @endif
         </li>
     @endforeach
-@else
-    <li>
-        <div class="alert alert-warning text-center">
-            <i class="fas fa-exclamation-triangle"></i> No hay nodos para mostrar
-        </div>
-    </li>
 @endif
