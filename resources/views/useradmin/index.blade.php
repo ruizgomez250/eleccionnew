@@ -177,8 +177,8 @@
                         <div class="form-group">
                             <label>Tipo de Candidato</label>
                             <select name="tipo" id="tipo" class="form-control" required>
-                                <option value="concejal">Concejal</option>
-                                <option value="intendente">Intendente</option>
+                                <option value="Concejal">Concejal</option>
+                                <option value="Intendente">Intendente</option>
                                 <option value="Miembro de Comite">Miembro de Comite</option>
                                 <option value="Convencional">Convencional</option>
                                 <option value="Miembro de la Juventud">Miembro de la Juventud</option>
