@@ -309,10 +309,9 @@ return [
         [
             'text'       => 'Árbol de Candidaturas',
             'icon'       => 'fas fa-sitemap',  // Cambié a fa-sitemap que es más apropiado para un árbol
-            'icon_color' => 'primary',
-            'url'        => '/arbol',    // Usando el nombre de la ruta en lugar de la URL directa
-            'active'     => ['arbol'],         // Marca como activo cuando estás en esa ruta
+            'icon_color' => 'primary',            
             'can'        => 'Arbol',
+            'url'        => '/arbol',    // Usando el nombre de la ruta en lugar de la URL directa
         ],
         [
             'text'       => 'Equipo',
