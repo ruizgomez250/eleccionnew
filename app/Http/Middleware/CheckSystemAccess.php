@@ -12,7 +12,7 @@ class CheckSystemAccess
         $sistemaId = $request->route('sistema') ?? $request->input('sistema_id');
         
         if ($sistemaId && !auth()->user()->sistemasAccesibles->contains($sistemaId)) {
-            abort(403, 'No tienes acceso a este sistema');
+            return redirect()->route('login')->with('error', 'Debes iniciar sesión para acceder a esta página');
         }
         
         return $next($request);
