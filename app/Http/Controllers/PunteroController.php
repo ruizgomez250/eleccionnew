@@ -362,20 +362,21 @@ class PunteroController extends Controller
     {
         try {
             $sistema = Sistema::findOrFail($sistemaId);
-            
+
             // Obtener equipos del sistema
             $equipos = Equipo::where('sist', $sistema->id)
                 ->with('dirigentes.punteros')
                 ->get();
-            
+
             // Obtener todos los punteros del sistema
             $punteros = Puntero::whereHas('dirigente.equipo', function ($q) use ($sistema) {
                 $q->where('sist', $sistema->id);
-            })->with(['dirigente', 'equipo', 'votantes'])->get();
-            
-            // Contar votantes por puntero
+            })->with(['dirigente', 'equipo', 'votantes', 'vehiculos'])->get(); // Agregar 'vehiculos' a with
+
+            // Contar votantes y vehículos por puntero
             foreach ($punteros as $p) {
                 $p->votantes_count = $p->votantes->count();
+                $p->vehiculos_count = $p->vehiculos->count(); // Agregar contador de vehículos
             }
 
             // Total de votantes general
@@ -434,15 +435,15 @@ class PunteroController extends Controller
         try {
             $equipoAct = Equipo::findOrFail($equipoId);
             $sistema = Sistema::findOrFail($equipoAct->sist);
-            
+
             // Obtener equipos del sistema
             $equipos = Equipo::where('sist', $sistema->id)
                 ->with('dirigentes.punteros')
                 ->get();
-            
+
             // Obtener todos los punteros del sistema
             $punteros = Puntero::where('id_equipo', $equipoId)->get();
-            
+
             // Contar votantes por puntero
             foreach ($punteros as $p) {
                 $p->votantes_count = $p->votantes->count();
@@ -502,21 +503,25 @@ class PunteroController extends Controller
     public function porDirigente($dirigenteId)
     {
         try {
-            $dirigente= Dirigente::findOrFail($dirigenteId);
+            $dirigente = Dirigente::findOrFail($dirigenteId);
             $equipo = Equipo::findOrFail($dirigente->id_equipo);
             $sistema = Sistema::findOrFail($equipo->sist);
             $nombreSistema = $sistema->nombre;
+
             // Obtener equipos del sistema
             $equipos = Equipo::where('sist', $sistema->id)
                 ->with('dirigentes.punteros')
                 ->get();
-            
-            // Obtener todos los punteros del sistema
-            $punteros = Puntero::where('id_dirigente', $dirigenteId)->get();
-            
-            // Contar votantes por puntero
+
+            // Obtener todos los punteros del dirigente con sus relaciones
+            $punteros = Puntero::where('id_dirigente', $dirigenteId)
+                ->with(['votantes', 'vehiculos']) // Agregar 'vehiculos' a with
+                ->get();
+
+            // Contar votantes y vehículos por puntero
             foreach ($punteros as $p) {
                 $p->votantes_count = $p->votantes->count();
+                $p->vehiculos_count = $p->vehiculos->count(); // Agregar contador de vehículos
             }
 
             // Total de votantes general
@@ -565,7 +570,7 @@ class PunteroController extends Controller
                 'nombreSistema'
             ));
         } catch (\Exception $e) {
-            Log::error('Error en porSistema: ' . $e->getMessage());
+            Log::error('Error en porDirigente: ' . $e->getMessage());
             if (request()->ajax()) {
                 return response()->json(['error' => 'Error al cargar punteros'], 500);
             }
@@ -628,6 +633,31 @@ class PunteroController extends Controller
         } catch (\Exception $e) {
             Log::error('Error en filtrarAjax: ' . $e->getMessage());
             return response()->json(['error' => 'Error al filtrar punteros'], 500);
+        }
+    }
+    public function getVehiculos($id)
+    {
+        try {
+            $puntero = Puntero::with('vehiculos')->find($id);
+
+            if (!$puntero) {
+                return response()->json([]);
+            }
+
+            $vehiculos = $puntero->vehiculos->map(function ($v) {
+                return [
+                    'id' => $v->id,
+                    'chapa' => $v->chapa,
+                    'nombre' => $v->nombre,
+                    'cedulachofer' => $v->cedulachofer,
+                    'telefono1' => $v->telefono1,
+                    'rol' => $v->rol,
+                ];
+            });
+
+            return response()->json($vehiculos);
+        } catch (\Exception $e) {
+            return response()->json([], 500);
         }
     }
 }

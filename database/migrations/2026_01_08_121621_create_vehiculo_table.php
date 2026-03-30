@@ -19,9 +19,10 @@ return new class extends Migration
             $table->integer('capacidad')->nullable();
             $table->integer('numero_auto')->nullable();
             $table->string('telefono1', 20)->nullable();
+            $table->string('rol', 20);
+            $table->foreignId('id_sistema')->constrained('sistemas')->onDelete('cascade');
             $table->string('telefono2', 20)->nullable();
             $table->string('telefono3', 20)->nullable();
-            ;
             $table->decimal('montopagar', 12, 2)->default(0);
             $table->integer('cantidadpagos')->default(0);
 

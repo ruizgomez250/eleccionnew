@@ -71,20 +71,20 @@
         </div>
     </div>
     <div class="row mb-2">
-            <div class="col-md-6">
-                <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
+        <div class="col-md-6">
+            <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
                 <i class="fas fa-save"></i> Guardar Puntero
             </button>
 
 
-            </div>
-            <div class="col-md-6 text-right">
+        </div>
+        <div class="col-md-6 text-right">
 
 
-                <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
-                    <i class="fas fa-arrow-left"></i> Volver Atras
-                </button>
-            </div>
+            <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
+                <i class="fas fa-arrow-left"></i> Volver Atras
+            </button>
+        </div>
     </div>
 </form>
 
@@ -120,8 +120,9 @@
                         <td>{{ $p->telefono }}</td>
                         <td>{{ $p->barrio }}</td>
                         <td>{{ $p->dirigente->nombre ?? '' }}</td>
-                        <td>{{ $p->equipo->descripcion ?? '' }}</td>
+                        <td>{{ $p->equipo->descripcion ?? '' }} </td>
                         <td class="text-center">
+
                             <button class="btn btn-success btn-sm"
                                 onclick="abrirModalVotantesPuntero({{ $p->id }}, '{{ $p->nombre }}')">
                                 <i class="fas fa-users"><span
@@ -130,11 +131,28 @@
 
                         </td>
                         <td>
+                            {{-- Botón para crear vehículo y asignar a puntero --}}
 
-                            <button class="btn btn-danger btn-sm"
-                                onclick="eliminarPunteroModal({{ $p->id }}, {{ $p->id_dirigente }})">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {{-- Botón para crear vehículo --}}
+                                <button class="btn btn-info"
+                                    onclick="abrirModalCrearVehiculo({{ $p->id }}, '{{ addslashes($p->nombre) }}')"
+                                    title="Crear vehículo para este puntero">
+                                    <i class="fas fa-truck"></i>
+                                    <span
+                                        class="badge {{ $p->vehiculos_count > 0 ? 'badge-light' : 'badge-secondary' }} ml-1">
+                                        {{ $p->vehiculos_count }}
+                                    </span>
+                                </button>
+
+                                {{-- Botón eliminar --}}
+                                <button class="btn btn-danger"
+                                    onclick="eliminarPunteroModal({{ $p->id }}, {{ $p->id_dirigente }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
                         </td>
                     </tr>
                 @endforeach
@@ -704,4 +722,105 @@
             $('#departamento').val(v.departamento);
         });
     }
+
+
+    // ==================== GUARDAR VEHÍCULO DESDE MODAL ====================
+    $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {
+        e.preventDefault();
+
+        let btnSubmit = $(this).find('button[type="submit"]');
+        btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+        let formData = {
+            nombre: $('#vehiculo_nombre').val(),
+            id_equipo: $('#vehiculo_id_equipo').val(),
+            cedulachofer: $('#vehiculo_cedulachofer').val(),
+            chapa: $('#vehiculo_chapa').val(),
+            tipovehiculo: $('#vehiculo_tipovehiculo').val(),
+            capacidad: $('#vehiculo_capacidad').val(),
+            telefono1: $('#vehiculo_telefono1').val(),
+            telefono2: $('#vehiculo_telefono2').val(),
+            montopagar: $('#vehiculo_montopagar').val(),
+            cantidadpagos: $('#vehiculo_cantidadpagos').val(),
+            rolvehiculo: $('#vehiculo_rolvehiculo').val(),
+            id_puntero: $('#vehiculo_id_puntero').val(),
+            _token: '{{ csrf_token() }}'
+        };
+
+        $.ajax({
+            url: "{{ route('vehiculo.store.from.puntero') }}",
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                $('#modalCrearVehiculoPuntero').modal('hide');
+
+                // Limpiar formulario
+                $('#formCrearVehiculoPuntero')[0].reset();
+
+                btnSubmit.prop('disabled', false).html(
+                    '<i class="fas fa-save"></i> Guardar y Asignar');
+            },
+            error: function(xhr) {
+                btnSubmit.prop('disabled', false).html(
+                    '<i class="fas fa-save"></i> Guardar y Asignar');
+
+                if (xhr.status === 422 && xhr.responseJSON.errors) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessage = '';
+                    $.each(errors, function(key, value) {
+                        errorMessage += `${value[0]}\n`;
+                    });
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de validación',
+                        text: errorMessage
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || 'Error al crear el vehículo'
+                    });
+                }
+            }
+        });
+    });
+
+    // Búsqueda por cédula en el modal de vehículo
+    $(document).on('blur', '#vehiculo_cedulachofer', function() {
+        let cedula = $(this).val().trim();
+        if (cedula.length < 3) return;
+
+        $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+            if (response.encontrado) {
+                $('#vehiculo_nombre').val(response.data.nombre ?? '');
+                $('#vehiculo_telefono1').val(response.data.telefono ?? '');
+            }
+        });
+    });
+
+    $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            let cedula = $(this).val().trim();
+            if (cedula.length >= 3) {
+                $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                    if (response.encontrado) {
+                        $('#vehiculo_nombre').val(response.data.nombre ?? '');
+                        $('#vehiculo_telefono1').val(response.data.telefono ?? '');
+                        $('#vehiculo_telefono2').focus();
+                    }
+                });
+            }
+        }
+    });
 </script>

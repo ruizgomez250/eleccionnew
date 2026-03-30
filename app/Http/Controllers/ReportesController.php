@@ -16,10 +16,8 @@ class ReportesController extends Controller
     public function vehicporsis()
     {
         $vehiculos = Vehiculo::with(['equipo', 'punteros'])
-            ->whereHas('equipo', function ($q) {
-                $q->where('sist', Auth::user()->sistema);
-            })
-            ->get();
+    ->where('id_sistema', Auth::user()->sistema)
+    ->get();
 
         $totalMonto     = $vehiculos->sum('montopagar');
         $totalPagos     = $vehiculos->sum('cantidadpagos');

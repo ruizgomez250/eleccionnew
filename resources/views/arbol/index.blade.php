@@ -123,7 +123,167 @@
             </div>
         </div>
     </div>
+    {{-- MODAL DE VEHÍCULOS DEL PUNTERO --}}
+    <div class="modal fade" id="modalVehiculosPuntero" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-truck"></i> Vehículos del Puntero: <span id="vehiculo_puntero_nombre"></span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    {{-- FORMULARIO PARA CREAR NUEVO VEHÍCULO --}}
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-plus-circle"></i> Nuevo Vehículo
+                        </div>
+                        <div class="card-body">
+                            <form id="formCrearVehiculoPuntero">
+                                @csrf
+                                <input type="hidden" name="id_puntero" id="vehiculo_id_puntero">
 
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Cédula del Chofer <span class="text-danger">*</span></label>
+                                            <input type="text" name="cedulachofer" id="vehiculo_cedulachofer"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="form-group">
+                                            <label>Nombre del Chofer <span class="text-danger">*</span></label>
+                                            <input type="text" name="nombre" id="vehiculo_nombre"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Chapa <span class="text-danger">*</span></label>
+                                            <input type="text" name="chapa" id="vehiculo_chapa"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Tipo Vehículo</label>
+                                            <select name="tipovehiculo" id="vehiculo_tipovehiculo" class="form-control">
+                                                <option value="AUTOMOVIL">AUTOMÓVIL</option>
+                                                <option value="CAMIONETA">CAMIONETA</option>
+                                                <option value="FURGONETA">FURGONETA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Capacidad</label>
+                                            <input type="number" name="capacidad" id="vehiculo_capacidad"
+                                                class="form-control" value="5">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Teléfono Principal <span class="text-danger">*</span></label>
+                                            <input type="text" name="telefono1" id="vehiculo_telefono1"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Teléfono Secundario</label>
+                                            <input type="text" name="telefono2" id="vehiculo_telefono2"
+                                                class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Monto a Pagar (Gs.)</label>
+                                            <select name="montopagar" id="vehiculo_montopagar" class="form-control">
+                                                <option value="0">0</option>
+                                                <option value="200000">200.000</option>
+                                                <option value="300000" selected>300.000</option>
+                                                <option value="350000">350.000</option>
+                                                <option value="400000">400.000</option>
+                                                <option value="450000">450.000</option>
+                                                <option value="500000">500.000</option>
+                                                <option value="550000">550.000</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Cantidad Pagos</label>
+                                            <input type="number" name="cantidadpagos" id="vehiculo_cantidadpagos"
+                                                class="form-control" value="2">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Rol del Vehículo</label>
+                                            <select name="rolvehiculo" id="vehiculo_rolvehiculo" class="form-control">
+                                                <option value="PUNTERO">PUNTERO</option>
+                                                <option value="LOGISTICA">LOGISTICA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{-- Espacio vacío --}}
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-save"></i> Guardar Vehículo
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- TABLA DE VEHÍCULOS ASIGNADOS --}}
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <i class="fas fa-list"></i> Vehículos Asignados
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="vehiculos-puntero-table" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Chapa</th>
+                                            <th>Chofer</th>
+                                            <th>Cédula</th>
+                                            <th>Teléfono</th>
+                                            <th>Rol</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="7" class="text-center">Seleccione un puntero</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i> Volver Atrás
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     {{-- MODAL VOTANTES --}}
     <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -231,8 +391,8 @@
 @section('css')
     <style>
         /* ============================================
-                                                           ESTILOS BASE DEL ÁRBOL
-                                                        ============================================ */
+                                                                                                                               ESTILOS BASE DEL ÁRBOL
+                                                                                                                            ============================================ */
         .tree {
             min-height: 20px;
             padding: 19px;
@@ -322,8 +482,8 @@
         }
 
         /* ============================================
-                                                           ICONOS DE EXPANDIR/COLAPSAR
-                                                        ============================================ */
+                                                                                                                               ICONOS DE EXPANDIR/COLAPSAR
+                                                                                                                            ============================================ */
         .toggle-icon {
             cursor: pointer;
             margin-right: 10px;
@@ -356,8 +516,8 @@
         }
 
         /* ============================================
-                                                           ESTILOS PARA DISTRITOS (NIVEL PRINCIPAL)
-                                                        ============================================ */
+                                                                                                                               ESTILOS PARA DISTRITOS (NIVEL PRINCIPAL)
+                                                                                                                            ============================================ */
         .level-distrito {
             margin-bottom: 20px;
         }
@@ -396,8 +556,8 @@
         }
 
         /* ============================================
-                                                           ESTILOS POR TIPO DE CANDIDATURA
-                                                        ============================================ */
+                                                                                                                               ESTILOS POR TIPO DE CANDIDATURA
+                                                                                                                            ============================================ */
         /* Intendente */
         .level-intendente .card {
             border-left-color: #dc3545;
@@ -459,8 +619,8 @@
         }
 
         /* ============================================
-                                                           BADGES Y ETIQUETAS
-                                                        ============================================ */
+                                                                                                                               BADGES Y ETIQUETAS
+                                                                                                                            ============================================ */
         .badge-nivel {
             font-size: 0.7rem;
             padding: 4px 8px;
@@ -479,8 +639,8 @@
         }
 
         /* ============================================
-                                                           ESTADÍSTICAS DEL DISTRITO
-                                                        ============================================ */
+                                                                                                                               ESTADÍSTICAS DEL DISTRITO
+                                                                                                                            ============================================ */
         .stats-distrito {
             font-size: 0.75rem;
             display: flex;
@@ -494,8 +654,8 @@
         }
 
         /* ============================================
-                                                           EFECTOS Y ANIMACIONES
-                                                        ============================================ */
+                                                                                                                               EFECTOS Y ANIMACIONES
+                                                                                                                            ============================================ */
         /* Animación para expandir/colapsar */
         .tree ul.child-list {
             transition: all 0.3s ease-in-out;
@@ -530,8 +690,8 @@
         }
 
         /* ============================================
-                                                           RESALTADO DE BÚSQUEDA
-                                                        ============================================ */
+                                                                                                                               RESALTADO DE BÚSQUEDA
+                                                                                                                            ============================================ */
         .nodo-buscar {
             position: relative;
         }
@@ -558,8 +718,8 @@
         }
 
         /* ============================================
-                                                           CLASES UTILITARIAS
-                                                        ============================================ */
+                                                                                                                               CLASES UTILITARIAS
+                                                                                                                            ============================================ */
         .border-top {
             border-top: 1px solid #dee2e6 !important;
         }
@@ -593,8 +753,8 @@
         }
 
         /* ============================================
-                                                           RESPONSIVE
-                                                        ============================================ */
+                                                                                                                               RESPONSIVE
+                                                                                                                            ============================================ */
         @media (max-width: 768px) {
             .tree {
                 padding: 10px;
@@ -634,8 +794,8 @@
         }
 
         /* ============================================
-                                                           SCROLLBAR PERSONALIZADA
-                                                        ============================================ */
+                                                                                                                               SCROLLBAR PERSONALIZADA
+                                                                                                                            ============================================ */
         .tree::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -656,8 +816,8 @@
         }
 
         /* ============================================
-                                                           ESTILOS PARA MODALES
-                                                        ============================================ */
+                                                                                                                               ESTILOS PARA MODALES
+                                                                                                                            ============================================ */
         .modal-xl {
             max-width: 98% !important;
             width: 98% !important;
@@ -678,8 +838,8 @@
         }
 
         /* ============================================
-                                                           ESTILOS PARA TABLAS EN MODALES
-                                                        ============================================ */
+                                                                                                                               ESTILOS PARA TABLAS EN MODALES
+                                                                                                                            ============================================ */
         .table-responsive {
             overflow-x: auto;
         }
@@ -703,9 +863,10 @@
 @section('js')
     <script>
         $(document).ready(function() {
+            
             // Desactivar autofocus en modales para evitar warnings
             $.fn.modal.Constructor.Default.focusOnShow = false;
-            
+
             // Función para expandir/colapsar un nodo específico
             function toggleNode($li) {
                 var $ul = $li.children('ul.child-list');
@@ -773,7 +934,8 @@
                     });
 
                     $node.off('click').on('click', function(e) {
-                        if ($(e.target).hasClass('toggle-icon') || $(e.target).closest('.toggle-icon').length) {
+                        if ($(e.target).hasClass('toggle-icon') || $(e.target).closest(
+                                '.toggle-icon').length) {
                             return;
                         }
                         var sistemaId = $(this).data('id');
@@ -782,7 +944,8 @@
                         if ($ul.length > 0) {
                             toggleNode($li);
                         } else if (sistemaId && sistemaTipo !== 'Distrito') {
-                            abrirModalDirigentes(sistemaId, $(this).find('.card-title').text(), sistemaTipo);
+                            abrirModalDirigentes(sistemaId, $(this).find('.card-title').text(),
+                                sistemaTipo);
                         }
                     });
                 } else {
@@ -791,7 +954,8 @@
                         var sistemaId = $(this).data('id');
                         var sistemaTipo = $(this).data('tipo');
                         if (sistemaId && sistemaTipo !== 'Distrito') {
-                            abrirModalDirigentes(sistemaId, $(this).find('.card-title').text(), sistemaTipo);
+                            abrirModalDirigentes(sistemaId, $(this).find('.card-title').text(),
+                                sistemaTipo);
                         }
                     });
                 }
@@ -825,7 +989,8 @@
                     let tipo = $(this).find('.badge-nivel').text().toLowerCase();
                     let textoCompleto = $(this).text().toLowerCase();
 
-                    if (nombre.includes(query) || tipo.includes(query) || textoCompleto.includes(query)) {
+                    if (nombre.includes(query) || tipo.includes(query) || textoCompleto.includes(
+                            query)) {
                         $(this).show();
                         $(this).addClass('nodo-buscar');
                         encontrados++;
@@ -833,11 +998,13 @@
                         $(this).parents('li').each(function() {
                             var $parentLi = $(this);
                             var $parentUl = $parentLi.children('ul.child-list');
-                            var $parentIcon = $parentLi.children('.tree-node').find('.toggle-icon');
+                            var $parentIcon = $parentLi.children('.tree-node').find(
+                                '.toggle-icon');
 
                             if ($parentUl.length > 0 && !$parentUl.is(':visible')) {
                                 $parentUl.show();
-                                $parentIcon.text('▼').removeClass('collapsed').addClass('expanded');
+                                $parentIcon.text('▼').removeClass('collapsed').addClass(
+                                    'expanded');
                             }
                         });
                     } else {
@@ -859,10 +1026,135 @@
                 }
             });
 
+            
+            // ==================== CARGAR VEHÍCULOS DEL PUNTERO ====================
+            window.cargarVehiculosPuntero = function(punteroId) {
+                $('#vehiculos-puntero-table tbody').html(
+                    '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>'
+                );
+
+                $.get(`{{ url('/') }}/puntero/${punteroId}/vehiculos`, function(vehiculos) {
+                    let tbody = '';
+
+                    if (vehiculos.length === 0) {
+                        tbody =
+                            '<tr><td colspan="7" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
+                    } else {
+                        vehiculos.forEach((v, i) => {
+                            tbody += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${v.chapa}</td>
+                        <td>${v.nombre}</td>
+                        <td>${v.cedulachofer}</td>
+                        <td>${v.telefono1 || ''}</td>
+                        <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                        });
+                    }
+
+                    $('#vehiculos-puntero-table tbody').html(tbody);
+
+                    // Destruir DataTable si existe y volver a inicializar
+                    if ($.fn.DataTable && $('#vehiculos-puntero-table').length) {
+                        if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) {
+                            $('#vehiculos-puntero-table').DataTable().destroy();
+                        }
+                        $('#vehiculos-puntero-table').DataTable({
+                            responsive: true,
+                            language: {
+                                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                            },
+                            pageLength: 10,
+                            destroy: true
+                        });
+                    }
+                }).fail(function() {
+                    $('#vehiculos-puntero-table tbody').html(
+                        '<tr><td colspan="7" class="text-center text-danger">Error al cargar los vehículos</td></tr>'
+                    );
+                });
+            }
+            // ==================== ELIMINAR VEHÍCULO DEL PUNTERO ====================
+            window.eliminarVehiculoPuntero = function(vehiculoId) {
+                let punteroId = $('#vehiculo_id_puntero').val();
+
+                Swal.fire({
+                    title: '¿Desvincular vehículo?',
+                    text: 'El vehículo dejará de estar asignado a este puntero',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Sí, desvincular',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ url('/') }}/vehiculo/${vehiculoId}/puntero/${punteroId}`,
+                            type: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Desvinculado',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                cargarVehiculosPuntero(punteroId);
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: xhr.responseJSON?.message ||
+                                        'No se pudo desvincular el vehículo'
+                                });
+                            }
+                        });
+                    }
+                });
+            }
             // ============================================
             // FUNCIONES PARA MODALES
             // ============================================
+            window.abrirModalCrearVehiculo = function(punteroId, punteroNombre) {
+                $('#vehiculo_id_puntero').val(punteroId);
+                $('#vehiculo_puntero_nombre').text(punteroNombre);
 
+                // Limpiar formulario
+                $('#formCrearVehiculoPuntero')[0].reset();
+                $('#vehiculo_capacidad').val(5);
+                $('#vehiculo_cantidadpagos').val(2);
+                $('#vehiculo_montopagar').val('300000');
+                $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+                $('#vehiculo_rolvehiculo').val('PUNTERO');
+
+                // Limpiar campos específicos
+                $('#vehiculo_cedulachofer').val('');
+                $('#vehiculo_nombre').val('');
+                $('#vehiculo_telefono1').val('');
+                $('#vehiculo_telefono2').val('');
+                $('#vehiculo_chapa').val('');
+
+                // Cargar vehículos del puntero
+                cargarVehiculosPuntero(punteroId);
+
+                // Enfocar primer campo
+                setTimeout(function() {
+                    $('#vehiculo_cedulachofer').focus();
+                }, 500);
+
+                $('#modalVehiculosPuntero').modal('show');
+            }
             window.abrirModalDirigentes = function(sistemaId, nombre, tipo) {
                 $('#tituloDirigentes').html(`
                     <i class="fas fa-users"></i> Dirigentes - ${tipo}: ${nombre}
@@ -990,7 +1282,8 @@
                     `;
 
                     if (data.length === 0) {
-                        html += `<tr><td colspan="5" class="text-center">No hay votantes registrados</td></tr>`;
+                        html +=
+                            `<tr><td colspan="5" class="text-center">No hay votantes registrados</td></tr>`;
                     } else {
                         data.forEach((v, i) => {
                             html += `
@@ -1044,14 +1337,16 @@
                                 _token: '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                Swal.fire('Eliminado', 'Votante eliminado correctamente', 'success');
+                                Swal.fire('Eliminado', 'Votante eliminado correctamente',
+                                    'success');
                                 let punteroId = $('#votante_id_puntero').val();
                                 if (punteroId) {
                                     cargarVotantes(punteroId, nombrePuntero);
                                 }
                             },
                             error: function() {
-                                Swal.fire('Error', 'No se pudo eliminar el votante', 'error');
+                                Swal.fire('Error', 'No se pudo eliminar el votante',
+                                    'error');
                             }
                         });
                     }
@@ -1065,15 +1360,15 @@
             function inicializarTablaDirigentes() {
                 setTimeout(function() {
                     var $tabla = $('#dirigentes-table');
-                    
+
                     if (!$tabla.length) return;
                     if ($tabla.find('thead').length === 0) return;
                     if (!$.fn.DataTable) return;
-                    
+
                     if ($.fn.DataTable.isDataTable('#dirigentes-table')) {
                         $('#dirigentes-table').DataTable().destroy();
                     }
-                    
+
                     try {
                         $('#dirigentes-table').DataTable({
                             responsive: true,
@@ -1086,17 +1381,21 @@
                                 className: 'btn btn-secondary',
                                 autoPrint: true,
                                 customize: function(win) {
-                                    $(win.document.body).find('table').addClass('table table-bordered');
+                                    $(win.document.body).find('table').addClass(
+                                        'table table-bordered');
                                 }
                             }],
                             language: {
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                             },
                             pageLength: 10,
-                            lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Todos"]],
+                            lengthMenu: [
+                                [5, 10, 25, 50, -1],
+                                [5, 10, 25, 50, "Todos"]
+                            ],
                             destroy: true
                         });
-                    } catch(e) {
+                    } catch (e) {
                         console.error('Error inicializando DataTable dirigentes:', e);
                     }
                 }, 100);
@@ -1105,15 +1404,15 @@
             function inicializarTablaPunteros() {
                 setTimeout(function() {
                     var $tabla = $('#punteros-lista-table');
-                    
+
                     if (!$tabla.length) return;
                     if ($tabla.find('thead').length === 0) return;
                     if (!$.fn.DataTable) return;
-                    
+
                     if ($.fn.DataTable.isDataTable('#punteros-lista-table')) {
                         $('#punteros-lista-table').DataTable().destroy();
                     }
-                    
+
                     try {
                         $('#punteros-lista-table').DataTable({
                             responsive: true,
@@ -1131,7 +1430,7 @@
                             pageLength: 10,
                             destroy: true
                         });
-                    } catch(e) {
+                    } catch (e) {
                         console.error('Error inicializando DataTable punteros:', e);
                     }
                 }, 100);
@@ -1140,15 +1439,15 @@
             function inicializarTablaVotantes() {
                 setTimeout(function() {
                     var $tabla = $('#votantes-table');
-                    
+
                     if (!$tabla.length) return;
                     if ($tabla.find('thead').length === 0) return;
                     if (!$.fn.DataTable) return;
-                    
+
                     if ($.fn.DataTable.isDataTable('#votantes-table')) {
                         $('#votantes-table').DataTable().destroy();
                     }
-                    
+
                     try {
                         $('#votantes-table').DataTable({
                             responsive: true,
@@ -1166,7 +1465,7 @@
                             pageLength: 10,
                             destroy: true
                         });
-                    } catch(e) {
+                    } catch (e) {
                         console.error('Error inicializando DataTable votantes:', e);
                     }
                 }, 100);
@@ -1197,7 +1496,7 @@
                 $('#contenidoVotantes').empty();
                 limpiarFormularioVotante();
             });
-            
+
             function limpiarFormularioVotante() {
                 $('#votante_cedula').val('');
                 $('#votante_nombre').val('');
@@ -1210,6 +1509,132 @@
                 $('#departamento').val('');
                 $('#tipo_votante').val('seguro');
             }
+        });
+        
+
+        // Eventos para búsqueda por cédula
+        $(document).on('blur', '#vehiculo_cedulachofer', function() {
+            buscarChoferPorCedula();
+        });
+
+        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarChoferPorCedula();
+                $('#vehiculo_nombre').focus();
+            }
+        });
+        // ==================== BÚSQUEDA POR CÉDULA EN VEHÍCULOS ====================
+        function buscarChoferPorCedula() {
+            let cedula = $('#vehiculo_cedulachofer').val().trim();
+            if (cedula.length < 3) return;
+
+            $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#vehiculo_nombre').val(response.data.nombre ?? '');
+                    $('#vehiculo_telefono1').val(response.data.telefono ?? '');
+                    $('#vehiculo_telefono2').val(response.data.telefono2 ?? '');
+                } else {
+                    // Limpiar campos si no se encuentra
+                    $('#vehiculo_nombre').val('');
+                    $('#vehiculo_telefono1').val('');
+                    $('#vehiculo_telefono2').val('');
+                }
+            }).fail(function() {
+                console.log('Error en la búsqueda de cédula');
+            });
+        }
+
+        // Evento blur para búsqueda por cédula
+        $(document).on('blur', '#vehiculo_cedulachofer', function() {
+            buscarChoferPorCedula();
+        });
+
+        // Evento keypress para búsqueda por cédula con Enter
+        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarChoferPorCedula();
+                $('#vehiculo_nombre').focus();
+            }
+        });
+        // ==================== GUARDAR VEHÍCULO DESDE MODAL ====================
+        $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {
+            e.preventDefault();
+
+            let btnSubmit = $(this).find('button[type="submit"]');
+            let punteroId = $('#vehiculo_id_puntero').val();
+
+            btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+            let formData = {
+                nombre: $('#vehiculo_nombre').val(),
+                cedulachofer: $('#vehiculo_cedulachofer').val(),
+                chapa: $('#vehiculo_chapa').val(),
+                tipovehiculo: $('#vehiculo_tipovehiculo').val(),
+                capacidad: $('#vehiculo_capacidad').val(),
+                telefono1: $('#vehiculo_telefono1').val(),
+                telefono2: $('#vehiculo_telefono2').val(),
+                montopagar: $('#vehiculo_montopagar').val(),
+                cantidadpagos: $('#vehiculo_cantidadpagos').val(),
+                rolvehiculo: $('#vehiculo_rolvehiculo').val(),
+                id_puntero: punteroId,
+                _token: '{{ csrf_token() }}'
+            };
+
+            $.ajax({
+                url: "{{ route('vehiculo.store.from.puntero') }}",
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    // Limpiar formulario
+                    $('#formCrearVehiculoPuntero')[0].reset();
+                    $('#vehiculo_capacidad').val(5);
+                    $('#vehiculo_cantidadpagos').val(2);
+                    $('#vehiculo_montopagar').val('300000');
+                    $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+                    $('#vehiculo_rolvehiculo').val('PUNTERO');
+                    $('#vehiculo_cedulachofer').focus();
+
+                    // Recargar la lista de vehículos
+                    cargarVehiculosPuntero(punteroId);
+
+                    btnSubmit.prop('disabled', false).html(
+                        '<i class="fas fa-save"></i> Guardar Vehículo');
+                },
+                error: function(xhr) {
+                    btnSubmit.prop('disabled', false).html(
+                        '<i class="fas fa-save"></i> Guardar Vehículo');
+
+                    if (xhr.status === 422 && xhr.responseJSON.errors) {
+                        let errors = xhr.responseJSON.errors;
+                        let errorMessage = '';
+                        $.each(errors, function(key, value) {
+                            errorMessage += `${key}: ${value[0]}\n`;
+                        });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de validación',
+                            text: errorMessage
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message || 'Error al crear el vehículo'
+                        });
+                    }
+                }
+            });
         });
     </script>
 @stop

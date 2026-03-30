@@ -71,20 +71,20 @@
         </div>
     </div>
     <div class="row mb-2">
-            <div class="col-md-6">
-                <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
+        <div class="col-md-6">
+            <button type="button" class="btn btn-primary" id="btnGuardarPunteroLista">
                 <i class="fas fa-save"></i> Guardar Puntero
             </button>
 
 
-            </div>
-            <div class="col-md-6 text-right">
+        </div>
+        <div class="col-md-6 text-right">
 
 
-                <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
-                    <i class="fas fa-arrow-left"></i> Volver Atras
-                </button>
-            </div>
+            <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
+                <i class="fas fa-arrow-left"></i> Volver Atras
+            </button>
+        </div>
     </div>
 </form>
 
@@ -122,6 +122,7 @@
                         <td>{{ $p->dirigente->nombre ?? '' }}</td>
                         <td>{{ $p->equipo->descripcion ?? '' }}</td>
                         <td class="text-center">
+
                             <button class="btn btn-success btn-sm"
                                 onclick="abrirModalVotantesPuntero({{ $p->id }}, '{{ $p->nombre }}')">
                                 <i class="fas fa-users"><span
@@ -130,11 +131,23 @@
 
                         </td>
                         <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {{-- Botón para crear vehículo --}}
+                                <button class="btn btn-info btn-icon-with-count"
+                                    onclick="abrirModalCrearVehiculo({{ $p->id }}, '{{ addslashes($p->nombre) }}')"
+                                    title="Vehículos asignados">
+                                    <i class="fas fa-truck"></i>
+                                    <span class="count-badge {{ $p->vehiculos_count == 0 ? 'zero' : '' }}">
+                                        {{ $p->vehiculos_count }}
+                                    </span>
+                                </button>
 
-                            <button class="btn btn-danger btn-sm"
-                                onclick="eliminarPunteroModal({{ $p->id }}, {{ $p->id_dirigente }})">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                                {{-- Botón eliminar --}}
+                                <button class="btn btn-danger"
+                                    onclick="eliminarPunteroModal({{ $p->id }}, {{ $p->id_dirigente }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 @endforeach

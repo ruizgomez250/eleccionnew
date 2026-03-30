@@ -41,7 +41,7 @@ Route::get('mesas-entrada/data1', [MesaEntradaController::class, 'getData'])->na
 
 Route::middleware('auth')->group(function () {
     Route::get('/arbol', [SistemaController::class, 'mostrarArbol'])
-    ->name('arbol');
+        ->name('arbol');
     Route::get('punterosyvotantespordirigente/{equipo?}', [ReportesController::class, 'index'])
         ->name('punterosyvotantespordirigente');
     Route::resource('equipo', EquipoController::class);
@@ -193,6 +193,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/sistemas/{sistema}/punteros', [PunteroController::class, 'porSistema'])->name('sistemas.punteros');
     Route::get('/dirigente/{dirigente}/punteros', [PunteroController::class, 'porDirigente'])->name('dirigentes.punteros');
     Route::get('/equipo/{equipo}/punteros', [PunteroController::class, 'porEquipo'])->name('equipo.punteros');
-    // Agrega esta línea junto a las otras rutas AJAX de votantes
+    // Agrega esta línea junto a las otras rutas AJAX de votdantes
     Route::post('/votante/store-ajax', [VotanteController::class, 'storeAjax'])->name('votante.store.ajax');
+    // Ruta para crear vehículo desde el modal del puntero
+
+    Route::get('/puntero/{id}/vehiculos', [PunteroController::class, 'getVehiculos']);
+    Route::post('/vehiculo/from-puntero', [VehiculoController::class, 'storeFromPuntero'])
+        ->name('vehiculo.store.from.puntero');
+    // Ruta para desvincular vehículo de un puntero
+    Route::delete('/vehiculo/{vehiculoId}/puntero/{punteroId}', [VehiculoController::class, 'desvincularPuntero']);
 });

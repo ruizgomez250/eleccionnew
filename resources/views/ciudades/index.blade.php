@@ -170,7 +170,167 @@
             </div>
         </div>
     </div>
+    {{-- MODAL DE VEHÍCULOS DEL PUNTERO --}}
+    <div class="modal fade" id="modalVehiculosPuntero" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-truck"></i> Vehículos del Puntero: <span id="vehiculo_puntero_nombre"></span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    {{-- FORMULARIO PARA CREAR NUEVO VEHÍCULO --}}
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-plus-circle"></i> Nuevo Vehículo
+                        </div>
+                        <div class="card-body">
+                            <form id="formCrearVehiculoPuntero">
+                                @csrf
+                                <input type="hidden" name="id_puntero" id="vehiculo_id_puntero">
 
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Cédula del Chofer <span class="text-danger">*</span></label>
+                                            <input type="text" name="cedulachofer" id="vehiculo_cedulachofer"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="form-group">
+                                            <label>Nombre del Chofer <span class="text-danger">*</span></label>
+                                            <input type="text" name="nombre" id="vehiculo_nombre"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Chapa <span class="text-danger">*</span></label>
+                                            <input type="text" name="chapa" id="vehiculo_chapa"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Tipo Vehículo</label>
+                                            <select name="tipovehiculo" id="vehiculo_tipovehiculo" class="form-control">
+                                                <option value="AUTOMOVIL">AUTOMÓVIL</option>
+                                                <option value="CAMIONETA">CAMIONETA</option>
+                                                <option value="FURGONETA">FURGONETA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Capacidad</label>
+                                            <input type="number" name="capacidad" id="vehiculo_capacidad"
+                                                class="form-control" value="5">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Teléfono Principal <span class="text-danger">*</span></label>
+                                            <input type="text" name="telefono1" id="vehiculo_telefono1"
+                                                class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Teléfono Secundario</label>
+                                            <input type="text" name="telefono2" id="vehiculo_telefono2"
+                                                class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Monto a Pagar (Gs.)</label>
+                                            <select name="montopagar" id="vehiculo_montopagar" class="form-control">
+                                                <option value="0">0</option>
+                                                <option value="200000">200.000</option>
+                                                <option value="300000" selected>300.000</option>
+                                                <option value="350000">350.000</option>
+                                                <option value="400000">400.000</option>
+                                                <option value="450000">450.000</option>
+                                                <option value="500000">500.000</option>
+                                                <option value="550000">550.000</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Cantidad Pagos</label>
+                                            <input type="number" name="cantidadpagos" id="vehiculo_cantidadpagos"
+                                                class="form-control" value="2">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Rol del Vehículo</label>
+                                            <select name="rolvehiculo" id="vehiculo_rolvehiculo" class="form-control">
+                                                <option value="PUNTERO">PUNTERO</option>
+                                                <option value="LOGISTICA">LOGISTICA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{-- Espacio vacío --}}
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-save"></i> Guardar Vehículo
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- TABLA DE VEHÍCULOS ASIGNADOS --}}
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <i class="fas fa-list"></i> Vehículos Asignados
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="vehiculos-puntero-table" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Chapa</th>
+                                            <th>Chofer</th>
+                                            <th>Cédula</th>
+                                            <th>Teléfono</th>
+                                            <th>Rol</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="7" class="text-center">Seleccione un puntero</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i> Volver Atrás
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     {{-- MODAL VOTANTES --}}
     <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -477,6 +637,7 @@
                     $('#tipo_votante').focus();
                 }
             });
+
         });
         localStorage.setItem('modaldirigenteAbierto', 'false');
 
@@ -1096,7 +1257,134 @@
                 }
             });
         }
+                    // ==================== CARGAR VEHÍCULOS DEL PUNTERO ====================
+            window.cargarVehiculosPuntero = function(punteroId) {
+                $('#vehiculos-puntero-table tbody').html(
+                    '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>'
+                );
 
+                $.get(`{{ url('/') }}/puntero/${punteroId}/vehiculos`, function(vehiculos) {
+                    let tbody = '';
+
+                    if (vehiculos.length === 0) {
+                        tbody =
+                            '<tr><td colspan="7" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
+                    } else {
+                        vehiculos.forEach((v, i) => {
+                            tbody += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${v.chapa}</td>
+                        <td>${v.nombre}</td>
+                        <td>${v.cedulachofer}</td>
+                        <td>${v.telefono1 || ''}</td>
+                        <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                        });
+                    }
+
+                    $('#vehiculos-puntero-table tbody').html(tbody);
+
+                    // Destruir DataTable si existe y volver a inicializar
+                    if ($.fn.DataTable && $('#vehiculos-puntero-table').length) {
+                        if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) {
+                            $('#vehiculos-puntero-table').DataTable().destroy();
+                        }
+                        $('#vehiculos-puntero-table').DataTable({
+                            responsive: true,
+                            language: {
+                                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                            },
+                            pageLength: 10,
+                            destroy: true
+                        });
+                    }
+                }).fail(function() {
+                    $('#vehiculos-puntero-table tbody').html(
+                        '<tr><td colspan="7" class="text-center text-danger">Error al cargar los vehículos</td></tr>'
+                    );
+                });
+            }
+            // ==================== ELIMINAR VEHÍCULO DEL PUNTERO ====================
+            window.eliminarVehiculoPuntero = function(vehiculoId) {
+                let punteroId = $('#vehiculo_id_puntero').val();
+
+                Swal.fire({
+                    title: '¿Desvincular vehículo?',
+                    text: 'El vehículo dejará de estar asignado a este puntero',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Sí, desvincular',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ url('/') }}/vehiculo/${vehiculoId}/puntero/${punteroId}`,
+                            type: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Desvinculado',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                cargarVehiculosPuntero(punteroId);
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: xhr.responseJSON?.message ||
+                                        'No se pudo desvincular el vehículo'
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        // ============================================
+        // FUNCIONES PARA MODALES
+        // ============================================
+        window.abrirModalCrearVehiculo = function(punteroId, punteroNombre) {
+            $('#vehiculo_id_puntero').val(punteroId);
+            $('#vehiculo_puntero_nombre').text(punteroNombre);
+
+            // Limpiar formulario
+            $('#formCrearVehiculoPuntero')[0].reset();
+            $('#vehiculo_capacidad').val(5);
+            $('#vehiculo_cantidadpagos').val(2);
+            $('#vehiculo_montopagar').val('300000');
+            $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+            $('#vehiculo_rolvehiculo').val('PUNTERO');
+
+            // Limpiar campos específicos
+            $('#vehiculo_cedulachofer').val('');
+            $('#vehiculo_nombre').val('');
+            $('#vehiculo_telefono1').val('');
+            $('#vehiculo_telefono2').val('');
+            $('#vehiculo_chapa').val('');
+
+            // Cargar vehículos del puntero
+            cargarVehiculosPuntero(punteroId);
+
+            // Enfocar primer campo
+            setTimeout(function() {
+                $('#vehiculo_cedulachofer').focus();
+            }, 500);
+
+            $('#modalVehiculosPuntero').modal('show');
+        }
         // Exponer funciones globalmente
         window.eliminarDirigente = eliminarDirigente;
         window.filtrarPunteros = filtrarPunteros;
@@ -1129,48 +1417,7 @@
             });
         }
 
-        // MODIFICACIÓN: Función inicializarSelect2 mejorada
-        // function inicializarSelect2() {
-        //     // Verificar si estamos dentro de un modal abierto
-        //     if ($('#modalDirigentes').is(':visible')) {
-        //         // Si el modal de dirigentes está visible, inicializar el select de equipos
-        //         if (typeof inicializarSelect2Equipos === 'function') {
-        //             inicializarSelect2Equipos();
-        //         }
 
-        //         // Inicializar otros selects con clase .select2 dentro del modal
-        //         $('.select2').not('#equipo_id_dir').each(function() {
-        //             if ($(this).data('select2')) {
-        //                 $(this).select2('destroy');
-        //             }
-        //             $(this).select2({
-        //                 width: '100%',
-        //                 allowClear: true,
-        //                 dropdownParent: $('#modalDirigentes .modal-body')
-        //             });
-        //         });
-        //     } else if ($('#modalPunterosLista').is(':visible')) {
-        //         // Si está abierto el modal de punteros
-        //         $('.select2').each(function() {
-        //             if ($(this).data('select2')) {
-        //                 $(this).select2('destroy');
-        //             }
-        //             $(this).select2({
-        //                 width: '100%',
-        //                 allowClear: true,
-        //                 dropdownParent: $('#modalPunterosLista .modal-body')
-        //             });
-        //         });
-        //     } else {
-        //         // Si no hay modal visible, inicializar normalmente
-        //         $('.select2').select2({
-        //             width: '100%',
-        //             allowClear: true
-        //         });
-        //     }
-        // }
-
-        // Función para abrir modal de punteros (lista completa)
         function abrirModalPunterosLista(sistemaId, nombreSistema) {
             let modalTitle = document.querySelector('#modalPunterosLista .modal-title');
             if (modalTitle) {
@@ -1421,5 +1668,129 @@
         window.cargarVotantes = cargarVotantes;
         window.eliminarVotante = eliminarVotante;
         window.abrirModalPunterosListapordir = abrirModalPunterosListapordir;
+        // Eventos para búsqueda por cédula
+        $(document).on('blur', '#vehiculo_cedulachofer', function() {
+            buscarChoferPorCedula();
+        });
+
+        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarChoferPorCedula();
+                $('#vehiculo_nombre').focus();
+            }
+        });
+        // ==================== BÚSQUEDA POR CÉDULA EN VEHÍCULOS ====================
+        function buscarChoferPorCedula() {
+            let cedula = $('#vehiculo_cedulachofer').val().trim();
+            if (cedula.length < 3) return;
+
+            $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#vehiculo_nombre').val(response.data.nombre ?? '');
+                    $('#vehiculo_telefono1').val(response.data.telefono ?? '');
+                    $('#vehiculo_telefono2').val(response.data.telefono2 ?? '');
+                } else {
+                    // Limpiar campos si no se encuentra
+                    $('#vehiculo_nombre').val('');
+                    $('#vehiculo_telefono1').val('');
+                    $('#vehiculo_telefono2').val('');
+                }
+            }).fail(function() {
+                console.log('Error en la búsqueda de cédula');
+            });
+        }
+
+        // Evento blur para búsqueda por cédula
+        $(document).on('blur', '#vehiculo_cedulachofer', function() {
+            buscarChoferPorCedula();
+        });
+
+        // Evento keypress para búsqueda por cédula con Enter
+        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarChoferPorCedula();
+                $('#vehiculo_nombre').focus();
+            }
+        });
+        // ==================== GUARDAR VEHÍCULO DESDE MODAL ====================
+        $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {
+            e.preventDefault();
+
+            let btnSubmit = $(this).find('button[type="submit"]');
+            let punteroId = $('#vehiculo_id_puntero').val();
+
+            btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+            let formData = {
+                nombre: $('#vehiculo_nombre').val(),
+                cedulachofer: $('#vehiculo_cedulachofer').val(),
+                chapa: $('#vehiculo_chapa').val(),
+                tipovehiculo: $('#vehiculo_tipovehiculo').val(),
+                capacidad: $('#vehiculo_capacidad').val(),
+                telefono1: $('#vehiculo_telefono1').val(),
+                telefono2: $('#vehiculo_telefono2').val(),
+                montopagar: $('#vehiculo_montopagar').val(),
+                cantidadpagos: $('#vehiculo_cantidadpagos').val(),
+                rolvehiculo: $('#vehiculo_rolvehiculo').val(),
+                id_puntero: punteroId,
+                _token: '{{ csrf_token() }}'
+            };
+
+            $.ajax({
+                url: "{{ route('vehiculo.store.from.puntero') }}",
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    // Limpiar formulario
+                    $('#formCrearVehiculoPuntero')[0].reset();
+                    $('#vehiculo_capacidad').val(5);
+                    $('#vehiculo_cantidadpagos').val(2);
+                    $('#vehiculo_montopagar').val('300000');
+                    $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+                    $('#vehiculo_rolvehiculo').val('PUNTERO');
+                    $('#vehiculo_cedulachofer').focus();
+
+                    // Recargar la lista de vehículos
+                    cargarVehiculosPuntero(punteroId);
+
+                    btnSubmit.prop('disabled', false).html(
+                        '<i class="fas fa-save"></i> Guardar Vehículo');
+                },
+                error: function(xhr) {
+                    btnSubmit.prop('disabled', false).html(
+                        '<i class="fas fa-save"></i> Guardar Vehículo');
+
+                    if (xhr.status === 422 && xhr.responseJSON.errors) {
+                        let errors = xhr.responseJSON.errors;
+                        let errorMessage = '';
+                        $.each(errors, function(key, value) {
+                            errorMessage += `${key}: ${value[0]}\n`;
+                        });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de validación',
+                            text: errorMessage
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message || 'Error al crear el vehículo'
+                        });
+                    }
+                }
+            });
+        });
     </script>
 @stop

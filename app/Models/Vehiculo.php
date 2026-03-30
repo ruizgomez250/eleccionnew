@@ -24,12 +24,16 @@ class Vehiculo extends Model
         'cantidadpagos',
         'numero_auto',
         'id_equipo',
+        'rol',
+        'id_sistema',
     ];
-    public function punteros()
+     public function punteros()
     {
-        return $this->belongsToMany(Puntero::class, 'puntero_vehiculo', 'vehiculo_id', 'puntero_id');
+        return $this->belongsToMany(Puntero::class, 'puntero_vehiculo', 'vehiculo_id', 'puntero_id')
+            ->withTimestamps()
+            ->withPivot('fecha_asignacion');
     }
-    // Dirigente pertenece a un equipo
+
     public function equipo()
     {
         return $this->belongsTo(Equipo::class, 'id_equipo');
