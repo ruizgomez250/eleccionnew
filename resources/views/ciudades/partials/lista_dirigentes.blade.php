@@ -46,22 +46,22 @@
             <small class="text-danger" id="error-barrio"></small>
         </div>
     </div>
-        <div class="row mt-3">
-            <div class="col-md-6">
-                <button type="button" class="btn btn-primary" id="btnGuardarDirigente">
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <button type="button" class="btn btn-primary" id="btnGuardarDirigente">
                 <i class="fas fa-save"></i> Guardar Dirigente
             </button>
 
 
-            </div>
-            <div class="col-md-6 text-right">
-
-
-                <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
-                    <i class="fas fa-arrow-left"></i> Volver a Atras
-                </button>
-            </div>
         </div>
+        <div class="col-md-6 text-right">
+
+
+            <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
+                <i class="fas fa-arrow-left"></i> Volver a Atras
+            </button>
+        </div>
+    </div>
 </form>
 {{-- MODAL DE BÚSQUEDA DE EQUIPOS --}}
 <div class="modal fade" id="modalEquipos" tabindex="-1">
@@ -151,7 +151,9 @@
                             <span class="badge badge-success">{{ $dir->votantes_count ?? 0 }}</span>
                         </td>
                         <td>
-
+                            <button class="btn btn-primary btn-sm" onclick="generarPDFporDir({{ $dir->id }})">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
                             <button class="btn btn-danger btn-sm" onclick="eliminarDirigente({{ $dir->id }})">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -164,6 +166,11 @@
 </div>
 
 <script>
+    function generarPDFporDir(id) {
+
+            var url = `{{ url('/') }}/votantespordirigente/${id}`;
+            window.open(url, '_blank');
+        }
     $(document).ready(function() {
 
         // Inicializar Select2 cuando se abre el modal (esto va en la página principal, no aquí)

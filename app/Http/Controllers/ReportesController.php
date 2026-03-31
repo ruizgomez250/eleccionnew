@@ -16,8 +16,8 @@ class ReportesController extends Controller
     public function vehicporsis()
     {
         $vehiculos = Vehiculo::with(['equipo', 'punteros'])
-    ->where('id_sistema', Auth::user()->sistema)
-    ->get();
+            ->where('id_sistema', Auth::user()->sistema)
+            ->get();
 
         $totalMonto     = $vehiculos->sum('montopagar');
         $totalPagos     = $vehiculos->sum('cantidadpagos');
@@ -139,9 +139,25 @@ class ReportesController extends Controller
     }
     public function vehiculosPorEquipo($idEquipo)
     {
-        $equipo = Equipo::with(['vehiculos.punteros'])
-            ->where('sist', Auth::user()->sistema)
-            ->findOrFail($idEquipo);
+        // Caso especial: idEquipo = 0 para mostrar vehículos sin equipo
+        if ($idEquipo == 0) {
+            $vehiculos = Vehiculo::with(['punteros', 'equipo'])
+                ->where('id_sistema', Auth::user()->sistema)
+                ->whereNull('id_equipo')
+                ->get();
+
+            $tituloEquipo = "VEHÍCULOS SIN EQUIPO ASIGNADO";
+            $equipoDescripcion = "SIN EQUIPO";
+        } else {
+            // Caso normal: mostrar vehículos de un equipo específico
+            $equipo = Equipo::with(['vehiculos.punteros'])
+                ->where('sist', Auth::user()->sistema)
+                ->findOrFail($idEquipo);
+
+            $vehiculos = $equipo->vehiculos;
+            $tituloEquipo = "PLANILLA DE VEHÍCULOS Y PUNTEROS";
+            $equipoDescripcion = "Equipo: " . $equipo->descripcion;
+        }
 
         $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false); // LANDSCAPE
 
@@ -153,10 +169,10 @@ class ReportesController extends Controller
 
         /* ================= TÍTULO ================= */
         $pdf->SetFont('helvetica', 'B', 11);
-        $pdf->Cell(0, 6, 'PLANILLA DE VEHÍCULOS Y PUNTEROS', 0, 1, 'C');
+        $pdf->Cell(0, 6, $tituloEquipo, 0, 1, 'C');
 
         $pdf->SetFont('helvetica', '', 9);
-        $pdf->Cell(0, 5, 'Equipo: ' . $equipo->descripcion, 0, 1, 'C');
+        $pdf->Cell(0, 5, $equipoDescripcion, 0, 1, 'C');
 
         $pdf->Ln(3);
 
@@ -184,39 +200,47 @@ class ReportesController extends Controller
         $totalPagos = 0;
         $totalVehiculos = 0;
 
-        foreach ($equipo->vehiculos as $vehiculo) {
+        // Verificar si hay vehículos para mostrar
+        if ($vehiculos->isEmpty()) {
+            $pdf->Cell(0, 10, 'No hay vehículos para mostrar', 1, 1, 'C');
+        } else {
+            foreach ($vehiculos as $vehiculo) {
 
-            $punterosTexto = $vehiculo->punteros
-                ->pluck('nombre')
-                ->implode("\n");
+                $punterosTexto = $vehiculo->punteros
+                    ->pluck('nombre')
+                    ->implode("\n");
 
-            $telefonos = collect([
-                $vehiculo->telefono1,
-                $vehiculo->telefono2,
-                $vehiculo->telefono3
-            ])->filter()->implode(' - ');
+                $telefonos = collect([
+                    $vehiculo->telefono1,
+                    $vehiculo->telefono2,
+                    $vehiculo->telefono3
+                ])->filter()->implode(' - ');
 
-            // calcular altura dinámica
-            $hPunteros = $pdf->getStringHeight(55, $punterosTexto);
-            $rowHeight = max(7, $hPunteros);
+                // Obtener descripción del equipo (puede ser null)
+                $equipoDescripcion = $vehiculo->equipo ? $vehiculo->equipo->descripcion : 'SIN EQUIPO';
 
-            $pdf->MultiCell(6, $rowHeight, $i, 1, 'C', false, 0);
-            $pdf->MultiCell(30, $rowHeight, $vehiculo->nombre, 1, 'L', false, 0);
-            $pdf->MultiCell(22, $rowHeight, number_format($vehiculo->cedulachofer, 0, ',', '.'), 1, 'C', false, 0);
-            $pdf->MultiCell(18, $rowHeight, $vehiculo->chapa, 1, 'C', false, 0);
-            $pdf->MultiCell(18, $rowHeight, $vehiculo->tipovehiculo, 1, 'C', false, 0);
-            $pdf->MultiCell(10, $rowHeight, $vehiculo->capacidad, 1, 'C', false, 0);
-            $pdf->MultiCell(30, $rowHeight, $telefonos, 1, 'L', false, 0);
-            $pdf->MultiCell(18, $rowHeight, number_format($vehiculo->montopagar, 0, ',', '.'), 1, 'R', false, 0);
-            $pdf->MultiCell(12, $rowHeight, $vehiculo->cantidadpagos, 1, 'C', false, 0);
-            $pdf->MultiCell(25, $rowHeight, $vehiculo->equipo->descripcion, 1, 'L', false, 0);
-            $pdf->MultiCell(55, $rowHeight, $punterosTexto, 1, 'L', false, 1);
+                // calcular altura dinámica
+                $hPunteros = $pdf->getStringHeight(55, $punterosTexto);
+                $rowHeight = max(7, $hPunteros);
 
-            $totalMonto += $vehiculo->montopagar;
-            $totalPagos += $vehiculo->cantidadpagos;
-            $totalVehiculos++;
+                $pdf->MultiCell(6, $rowHeight, $i, 1, 'C', false, 0);
+                $pdf->MultiCell(30, $rowHeight, $vehiculo->nombre, 1, 'L', false, 0);
+                $pdf->MultiCell(22, $rowHeight, number_format($vehiculo->cedulachofer, 0, ',', '.'), 1, 'C', false, 0);
+                $pdf->MultiCell(18, $rowHeight, $vehiculo->chapa, 1, 'C', false, 0);
+                $pdf->MultiCell(18, $rowHeight, $vehiculo->tipovehiculo, 1, 'C', false, 0);
+                $pdf->MultiCell(10, $rowHeight, $vehiculo->capacidad, 1, 'C', false, 0);
+                $pdf->MultiCell(30, $rowHeight, $telefonos, 1, 'L', false, 0);
+                $pdf->MultiCell(18, $rowHeight, number_format($vehiculo->montopagar, 0, ',', '.'), 1, 'R', false, 0);
+                $pdf->MultiCell(12, $rowHeight, $vehiculo->cantidadpagos, 1, 'C', false, 0);
+                $pdf->MultiCell(25, $rowHeight, $equipoDescripcion, 1, 'L', false, 0);
+                $pdf->MultiCell(55, $rowHeight, $punterosTexto, 1, 'L', false, 1);
 
-            $i++;
+                $totalMonto += $vehiculo->montopagar;
+                $totalPagos += $vehiculo->cantidadpagos;
+                $totalVehiculos++;
+
+                $i++;
+            }
         }
 
         /* ================= TOTALES ================= */
@@ -228,8 +252,6 @@ class ReportesController extends Controller
 
         $pdf->Cell(60, 7, 'TOTAL MONTO:', 1, 0);
         $pdf->Cell(20, 7, number_format($totalMonto, 0, ',', '.'), 1, 1, 'R');
-
-
 
         $pdf->Output('planilla_vehiculos_punteros.pdf', 'I');
         exit;

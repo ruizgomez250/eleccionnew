@@ -238,7 +238,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-users"></i> Equipo</label>
                         <select id="selectEquipoReporte" class="form-control select2" style="width:100%">
-                            <option value="">Seleccione un equipo</option>
+                            <option value="0">Sin Equipo</option>
                             @foreach ($equipos as $equipo)
                                 <option value="{{ $equipo->id }}">
                                     {{ $equipo->descripcion }}
