@@ -152,17 +152,30 @@ Route::middleware('auth')->group(function () {
         [ReportesController::class, 'vehiculosPorEquipo']
     )->name('reportes.vehiculos.equipo');
     Route::get('/reportestotalesporsistema', [ReportesController::class, 'totalesporSistema'])->name('reportes.totalesporSistema');
+    // Rutas para Miembros de Mesa - COMPLETAS
     Route::get('miembros-de-mesa', [MiembroDeMesaController::class, 'index'])
         ->name('miembros-de-mesa.index');
 
     Route::get('miembros-de-mesa/create/{equipoId?}', [MiembroDeMesaController::class, 'createWithEquipo'])
         ->name('miembros-de-mesa.create');
 
-    Route::post('miembros-de-mesa/store', [MiembroDeMesaController::class, 'store'])
+    Route::post('miembros-de-mesa', [MiembroDeMesaController::class, 'store'])
         ->name('miembros-de-mesa.store');
+
+    // Ruta para mostrar un miembro específico (para editar)
+    Route::get('miembros-de-mesa/{id}', [MiembroDeMesaController::class, 'show'])
+        ->name('miembros-de-mesa.show');
+
+    // Ruta para actualizar un miembro
+    Route::put('miembros-de-mesa/{id}', [MiembroDeMesaController::class, 'update'])
+        ->name('miembros-de-mesa.update');
 
     Route::delete('miembros-de-mesa/{id}', [MiembroDeMesaController::class, 'destroy'])
         ->name('miembros-de-mesa.destroy');
+
+    // Ruta para obtener miembros por equipo (AJAX)
+    Route::get('miembros-de-mesa/get-by-equipo/{equipoId}', [MiembroDeMesaController::class, 'getByEquipo'])
+        ->name('miembros-de-mesa.getByEquipo');
     Route::get('/configuracion-montos', [ConfiguracionMontoController::class, 'index'])
         ->name('configuracion_montos.index');
     Route::post('/configuracion-montos/actualizar', [ConfiguracionMontoController::class, 'store'])

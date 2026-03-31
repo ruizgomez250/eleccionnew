@@ -17,6 +17,10 @@ class MiembroDeMesa extends Model
         'cedula',
         'funcion',
         'idequipo',
+        'cedulaproponente',
+        'nombreproponente',
+        'telefonoproponente',
+
     ];
 
     /**

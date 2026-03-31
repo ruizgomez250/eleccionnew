@@ -36,6 +36,9 @@
                         <th>Teléfono</th>
                         <th>Función</th>
                         <th>Equipo</th>
+                        <th>Cédula Proponente</th>
+                        <th>Proponente</th>
+                        <th>Tel. Proponente</th>
                         <th width="10%">Acciones</th>
                     </tr>
                 </thead>
@@ -46,9 +49,21 @@
                             <td>{{ $miembro->cedula }}</td>
                             <td>{{ $miembro->nombre }}</td>
                             <td>{{ $miembro->telefono }}</td>
-                            <td>{{ $miembro->funcion }}</td>
-                            <td>{{ $miembro->equipo->descripcion ?? '' }}</td>
                             <td>
+                                @if($miembro->funcion == 'Titular')
+                                    <span class="badge badge-success">{{ $miembro->funcion }}</span>
+                                @else
+                                    <span class="badge badge-warning">{{ $miembro->funcion }}</span>
+                                @endif
+                            </td>
+                            <td>{{ $miembro->equipo->descripcion ?? '' }}</td>
+                            <td>{{ $miembro->cedulaproponente ?? '-' }}</td>
+                            <td>{{ $miembro->nombreproponente ?? '-' }}</td>
+                            <td>{{ $miembro->telefonoproponente ?? '-' }}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="editarMiembro({{ $miembro->id }})" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <button class="btn btn-danger btn-sm" onclick="confirmarBorrado(this)"
                                     data-url="{{ route('miembros-de-mesa.destroy', $miembro->id) }}">
                                     <i class="fas fa-trash"></i>
@@ -67,52 +82,100 @@
         @method('DELETE')
     </form>
 
-    {{-- MODAL AGREGAR --}}
-    <div class="modal fade" id="modalAgregar" tabindex="-1">
-        <div class="modal-dialog">
-            <form id="formAgregarMiembro" action="{{ route('miembros-de-mesa.store') }}" method="POST">
+    {{-- MODAL AGREGAR/EDITAR --}}
+    <div class="modal fade" id="modalMiembro" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form id="formMiembro" action="{{ route('miembros-de-mesa.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="_method" id="methodField" value="POST">
+                <input type="hidden" name="id" id="miembroId">
+                
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Miembro de Mesa</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="modalTitle">Agregar Miembro de Mesa</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                     </div>
 
                     <div class="modal-body">
+                        <input type="hidden" name="idequipo" id="idequipo" value="{{ $equipoId }}">
 
-                        <input type="hidden" name="idequipo" value="{{ $equipoId }}">
-
-                        <div class="form-group">
-                            <label>Cédula</label>
-                            <input type="text" name="cedula" id="miembro_cedula" class="form-control" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cedula">Cédula <span class="text-danger">*</span></label>
+                                    <input type="text" name="cedula" id="cedula" class="form-control" required>
+                                    <small class="text-muted">Ingrese la cédula y automáticamente se buscarán los datos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="telefono">Teléfono</label>
+                                    <input type="text" name="telefono" id="telefono" class="form-control">
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Nombre</label>
-                            <input type="text" name="nombre" id="miembro_nombre" class="form-control" required>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" name="nombre" id="nombre" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="funcion">Función <span class="text-danger">*</span></label>
+                                    <select name="funcion" id="funcion" class="form-control" required>
+                                        <option value="Titular">Titular</option>
+                                        <option value="Suplente">Suplente</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Teléfono</label>
-                            <input type="text" name="telefono" id="miembro_telefono" class="form-control">
+                        <hr class="my-3">
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="text-info">
+                                    <i class="fas fa-user-friends"></i> Datos del Proponente (Opcional)
+                                </h6>
+                                <small class="text-muted">Complete estos campos si el miembro tiene un proponente asociado</small>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Función</label>
-                            <select name="funcion" class="form-control" required>
-                                <option value="Titular">Titular</option>
-                                <option value="Suplente">Suplente</option>
-                            </select>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cedulaproponente">Cédula del Proponente</label>
+                                    <input type="text" name="cedulaproponente" id="cedulaproponente" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="telefonoproponente">Teléfono del Proponente</label>
+                                    <input type="text" name="telefonoproponente" id="telefonoproponente" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="nombreproponente">Nombre del Proponente</label>
+                                    <input type="text" name="nombreproponente" id="nombreproponente" class="form-control">
+                                </div>
+                            </div>
                         </div>
 
                     </div>
 
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">
-                            Guardar
+                        <button type="submit" class="btn btn-primary" id="btnGuardar">
+                            <i class="fas fa-save"></i> Guardar
                         </button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            Cerrar
+                            <i class="fas fa-times"></i> Cerrar
                         </button>
                     </div>
 
@@ -122,6 +185,28 @@
     </div>
 
 @stop
+
+@push('css')
+    <style>
+        .border-success {
+            border-color: #28a745 !important;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        .modal-lg {
+            max-width: 800px;
+        }
+        .badge {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .bg-primary {
+            background-color: #007bff !important;
+        }
+        hr {
+            border-top: 2px solid #e9ecef;
+        }
+    </style>
+@endpush
 
 @push('js')
     <script>
@@ -138,40 +223,138 @@
             });
         }
 
-        function buscarMiembroPorCedula() {
-            let cedula = $('#miembro_cedula').val().trim();
-
-            if (cedula.length < 3) return;
-
-            $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
-                if (response.encontrado) {
-
-                    $('#miembro_nombre').val(response.data.nombre);
-                    $('#miembro_telefono').val(response.data.telefono);
-
-                    // efecto visual opcional
-                    $('#miembro_nombre').addClass('border-success');
-                    $('#miembro_telefono').addClass('border-success');
-
-                    setTimeout(() => {
-                        $('#miembro_nombre').removeClass('border-success');
-                        $('#miembro_telefono').removeClass('border-success');
-                    }, 1500);
-                }
+        if (successAlert) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: successAlert,
+                confirmButtonColor: '#28a745',
+                timer: 3000
             });
         }
 
-        $('#miembro_cedula').on('blur', function() {
+        function buscarMiembroPorCedula() {
+            let cedula = $('#cedula').val().trim();
+
+            if (cedula.length < 3) return;
+
+            // Mostrar loading
+            $('#cedula').addClass('border-info');
+            
+            $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#nombre').val(response.data.nombre);
+                    $('#telefono').val(response.data.telefono);
+
+                    // efecto visual opcional
+                    $('#nombre').addClass('border-success');
+                    $('#telefono').addClass('border-success');
+
+                    setTimeout(() => {
+                        $('#nombre').removeClass('border-success');
+                        $('#telefono').removeClass('border-success');
+                        $('#cedula').removeClass('border-info');
+                    }, 1500);
+                    
+                    // Mostrar notificación de éxito
+                    toastr.success('Datos del dirigente cargados correctamente');
+                } else {
+                    $('#nombre').val('');
+                    $('#telefono').val('');
+                    toastr.warning('No se encontró un dirigente con esa cédula');
+                    $('#cedula').removeClass('border-info');
+                }
+            }).fail(function() {
+                toastr.error('Error al buscar la cédula');
+                $('#cedula').removeClass('border-info');
+            });
+        }
+
+        function buscarProponentePorCedula() {
+            let cedula = $('#cedulaproponente').val().trim();
+
+            if (cedula.length < 3) return;
+
+            // Mostrar loading
+            $('#cedulaproponente').addClass('border-info');
+            
+            $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#nombreproponente').val(response.data.nombre);
+                    $('#telefonoproponente').val(response.data.telefono);
+
+                    // efecto visual opcional
+                    $('#nombreproponente').addClass('border-success');
+                    $('#telefonoproponente').addClass('border-success');
+
+                    setTimeout(() => {
+                        $('#nombreproponente').removeClass('border-success');
+                        $('#telefonoproponente').removeClass('border-success');
+                        $('#cedulaproponente').removeClass('border-info');
+                    }, 1500);
+                    
+                    toastr.success('Datos del proponente cargados correctamente');
+                } else {
+                    $('#nombreproponente').val('');
+                    $('#telefonoproponente').val('');
+                    toastr.warning('No se encontró un dirigente con esa cédula');
+                    $('#cedulaproponente').removeClass('border-info');
+                }
+            }).fail(function() {
+                toastr.error('Error al buscar la cédula');
+                $('#cedulaproponente').removeClass('border-info');
+            });
+        }
+
+        // Eventos para búsqueda automática
+        $('#cedula').on('blur', function() {
             buscarMiembroPorCedula();
         });
 
-        $('#miembro_cedula').on('keypress', function(e) {
+        $('#cedula').on('keypress', function(e) {
             if (e.which === 13) {
                 e.preventDefault();
                 buscarMiembroPorCedula();
-                $('#miembro_nombre').focus();
+                $('#nombre').focus();
             }
         });
+
+        $('#cedulaproponente').on('blur', function() {
+            buscarProponentePorCedula();
+        });
+
+        $('#cedulaproponente').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarProponentePorCedula();
+                $('#nombreproponente').focus();
+            }
+        });
+
+        function editarMiembro(id) {
+            $.get("{{ url('miembros-de-mesa') }}/" + id, function(miembro) {
+                $('#modalTitle').text('Editar Miembro de Mesa');
+                $('#formMiembro').attr('action', "{{ url('miembros-de-mesa') }}/" + id);
+                $('#methodField').val('PUT');
+                $('#miembroId').val(miembro.id);
+                $('#idequipo').val(miembro.idequipo);
+                $('#cedula').val(miembro.cedula);
+                $('#nombre').val(miembro.nombre);
+                $('#telefono').val(miembro.telefono);
+                $('#funcion').val(miembro.funcion);
+                $('#cedulaproponente').val(miembro.cedulaproponente || '');
+                $('#nombreproponente').val(miembro.nombreproponente || '');
+                $('#telefonoproponente').val(miembro.telefonoproponente || '');
+                
+                $('#modalMiembro').modal('show');
+            }).fail(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar los datos del miembro'
+                });
+            });
+        }
 
         function confirmarBorrado(button) {
             const url = button.getAttribute('data-url');
@@ -201,6 +384,17 @@
             window.location.href = url;
         }
 
+        // Limpiar modal al cerrar
+        $('#modalMiembro').on('hidden.bs.modal', function () {
+            $('#formMiembro')[0].reset();
+            $('#modalTitle').text('Agregar Miembro de Mesa');
+            $('#formMiembro').attr('action', "{{ route('miembros-de-mesa.store') }}");
+            $('#methodField').val('POST');
+            $('#miembroId').val('');
+            $('.border-success').removeClass('border-success');
+            $('.border-info').removeClass('border-info');
+        });
+
         $(document).ready(function() {
 
             $('#equipo_id').select2({
@@ -227,52 +421,69 @@
                                 return;
                             }
 
-                            $('#modalAgregar input[name="idequipo"]').val(equipoSeleccionado);
-                            $('#formAgregarMiembro')[0].reset();
-                            $('#modalAgregar').modal('show');
-                            $('#miembro_cedula').trigger('focus');
+                            $('#idequipo').val(equipoSeleccionado);
+                            $('#formMiembro')[0].reset();
+                            $('#modalTitle').text('Agregar Miembro de Mesa');
+                            $('#formMiembro').attr('action', "{{ route('miembros-de-mesa.store') }}");
+                            $('#methodField').val('POST');
+                            $('#modalMiembro').modal('show');
+                            $('#cedula').trigger('focus');
                         }
                     },
                     {
                         extend: 'excelHtml5',
-                        className: 'btn btn-info'
+                        className: 'btn btn-info',
+                        text: '<i class="fas fa-file-excel"></i> Excel'
                     },
                     {
                         extend: 'pdfHtml5',
-                        className: 'btn btn-danger'
+                        className: 'btn btn-danger',
+                        text: '<i class="fas fa-file-pdf"></i> PDF'
                     },
                     {
                         extend: 'print',
-                        className: 'btn btn-secondary'
+                        className: 'btn btn-secondary',
+                        text: '<i class="fas fa-print"></i> Imprimir'
                     }
                 ],
 
                 responsive: true,
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                }
+                },
+                order: [[1, 'asc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]]
             });
+            
             @if (session()->has('abrirModalMiembro'))
-
                 bloqueaFiltro = true;
 
-                $('#formAgregarMiembro')[0].reset();
+                $('#formMiembro')[0].reset();
 
                 @if (session()->has('equipoId'))
-                    $('input[name="idequipo"]').val('{{ session('equipoId') }}');
+                    $('#idequipo').val('{{ session('equipoId') }}');
                     $('#equipo_id').val('{{ session('equipoId') }}').trigger('change.select2');
                 @endif
 
-                $('#modalAgregar')
+                $('#modalMiembro')
                     .off('shown.bs.modal')
                     .on('shown.bs.modal', function() {
                         setTimeout(function() {
-                            $('#miembro_cedula').trigger('focus');
+                            $('#cedula').trigger('focus');
                             bloqueaFiltro = false;
                         }, 200);
                     })
                     .modal('show');
             @endif
+
+            // Configurar toastr
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "3000"
+            };
 
         });
     </script>
