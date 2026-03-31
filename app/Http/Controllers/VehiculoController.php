@@ -177,9 +177,9 @@ class VehiculoController extends Controller
     */
     public function destroy($id)
     {
-        $vehiculo = Vehiculo::whereHas('equipo', function ($q) {
-            $q->where('sist', Auth::user()->sistema);
-        })->findOrFail($id);
+        //dd($id);
+        $vehiculo = Vehiculo::where('id_sistema', Auth::user()->sistema)
+            ->findOrFail($id);
 
         $vehiculo->delete();
 

@@ -22,8 +22,8 @@
 
                 {{-- FILA 1 --}}
                 <div class="row">
-                    <x-adminlte-input name="cedulachofer" id="cedulachofer" label="Cédula del Chofer" placeholder="Ej: 1.234.567"
-                        fgroup-class="col-md-3" required>
+                    <x-adminlte-input name="cedulachofer" id="cedulachofer" label="Cédula del Chofer"
+                        placeholder="Ej: 1.234.567" fgroup-class="col-md-3" required>
                         <x-slot name="prependSlot">
                             <div class="input-group-text"><i class="fas fa-id-card"></i></div>
                         </x-slot>
@@ -65,7 +65,7 @@
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-input name="telefono2" id="telefono2" label="Teléfono Secundario" placeholder="Opcional" 
+                    <x-adminlte-input name="telefono2" id="telefono2" label="Teléfono Secundario" placeholder="Opcional"
                         fgroup-class="col-md-3">
                         <x-slot name="prependSlot">
                             <div class="input-group-text"><i class="fas fa-phone"></i></div>
@@ -95,7 +95,7 @@
                 <div class="row">
                     <x-adminlte-select name="rol" id="rol" label="Rol del Vehículo" fgroup-class="col-md-3">
                         <option value="PUNTERO" selected>PUNTERO</option>
-                        <option value="LOGISTICA" >LOGISTICA</option>
+                        <option value="LOGISTICA">LOGISTICA</option>
                     </x-adminlte-select>
 
                     <div class="col-md-6">
@@ -209,7 +209,7 @@
                                 class="form-delete d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -309,7 +309,7 @@
         function toggleEquipoRequired() {
             const rolSeleccionado = $('#rol').val();
             const equipoRequired = $('#equipoRequired');
-            
+
             if (rolSeleccionado === 'PUNTERO') {
                 equipoRequired.show();
             } else { // LOGISTICA
@@ -339,7 +339,7 @@
         function validarFormulario() {
             const rolSeleccionado = $('#rol').val();
             const equipoValue = $('#id_equipo').val();
-            
+
             // Si el rol es PUNTERO, el equipo es obligatorio
             if (rolSeleccionado === 'PUNTERO') {
                 if (!equipoValue || equipoValue === '') {
@@ -352,7 +352,7 @@
                     return false;
                 }
             }
-            
+
             // Si el rol es LOGISTICA, el equipo es opcional
             return true;
         }
@@ -593,9 +593,14 @@
         }
 
         // Eliminar vehículo con SweetAlert
+        // Eliminar vehículo con SweetAlert - VERSIÓN MEJORADA
         document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevenir comportamiento por defecto
+
                 let form = this.closest('.form-delete');
+                if (!form) return;
+
                 Swal.fire({
                     title: '¿Eliminar vehículo?',
                     text: 'Esta acción no se puede deshacer',
@@ -603,9 +608,22 @@
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonText: 'Cancelar',
-                    confirmButtonText: 'Eliminar'
+                    confirmButtonText: 'Sí, eliminar'
                 }).then(result => {
-                    if (result.isConfirmed) form.submit();
+                    if (result.isConfirmed) {
+                        // Mostrar loading
+                        Swal.fire({
+                            title: 'Eliminando...',
+                            text: 'Por favor espere',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Enviar el formulario
+                        form.submit();
+                    }
                 });
             });
         });
