@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PrePadron extends Model
 {
     use HasFactory;
-    protected $table = 'prepadron';
+    protected $table = 'padron';
 
     protected $fillable = [
         'nº',
@@ -31,6 +31,8 @@ class PrePadron extends Model
         'local_generales', 
         'local_interna', 
         'archivo_origen',
+        'mesa',
+        'orden',
     ];
     
 }
