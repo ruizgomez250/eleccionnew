@@ -416,7 +416,7 @@
         </div>
 
         <div class="footer">
-            <p><i class="fas fa-check-circle"></i> Datos actualizados al 2025</p>
+            <p><i class="fas fa-check-circle"></i> Datos actualizados al 2026</p>
         </div>
     </div>
 
