@@ -32,8 +32,10 @@ class VotanteController extends Controller
             local_interna,
             local_generales,
             direccion,
+            mesa,
+            orden,
             afiliaciones
-        FROM prepadron
+        FROM padron
         WHERE cedula = ?
         LIMIT 1
     ";
