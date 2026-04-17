@@ -402,4 +402,65 @@
         // DISPARAR EL FILTRO
         $('#equipo_id_dir').trigger('change');
     }
+    function eliminarDirigente(dirigenteId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede revertir. Se eliminarán también sus punteros y votantes.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Eliminando...',
+                        text: 'Por favor espera',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    let url = `{{ url('/') }}/dirigentes/ajax/${dirigenteId}`;
+
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Eliminado!',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+
+                            if (typeof filtrarDirigentes === 'function') {
+                                filtrarDirigentes();
+                            } else {
+                                location.reload();
+                            }
+                        },
+                        error: function(xhr) {
+                            let mensaje = 'Error al eliminar el dirigente';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                mensaje = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: mensaje
+                            });
+                        }
+                    });
+                }
+            });
+        }
 </script>

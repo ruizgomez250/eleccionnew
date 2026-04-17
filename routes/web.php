@@ -121,6 +121,9 @@ Route::middleware('auth')->group(function () {
         ->name('votantes.por.dirigente');
     Route::get('/vehiculosporsistema', [ReportesController::class, 'vehicporsis'])
         ->name('vehiculos.porsistema');
+    Route::get('/porlocal', [ReportesController::class, 'porlocal'])->name('informe.porlocal');
+    Route::get('/porlocal-data', [ReportesController::class, 'getPorlocalData'])->name('informe.porlocal.data');
+    Route::get('/porlocal-detalle', [ReportesController::class, 'getDetalleEquipo'])->name('informe.porlocal.detalle');
     Route::resource('vehiculo', VehiculoController::class);
     Route::get('/vehiculos/contrato/{vehiculo}', [VehiculoController::class, 'generarContratoPDF'])
         ->name('vehiculo.contrato');

@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Dirigente;
 use App\Models\Equipo;
+use App\Models\Puntero;
 use App\Models\Sistema;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use TCPDF;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ReportesController extends Controller
@@ -311,5 +313,120 @@ class ReportesController extends Controller
         }
 
         return response()->json($data);
+    }
+    // En ReportesController.php, agrega este método
+    public function getDetalleEquipo(Request $request)
+    {
+        try {
+            $equipoId = $request->id;
+
+            $equipo = Equipo::find($equipoId);
+
+            if (!$equipo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Equipo no encontrado'
+                ], 404);
+            }
+
+            // Cargar relaciones
+            $equipo->load(['dirigentes', 'vehiculos.punteros']);
+            $equipo->punteros = Puntero::where('id_equipo', $equipoId)->with('votantes')->get();
+
+            // Cargar votantes a través de punteros
+            $equipo->votantes = collect();
+            foreach ($equipo->punteros as $puntero) {
+                $equipo->votantes = $equipo->votantes->concat($puntero->votantes);
+            }
+
+            // Generar HTML del modal
+            $html = view('reportes.porlocal-detalle', compact('equipo'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    public function porlocal()
+    {
+        return view('reportes.porlocal-loading');
+    }
+
+    // Método que procesa los datos via AJAX
+    public function getPorlocalData()
+    {
+        try {
+            $sistemaId = Auth::user()->sistema;
+
+            // Simular proceso pesado (opcional, para ver el loading)
+            // sleep(2);
+
+            // Usando query builder con JOINs correctos: equipo -> puntero -> votante
+            $equipos = Equipo::where('equipo.sist', $sistemaId)
+                ->leftJoin('dirigente', 'equipo.id', '=', 'dirigente.id_equipo')
+                ->leftJoin('puntero', 'equipo.id', '=', 'puntero.id_equipo')
+                ->leftJoin('votante', 'puntero.id', '=', 'votante.idpuntero')
+                ->leftJoin('vehiculo', 'equipo.id', '=', 'vehiculo.id_equipo')
+                ->select(
+                    'equipo.id',
+                    'equipo.descripcion as nombre',
+                    'equipo.colegio',
+                    'equipo.ciudad',
+                    DB::raw('COUNT(DISTINCT dirigente.id) as total_dirigentes'),
+                    DB::raw('COUNT(DISTINCT puntero.id) as total_punteros'),
+                    DB::raw('COUNT(DISTINCT votante.id) as total_votantes'),
+                    DB::raw('COUNT(DISTINCT vehiculo.id) as total_vehiculos'),
+                    DB::raw('COUNT(DISTINCT CASE WHEN votante.voto = 1 THEN votante.id END) as votaron'),
+                    DB::raw('COUNT(DISTINCT CASE WHEN votante.voto = 0 THEN votante.id END) as no_votaron')
+                )
+                ->groupBy('equipo.id', 'equipo.descripcion', 'equipo.colegio', 'equipo.ciudad')
+                ->get();
+
+            // Para los detalles de dirigentes, punteros, votantes y vehículos
+            foreach ($equipos as $equipo) {
+                $equipo->dirigentes = Dirigente::where('id_equipo', $equipo->id)->get();
+                $equipo->punteros = Puntero::where('id_equipo', $equipo->id)->with('votantes')->get();
+                $equipo->vehiculos = Vehiculo::where('id_equipo', $equipo->id)->with('punteros')->get();
+
+                // Cargar votantes a través de punteros para el modal
+                $equipo->votantes = collect();
+                foreach ($equipo->punteros as $puntero) {
+                    $equipo->votantes = $equipo->votantes->concat($puntero->votantes);
+                }
+            }
+
+            $totalEquipos = $equipos->count();
+            $totalDirigentes = $equipos->sum('total_dirigentes');
+            $totalPunteros = $equipos->sum('total_punteros');
+            $totalVotantes = $equipos->sum('total_votantes');
+            $totalVehiculos = $equipos->sum('total_vehiculos');
+            $totalVotos = $equipos->sum('votaron');
+            $totalSinVoto = $equipos->sum('no_votaron');
+
+            return response()->json([
+                'success' => true,
+                'html' => view('reportes.porlocal-content', compact(
+                    'equipos',
+                    'totalEquipos',
+                    'totalDirigentes',
+                    'totalPunteros',
+                    'totalVotantes',
+                    'totalVehiculos',
+                    'totalVotos',
+                    'totalSinVoto'
+                ))->render()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el reporte: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

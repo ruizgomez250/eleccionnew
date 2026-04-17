@@ -355,9 +355,14 @@ return [
                     'url'  => '/punterosyvotantespordirigente',
                 ],
                 [
+                    'text' => 'Por local de votacion',
+                    'url'  => '/porlocal',
+                ],
+                [
                     'text' => 'Todos los Vehiculos',
                     'url'  => '/vehiculosporsistema',
                 ],
+                
             ],
 
 
