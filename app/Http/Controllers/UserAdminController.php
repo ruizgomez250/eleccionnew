@@ -23,13 +23,12 @@ class UserAdminController extends Controller
         if (!in_array($userId, [1, 4])) {
             $roles = Role::pluck('name', 'name')->all();
             $users = User::with('sistemaRelacion')
-                ->whereHas('sistemaRelacion', function ($q) use ($userId) {
-                    $q->where('idusuario', $userId);
-                })
+                ->where('idusuario', $userId)  // Directo, sin whereHas
                 ->get();
-            $sistemas = Sistema::where('idusuario', $userId)->get();
-            $ciudades = CiudadElectoral::orderBy('descripcion')->get();
-            return view('useradmin.index', compact('users', 'sistemas', 'roles', 'ciudades'));
+            $user = User::with('sistemaRelacion')->find($userId);
+            $sistemas = Sistema::where('id', $user->sistema)->get();
+            //$ciudades = CiudadElectoral::orderBy('descripcion')->get();
+            return view('useradmin.solouser', compact('users', 'roles', 'sistemas'));
         }
     }
 
@@ -52,23 +51,54 @@ class UserAdminController extends Controller
 
     public function store(Request $request)
     {
-        //$this->verificarPermiso();
-        //dd($request->input());
+        // Validación base
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email' . ($request->user_id ? ",{$request->user_id}" : ''),
             'password' => $request->user_id ? 'nullable|string|min:6' : 'required|string|min:6',
-            'sistema' => 'nullable|exists:sistemas,id',
             'roles' => 'required'
         ]);
 
         DB::beginTransaction();
 
         try {
+            $sistemaId = null;
 
+            // 🔹 Verificar si se está creando un nuevo sistema
+            if ($request->sistema === 'nuevo') {
+                $request->validate([
+                    'sistema_nombre' => 'required|string|max:255',
+                    'sistema_tipo' => 'required|string',
+                    'sistema_candidatosup1' => 'required|not_in:0',
+                ]);
+
+                // Obtener el candidato superior seleccionado
+                $candidatoSuperior = User::with('sistemaRelacion.ciudad')->find($request->sistema_candidatosup1);
+
+                if (!$candidatoSuperior || !$candidatoSuperior->sistemaRelacion) {
+                    throw new Exception('El candidato superior seleccionado no tiene un sistema asociado');
+                }
+
+                // Copiar los datos del sistema del candidato superior
+                $sistemaOrigen = $candidatoSuperior->sistemaRelacion;
+
+                // Crear el nuevo sistema
+                $sistema = Sistema::create([
+                    'nombre' => $request->sistema_nombre,
+                    'id_ciudad_electoral' => $sistemaOrigen->id_ciudad_electoral,
+                    'tipo' => $request->sistema_tipo,
+                    'idusuario' => $request->sistema_candidatosup1,
+                ]);
+
+                $sistemaId = $sistema->id;
+            } else {
+                // Usar sistema existente (puede ser null)
+                $sistemaId = $request->sistema ?? null;
+            }
+
+            // 🔹 Crear o actualizar usuario
             if ($request->user_id) {
-
-                // 🔹 ACTUALIZAR
+                // ACTUALIZAR
                 $user = User::findOrFail($request->user_id);
 
                 $user->name = $request->name;
@@ -78,33 +108,39 @@ class UserAdminController extends Controller
                     $user->password = Hash::make($request->password);
                 }
 
-                $user->sistema = $request->sistema;
+                $user->sistema = $sistemaId;
                 $user->save();
             } else {
-
-                // 🔹 CREAR
+                // CREAR
                 $userId = Auth::id();
                 $user = User::create([
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
-                    'sistema' => $request->sistema,
+                    'sistema' => $sistemaId,
                     'idusuario' => $userId,
                 ]);
             }
 
-            // 🔹 ASIGNAR ROL
-            $user->syncRoles($request->roles);
+            // 🔹 ASIGNAR ROL (ahora es selección única)
+            // $request->roles puede venir como array o como string
+            if ($request->has('roles')) {
+                $rol = is_array($request->roles) ? $request->roles[0] : $request->roles;
+                $user->syncRoles([$rol]);
+            }
 
             DB::commit();
 
+            $message = 'Usuario guardado correctamente';
+            if ($request->sistema === 'nuevo') {
+                $message .= ' y sistema creado correctamente';
+            }
+
             return redirect()
                 ->route('useradmin.index')
-                ->with('success', 'Usuario guardado correctamente');
+                ->with('success', $message);
         } catch (Exception $e) {
-            dd($e);
             DB::rollBack();
-
             return back()->with('error', 'Error al guardar usuario: ' . $e->getMessage());
         }
     }

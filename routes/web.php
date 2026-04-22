@@ -187,6 +187,7 @@ Route::middleware('auth')->group(function () {
         ->name('configuracion_montos.reporte')
         ->middleware(['auth', 'permission:Administracion General']);
     Route::resource('ciudades_electorales', CiudadElectoralController::class);
+    
     Route::get('/ciudades', [SistemaController::class, 'mostrarCiudades'])
         ->name('ciudades.index'); // opcional según tu sistema de autenticación
     Route::get('/distritos/{idCiudad}/sistemas', [SistemaController::class, 'sistemasPorDistrito'])

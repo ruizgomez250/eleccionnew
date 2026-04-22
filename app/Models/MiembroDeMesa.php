@@ -20,6 +20,7 @@ class MiembroDeMesa extends Model
         'cedulaproponente',
         'nombreproponente',
         'telefonoproponente',
+        'mesa',
 
     ];
 

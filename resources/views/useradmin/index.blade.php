@@ -148,7 +148,7 @@
 
     {{-- Modal Sistema --}}
     <div class="modal fade" id="modalSistema" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <form action="{{ route('sistema.store') }}" method="POST" id="formSistema">
                 @csrf
                 <input type="hidden" name="sistema_id" id="sistema_id">
@@ -158,44 +158,103 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label>Nombre del Sistema</label>
-                            <input type="text" name="nombre" id="nombre_sistema" class="form-control" required>
-                        </div>
+                        <div class="row">
+                            {{-- Columna Izquierda: Datos del Sistema --}}
+                            <div class="col-md-6">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h6 class="card-title">Datos del Sistema</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Nombre del Sistema <span class="text-danger">*</span></label>
+                                            <input type="text" name="nombre" id="nombre_sistema" class="form-control"
+                                                required>
+                                        </div>
 
-                        <div class="form-group">
-                            <x-adminlte-select2 name="id_ciudad_electoral" label="Ciudad" label-class="text-lightblue"
-                                igroup-size="lg">
-                                @foreach ($ciudades as $ciudad)
-                                    <option value="{{ $ciudad->id }}">
-                                        {{ $ciudad->descripcion }} - {{ $ciudad->departamento }}
-                                    </option>
-                                @endforeach
-                            </x-adminlte-select2>
-                        </div>
+                                        <div class="form-group">
+                                            <x-adminlte-select2 name="id_ciudad_electoral" label="Ciudad"
+                                                label-class="text-lightblue" igroup-size="lg">
+                                                @foreach ($ciudades as $ciudad)
+                                                    <option value="{{ $ciudad->id }}">
+                                                        {{ $ciudad->descripcion }} - {{ $ciudad->departamento }}
+                                                    </option>
+                                                @endforeach
+                                            </x-adminlte-select2>
+                                        </div>
 
-                        <div class="form-group">
-                            <label>Tipo de Candidato</label>
-                            <select name="tipo" id="tipo" class="form-control" required>
-                                <option value="Concejal">Concejal</option>
-                                <option value="Intendente">Intendente</option>
-                                <option value="Miembro de Comite">Miembro de Comite</option>
-                                <option value="Convencional">Convencional</option>
-                                <option value="Miembro de la Juventud">Miembro de la Juventud</option>
-                                <option value="Convencional Juventud">Convencional Juventud</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <x-adminlte-select2 name="candidatosup" label="Candidato Superior" label-class="text-lightblue"
-                                igroup-size="lg">
-                                <option value="0">Sin Dato</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">
-                                        {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
-                                    </option>
-                                @endforeach
-                            </x-adminlte-select2>
+                                        <div class="form-group">
+                                            <label>Tipo de Candidato <span class="text-danger">*</span></label>
+                                            <select name="tipo" id="tipo" class="form-control" required>
+                                                <option value="Concejal">Concejal</option>
+                                                <option value="Intendente">Intendente</option>
+                                                <option value="Miembro de Comite">Miembro de Comite</option>
+                                                <option value="Convencional">Convencional</option>
+                                                <option value="Miembro de la Juventud">Miembro de la Juventud</option>
+                                                <option value="Convencional Juventud">Convencional Juventud</option>
+                                            </select>
+                                        </div>
 
+                                        <div class="form-group">
+                                            <x-adminlte-select2 name="candidatosup" label="Candidato Superior"
+                                                label-class="text-lightblue" igroup-size="lg">
+                                                <option value="0">Sin Dato</option>
+                                                @foreach ($users as $user)
+                                                    <option value="{{ $user->id }}">
+                                                        {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
+                                                    </option>
+                                                @endforeach
+                                            </x-adminlte-select2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Columna Derecha: Datos del Usuario (Opcional) --}}
+                            <div class="col-md-6">
+                                <div class="card card-success">
+                                    <div class="card-header">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-user-plus"></i> Crear Usuario (Opcional)
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+
+                                        <div class="form-group">
+                                            <label>Nombre del Usuario</label>
+                                            <input type="text" name="user_name" id="user_name" class="form-control"
+                                                placeholder="Ej: Juan Pérez">
+                                            <small class="text-muted">Opcional</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Email del Usuario</label>
+                                            <input type="email" name="user_email" id="user_email" class="form-control"
+                                                placeholder="ejemplo@correo.com">
+                                            <small class="text-muted">Opcional - Debe ser único</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Contraseña</label>
+                                            <input type="password" name="user_password" id="user_password"
+                                                class="form-control" placeholder="********">
+                                            <small class="text-muted">Opcional - Dejar en blanco para generar
+                                                automática</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Roles para el Usuario</label>
+                                            <select name="user_roles[]" id="user_roles"
+                                                class="form-control select2-roles" multiple>
+                                                @foreach ($roles as $item)
+                                                    <option value="{{ $item }}">{{ $item }}</option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted">Opcional - Seleccione uno o más roles</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -238,7 +297,7 @@
 
     {{-- Modal Usuario --}}
     <div class="modal fade" id="modalUsuario" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <form action="{{ route('useradmin.store') }}" method="POST" id="formUsuario">
                 @csrf
                 <input type="hidden" name="user_id" id="user_id">
@@ -248,51 +307,112 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label>Nombre</label>
-                            <input type="text" name="name" id="name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" id="email" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Contraseña</label>
-                            <input type="password" name="password" id="password" class="form-control">
-                            <small class="text-muted">Dejar en blanco para no cambiar la contraseña</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Sistema</label>
-                            <select name="sistema" id="sistema" class="form-control">
-                                <option value="">-- Seleccione --</option>
-                                @foreach ($sistemas as $s)
-                                    <option value="{{ $s->id }}">{{ $s->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="">Roles</label>
-                            <select name="roles[]" class="form-control" multiple>
-                                @foreach ($roles as $item)
-                                    <option value="{{ $item }}"
-                                        @php
-$selected = false;
+                        <div class="row">
+                            {{-- Columna Izquierda: Datos del Usuario --}}
+                            <div class="col-md-6">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h6 class="card-title">Datos del Usuario</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Nombre <span class="text-danger">*</span></label>
+                                            <input type="text" name="name" id="name" class="form-control"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email <span class="text-danger">*</span></label>
+                                            <input type="email" name="email" id="email" class="form-control"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Contraseña</label>
+                                            <input type="password" name="password" id="password" class="form-control">
+                                            <small class="text-muted">Dejar en blanco para no cambiar la contraseña</small>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Sistema</label>
+                                            <select name="sistema" id="sistema" class="form-control">
+                                                <option value="">-- Seleccione un sistema --</option>
+                                                <option value="nuevo">➕ Nuevo Sistema</option>
+                                                @foreach ($sistemas as $s)
+                                                    <option value="{{ $s->id }}">{{ $s->nombre }} -
+                                                        {{ $s->tipo }}</option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted">Seleccione un sistema existente o cree uno
+                                                nuevo</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label>Rol <span class="text-danger">*</span></label>
+                                            <select name="roles" id="roles" class="form-control" required>
+                                                <option value="">-- Seleccione un rol --</option>
+                                                @foreach ($roles as $item)
+                                                    <option value="{{ $item }}">{{ $item }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('roles')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-            // Verificar si $userRoles existe y es un array
-            if(!empty($userRoles) && is_array($userRoles)){
-                $selected = in_array($item, $userRoles);
-            } else {
-                // Si $userRoles no existe, comparamos con 'Administrador General'
-                $selected = ($item === 'Administrador General');
-            } @endphp
-                                        {{ $selected ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('roles')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                            {{-- Columna Derecha: Crear Nuevo Sistema (se muestra solo cuando se selecciona "nuevo") --}}
+                            <div class="col-md-6" id="nuevoSistemaSection" style="display: none;">
+                                <div class="card card-success">
+                                    <div class="card-header">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-server"></i> Datos del Nuevo Sistema
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info alert-sm">
+                                            <small><i class="fas fa-info-circle"></i> Complete los campos para crear un
+                                                nuevo sistema. Los datos de ciudad se copiarán automáticamente del candidato
+                                                superior seleccionado.</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Nombre del Sistema <span
+                                                    class="text-danger sistema-required">*</span></label>
+                                            <input type="text" name="sistema_nombre" id="sistema_nombre"
+                                                class="form-control sistema-field"
+                                                placeholder="Ej: Sistema Electoral 2024">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Tipo de Candidato <span
+                                                    class="text-danger sistema-required">*</span></label>
+                                            <select name="sistema_tipo" id="sistema_tipo"
+                                                class="form-control sistema-field">
+                                                <option value="">-- Seleccione --</option>
+                                                <option value="Concejal">Concejal</option>
+                                                <option value="Intendente">Intendente</option>
+                                                <option value="Miembro de Comite">Miembro de Comite</option>
+                                                <option value="Convencional">Convencional</option>
+                                                <option value="Miembro de la Juventud">Miembro de la Juventud</option>
+                                                <option value="Convencional Juventud">Convencional Juventud</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <x-adminlte-select name="sistema_candidatosup1" id="sistema_candidatosup1"
+                                                label="Candidato Superior" label-class="text-lightblue" igroup-size="lg">
+                                                <option value="0">Sin Dato</option>
+                                                @foreach ($users as $user)
+                                                    <option value="{{ $user->id }}">
+                                                        {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
+                                                    </option>
+                                                @endforeach
+                                            </x-adminlte-select>
+                                            <small class="text-muted">Seleccione el candidato superior del cual se copiarán
+                                                los datos</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -308,6 +428,103 @@ $selected = false;
 
 @push('js')
     <script>
+        //modal para crear usuario
+        // Mostrar/ocultar sección de nuevo sistema
+        $('#sistema').change(function() {
+            if ($(this).val() === 'nuevo') {
+                $('#nuevoSistemaSection').slideDown();
+                // Hacer campos obligatorios
+                $('.sistema-field').prop('required', true);
+                $('.sistema-required').show();
+            } else {
+                $('#nuevoSistemaSection').slideUp();
+                // Quitar obligatoriedad
+                $('.sistema-field').prop('required', false);
+                $('.sistema-required').hide();
+                // Limpiar campos
+                $('#sistema_nombre').val('');
+                $('#sistema_tipo').val('');
+                $('#sistema_candidatosup').val('0').trigger('change');
+            }
+        });
+
+        // Función para validar campos del sistema antes de enviar
+        function validarCamposSistema() {
+            if ($('#sistema').val() === 'nuevo') {
+                var nombre = $('#sistema_nombre').val();
+                var tipo = $('#sistema_tipo').val();
+                var candidatoSup = $('#sistema_candidatosup').val();
+
+                if (!nombre || nombre.trim() === '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos incompletos',
+                        text: 'El campo "Nombre del Sistema" es obligatorio'
+                    });
+                    $('#sistema_nombre').focus();
+                    return false;
+                }
+
+                if (!tipo || tipo === '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos incompletos',
+                        text: 'El campo "Tipo de Candidato" es obligatorio'
+                    });
+                    $('#sistema_tipo').focus();
+                    return false;
+                }
+
+                if (!candidatoSup || candidatoSup === '0') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos incompletos',
+                        text: 'Debe seleccionar un Candidato Superior'
+                    });
+                    $('#sistema_candidatosup').focus();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Validar antes de enviar el formulario
+        $('#formUsuario').on('submit', function(e) {
+            if (!validarCamposSistema()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Inicializar select2 al abrir el modal
+        $('#modalUsuario').on('shown.bs.modal', function() {
+            $('#sistema_candidatosup').select2({
+                width: '100%',
+                dropdownParent: $('#modalUsuario'),
+                placeholder: 'Seleccionar Candidato Superior',
+                allowClear: true
+            });
+
+            $('.select2-roles-usuario').select2({
+                width: '100%',
+                dropdownParent: $('#modalUsuario'),
+                placeholder: 'Seleccionar Roles',
+                allowClear: true,
+                closeOnSelect: false
+            });
+        });
+
+        // Limpiar al cerrar el modal
+        $('#modalUsuario').on('hidden.bs.modal', function() {
+            $('#formUsuario')[0].reset();
+            $('#nuevoSistemaSection').hide();
+            $('#sistema').val('');
+            $('#sistema_candidatosup').val('0').trigger('change');
+            $('.select2-roles-usuario').val('').trigger('change');
+            $('.sistema-field').prop('required', false);
+        });
+        //fin modal crear usuario
         document.querySelectorAll('.btn-eliminar').forEach(button => {
 
             button.addEventListener('click', function() {

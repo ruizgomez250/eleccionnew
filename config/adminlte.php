@@ -299,7 +299,7 @@ return [
 
     'menu' => [
         [
-            'text'       => 'Distritos y Candidatos',
+            'text'       => 'Equipo y Candidatos',
             'icon'       => 'fas fa-map-marker-alt',
             'icon_color' => 'primary',
             'classes'    => 'custom-icon-box custom-icon-box-primary',
@@ -387,29 +387,29 @@ return [
         ],
 
 
-        [
-            'text' => 'Perfil',
-            'topnav'     => true,
-            'url'  => 'profile',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-box"></i>',
-        ],
-        [
-            'text' => 'Gestión de Permisos',
-            'topnav'     => true,
-            'url'  => 'permissions',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-box"></i>',
-            'can'  => 'Gestion de Permisos',
-        ],
-        [
-            'text' => 'Roles',
-            'topnav'     => true,
-            'url'  => 'roles',
-            'classes' => 'custom-icon-box-black',
-            'content' => '<i class="fas fa-box"></i>',
-            'can'  => 'Gestion de Usuarios',
-        ],
+        // [
+        //     'text' => 'Perfil',
+        //     'topnav'     => true,
+        //     'url'  => 'profile',
+        //     'classes' => 'custom-icon-box-black',
+        //     'content' => '<i class="fas fa-box"></i>',
+        // ],
+        // [
+        //     'text' => 'Gestión de Permisos',
+        //     'topnav'     => true,
+        //     'url'  => 'permissions',
+        //     'classes' => 'custom-icon-box-black',
+        //     'content' => '<i class="fas fa-box"></i>',
+        //     'can'  => 'Gestion de Permisos',
+        // ],
+        // [
+        //     'text' => 'Roles',
+        //     'topnav'     => true,
+        //     'url'  => 'roles',
+        //     'classes' => 'custom-icon-box-black',
+        //     'content' => '<i class="fas fa-box"></i>',
+        //     'can'  => 'Gestion de Usuarios',
+        // ],
         [
             'text' => 'change_password',
             'topnav'     => true,

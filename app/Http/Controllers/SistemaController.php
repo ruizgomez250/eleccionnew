@@ -7,12 +7,14 @@ use App\Models\Equipo;
 use App\Models\PrePadron;
 use App\Models\Sistema;
 use App\Models\Sistemaspadre;
+use App\Models\User;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class SistemaController extends Controller
 {
@@ -69,6 +71,19 @@ class SistemaController extends Controller
                     'tipo' => $request->tipo
                 ]);
 
+
+                // Si se proporcionaron datos de usuario, crear el usuario
+                if ($request->filled('user_name') && $request->filled('user_email')) {
+                    $userId = Auth::id();
+                    $user = User::create([
+                        'name' => $request->user_name,
+                        'email' => $request->user_email,
+                        'password' => Hash::make($request->password),
+                        'sistema' => $sistema->id,
+                        'idusuario' => $userId,
+                    ]);
+                    $user->syncRoles($request->roles);
+                }
                 // 🔹 Obtener ciudad electoral
                 $ciudad = CiudadElectoral::findOrFail($request->id_ciudad_electoral);
 
