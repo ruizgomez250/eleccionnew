@@ -41,6 +41,19 @@
                             </div>
                         </div>
 
+                        {{-- CONCEJALES (NUEVO) --}}
+                        <div class="row mb-1 justify-content-center">
+                            <div class="col-12">
+                                <p class="mb-0">
+                                    <i class="fas fa-users text-info"></i>
+                                    <strong>Concejales:</strong>
+                                    <span class="badge badge-info badge-pill">
+                                        {{ number_format($totales['concejales'] ?? 0, 0, '', '.') }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
                         {{-- DIRIGENTES --}}
                         <div class="row mb-1 justify-content-center">
                             <div class="col-12">
@@ -1257,21 +1270,21 @@
                 }
             });
         }
-                    // ==================== CARGAR VEHÍCULOS DEL PUNTERO ====================
-            window.cargarVehiculosPuntero = function(punteroId) {
-                $('#vehiculos-puntero-table tbody').html(
-                    '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>'
-                );
+        // ==================== CARGAR VEHÍCULOS DEL PUNTERO ====================
+        window.cargarVehiculosPuntero = function(punteroId) {
+            $('#vehiculos-puntero-table tbody').html(
+                '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>'
+            );
 
-                $.get(`{{ url('/') }}/puntero/${punteroId}/vehiculos`, function(vehiculos) {
-                    let tbody = '';
+            $.get(`{{ url('/') }}/puntero/${punteroId}/vehiculos`, function(vehiculos) {
+                let tbody = '';
 
-                    if (vehiculos.length === 0) {
-                        tbody =
-                            '<tr><td colspan="7" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
-                    } else {
-                        vehiculos.forEach((v, i) => {
-                            tbody += `
+                if (vehiculos.length === 0) {
+                    tbody =
+                        '<tr><td colspan="7" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
+                } else {
+                    vehiculos.forEach((v, i) => {
+                        tbody += `
                     <tr>
                         <td>${i + 1}</td>
                         <td>${v.chapa}</td>
@@ -1286,73 +1299,73 @@
                         </td>
                     </tr>
                 `;
-                        });
+                    });
+                }
+
+                $('#vehiculos-puntero-table tbody').html(tbody);
+
+                // Destruir DataTable si existe y volver a inicializar
+                if ($.fn.DataTable && $('#vehiculos-puntero-table').length) {
+                    if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) {
+                        $('#vehiculos-puntero-table').DataTable().destroy();
                     }
+                    $('#vehiculos-puntero-table').DataTable({
+                        responsive: true,
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                        },
+                        pageLength: 10,
+                        destroy: true
+                    });
+                }
+            }).fail(function() {
+                $('#vehiculos-puntero-table tbody').html(
+                    '<tr><td colspan="7" class="text-center text-danger">Error al cargar los vehículos</td></tr>'
+                );
+            });
+        }
+        // ==================== ELIMINAR VEHÍCULO DEL PUNTERO ====================
+        window.eliminarVehiculoPuntero = function(vehiculoId) {
+            let punteroId = $('#vehiculo_id_puntero').val();
 
-                    $('#vehiculos-puntero-table tbody').html(tbody);
-
-                    // Destruir DataTable si existe y volver a inicializar
-                    if ($.fn.DataTable && $('#vehiculos-puntero-table').length) {
-                        if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) {
-                            $('#vehiculos-puntero-table').DataTable().destroy();
+            Swal.fire({
+                title: '¿Desvincular vehículo?',
+                text: 'El vehículo dejará de estar asignado a este puntero',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Sí, desvincular',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `{{ url('/') }}/vehiculo/${vehiculoId}/puntero/${punteroId}`,
+                        type: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Desvinculado',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            cargarVehiculosPuntero(punteroId);
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.message ||
+                                    'No se pudo desvincular el vehículo'
+                            });
                         }
-                        $('#vehiculos-puntero-table').DataTable({
-                            responsive: true,
-                            language: {
-                                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                            },
-                            pageLength: 10,
-                            destroy: true
-                        });
-                    }
-                }).fail(function() {
-                    $('#vehiculos-puntero-table tbody').html(
-                        '<tr><td colspan="7" class="text-center text-danger">Error al cargar los vehículos</td></tr>'
-                    );
-                });
-            }
-            // ==================== ELIMINAR VEHÍCULO DEL PUNTERO ====================
-            window.eliminarVehiculoPuntero = function(vehiculoId) {
-                let punteroId = $('#vehiculo_id_puntero').val();
-
-                Swal.fire({
-                    title: '¿Desvincular vehículo?',
-                    text: 'El vehículo dejará de estar asignado a este puntero',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'Sí, desvincular',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: `{{ url('/') }}/vehiculo/${vehiculoId}/puntero/${punteroId}`,
-                            type: 'DELETE',
-                            data: {
-                                _token: '{{ csrf_token() }}'
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Desvinculado',
-                                    text: response.message,
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                cargarVehiculosPuntero(punteroId);
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: xhr.responseJSON?.message ||
-                                        'No se pudo desvincular el vehículo'
-                                });
-                            }
-                        });
-                    }
-                });
-            }
+                    });
+                }
+            });
+        }
         // ============================================
         // FUNCIONES PARA MODALES
         // ============================================

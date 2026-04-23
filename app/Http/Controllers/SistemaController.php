@@ -167,6 +167,12 @@ class SistemaController extends Controller
 
             foreach ($sistemas as $sistema) {
                 $ciudadNombre = $sistema->ciudad->descripcion ?? 'Sin ciudad';
+                $idCiudadElectoral = $sistema->id_ciudad_electoral; // o como se llame el campo
+
+                // Suma por tipo 'Concejal' para esta ciudad electoral
+                $sumaConcejal = Sistema::where('tipo', 'Concejal')
+                    ->where('id_ciudad_electoral', $idCiudadElectoral)
+                    ->count();
 
                 $totalDirigentes = $sistema->equipos->flatMap->dirigentes->count();
                 $totalPunteros = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
@@ -184,6 +190,7 @@ class SistemaController extends Controller
                         'dirigentes' => $totalDirigentes,
                         'punteros' => $totalPunteros,
                         'votantes' => $totalVotantes,
+                        'concejales' => $sumaConcejal,
                         'id_ciudad_electoral' => $sistema->id_ciudad_electoral,
                         'departamento' => $sistema->ciudad->departamento ?? ''
                     ];

@@ -120,7 +120,13 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
-                                    <td>{{ $user->sistemaRelacion->nombre ?? '' }}</td>
+                                    <td>
+                                        @if (Auth::id() == 1 && $user->sistemaRelacion)
+                                            Dpto. Central ({{ $user->sistemaRelacion->nombre }})
+                                        @else
+                                            {{ $user->sistemaRelacion->nombre ?? '' }}
+                                        @endif
+                                    </td>
                                     <td>
                                         <button class="btn btn-warning btn-sm"
                                             onclick="editarUsuario({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->sistema }}')">
