@@ -436,6 +436,9 @@
     <script>
         //modal para crear usuario
         // Mostrar/ocultar sección de nuevo sistema
+        // Reemplaza toda la sección de validación del modal usuario con esto:
+
+        // Mostrar/ocultar sección de nuevo sistema
         $('#sistema').change(function() {
             if ($(this).val() === 'nuevo') {
                 $('#nuevoSistemaSection').slideDown();
@@ -450,7 +453,7 @@
                 // Limpiar campos
                 $('#sistema_nombre').val('');
                 $('#sistema_tipo').val('');
-                $('#sistema_candidatosup').val('0').trigger('change');
+                $('#sistema_candidatosup1').val('0').trigger('change');
             }
         });
 
@@ -459,7 +462,7 @@
             if ($('#sistema').val() === 'nuevo') {
                 var nombre = $('#sistema_nombre').val();
                 var tipo = $('#sistema_tipo').val();
-                var candidatoSup = $('#sistema_candidatosup').val();
+                var candidatoSup = $('#sistema_candidatosup1').val(); // Cambiado a sistema_candidatosup1
 
                 if (!nombre || nombre.trim() === '') {
                     Swal.fire({
@@ -487,7 +490,7 @@
                         title: 'Campos incompletos',
                         text: 'Debe seleccionar un Candidato Superior'
                     });
-                    $('#sistema_candidatosup').focus();
+                    $('#sistema_candidatosup1').focus(); // Cambiado a sistema_candidatosup1
                     return false;
                 }
             }
@@ -505,7 +508,7 @@
 
         // Inicializar select2 al abrir el modal
         $('#modalUsuario').on('shown.bs.modal', function() {
-            $('#sistema_candidatosup').select2({
+            $('#sistema_candidatosup1').select2({ // Cambiado a sistema_candidatosup1
                 width: '100%',
                 dropdownParent: $('#modalUsuario'),
                 placeholder: 'Seleccionar Candidato Superior',
@@ -526,7 +529,7 @@
             $('#formUsuario')[0].reset();
             $('#nuevoSistemaSection').hide();
             $('#sistema').val('');
-            $('#sistema_candidatosup').val('0').trigger('change');
+            $('#sistema_candidatosup1').val('0').trigger('change'); // Cambiado a sistema_candidatosup1
             $('.select2-roles-usuario').val('').trigger('change');
             $('.sistema-field').prop('required', false);
         });
