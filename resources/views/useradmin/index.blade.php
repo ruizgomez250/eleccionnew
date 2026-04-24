@@ -121,7 +121,7 @@
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>
-                                        @if (Auth::id() == 1)
+                                        @if ($user->id == 1)
                                             Dpto. Central ({{ $user->sistemaRelacion->nombre }})
                                         @else
                                             {{ $user->sistemaRelacion->nombre ?? '' }}
