@@ -91,6 +91,35 @@ class UserAdminController extends Controller
                 ]);
 
                 $sistemaId = $sistema->id;
+
+                // 🔹 CREAR EQUIPOS PARA EL NUEVO SISTEMA
+                // Obtener la ciudad electoral del sistema origen
+                $ciudad = CiudadElectoral::findOrFail($sistemaOrigen->id_ciudad_electoral);
+
+                // Insert masivo de equipos para el nuevo sistema
+                DB::statement("
+                INSERT INTO equipo (sist, ciudad, colegio, descripcion, created_at, updated_at)
+                SELECT 
+                    ? AS sist,
+                    li.distrito_nombre AS ciudad,
+                    li.local_interna AS colegio,
+                    li.local_interna AS descripcion,
+                    NOW(),
+                    NOW()
+                FROM locales_internas li
+                LEFT JOIN equipo e
+                    ON e.sist = ?
+                    AND e.ciudad = li.distrito_nombre
+                    AND e.colegio = li.local_interna
+                WHERE e.id IS NULL
+                AND li.distrito_nombre = ?
+                AND li.departamento_nombre = ?
+            ", [
+                    $sistema->id,
+                    $sistema->id,
+                    $ciudad->descripcion,
+                    $ciudad->departamento
+                ]);
             } else {
                 // Usar sistema existente (puede ser null)
                 $sistemaId = $request->sistema ?? null;
@@ -123,7 +152,6 @@ class UserAdminController extends Controller
             }
 
             // 🔹 ASIGNAR ROL (ahora es selección única)
-            // $request->roles puede venir como array o como string
             if ($request->has('roles')) {
                 $rol = is_array($request->roles) ? $request->roles[0] : $request->roles;
                 $user->syncRoles([$rol]);
@@ -133,7 +161,8 @@ class UserAdminController extends Controller
 
             $message = 'Usuario guardado correctamente';
             if ($request->sistema === 'nuevo') {
-                $message .= ' y sistema creado correctamente';
+                $cantidadEquipos = DB::table('equipo')->where('sist', $sistemaId)->count();
+                $message .= " y sistema creado correctamente con {$cantidadEquipos} equipos generados";
             }
 
             return redirect()
