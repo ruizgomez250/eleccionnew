@@ -76,21 +76,32 @@ class VehiculoController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validación
+            // Validación completa con todos los campos
             $validated = $request->validate([
-                'nombre'        => 'required|string|max:150',
-                'id_equipo'     => 'nullable',
-                'cedulachofer'  => 'required',
-                'chapa'         => 'required',
-                'tipovehiculo'  => 'required',
-                'capacidad'     => 'required|integer',
-                'telefono1'     => 'required',
-                'telefono2'     => 'nullable',
-                'telefono3'     => 'nullable',
-                'montopagar'    => 'required|numeric',
-                'cantidadpagos' => 'required|integer',
-                'rol'   => 'required|string', // Asegúrate que el nombre coincida con el del formulario
+                'cedulachofer' => 'required|string|max:20',
+                'nombre' => 'required|string|max:150',
+                'chapa' => 'required|string|max:10',
+                'tipovehiculo' => 'required|string|max:20',
+                'capacidad' => 'required|integer|min:1',
+                'direccion' => 'nullable|string|max:255',
+                'barriocompania' => 'nullable|string|max:100',
+                'telefono1' => 'required|string|max:20',
+                'telefono2' => 'nullable|string|max:20',
+                'telefono3' => 'nullable|string|max:20',
+                'montopagar' => 'required|numeric|min:0',
+                'cantidadpagos' => 'required|integer|min:1',
+                'rol' => 'required|string|in:PUNTERO,LOGISTICA',
+                'id_equipo' => 'nullable|exists:equipo,id',
+                'cedulaproponente' => 'nullable|string|max:20',
+                'nombreproponente' => 'nullable|string|max:150',
+                'telefonoproponente' => 'nullable|string|max:20',
             ]);
+
+            // Decodificar caracteres especiales
+            $validated['nombre'] = html_entity_decode($validated['nombre']);
+            $validated['direccion'] = html_entity_decode($validated['direccion'] ?? '');
+            $validated['barriocompania'] = html_entity_decode($validated['barriocompania'] ?? '');
+            $validated['nombreproponente'] = html_entity_decode($validated['nombreproponente'] ?? '');
 
             // Buscar el último numero_auto del equipo
             $ultimoNumero = Vehiculo::where('id_equipo', $validated['id_equipo'])
@@ -99,7 +110,7 @@ class VehiculoController extends Controller
             $validated['numero_auto'] = $ultimoNumero ? $ultimoNumero + 1 : 1;
 
             // Agregar el id_sistema del usuario logueado
-            $validated['id_sistema'] = Auth::user()->sistema; // o Auth::user()->sistemaRelacion->id dependiendo de tu relación
+            $validated['id_sistema'] = Auth::user()->sistema;
 
             // Crear vehículo
             Vehiculo::create($validated);
