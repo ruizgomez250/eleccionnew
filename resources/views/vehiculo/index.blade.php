@@ -51,6 +51,20 @@
 
                 {{-- FILA 2 --}}
                 <div class="row">
+                    <x-adminlte-input name="direccion" id="direccion" label="Dirección del Chofer" 
+                        placeholder="Ej: Calle Fulgencio Yegros N° 123" fgroup-class="col-md-4">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text"><i class="fas fa-map-marker-alt"></i></div>
+                        </x-slot>
+                    </x-adminlte-input>
+
+                    <x-adminlte-input name="barriocompania" id="barriocompania" label="Barrio/Compañía" 
+                        placeholder="Ej: Barrio San Rafael" fgroup-class="col-md-3">
+                        <x-slot name="prependSlot">
+                            <div class="input-group-text"><i class="fas fa-building"></i></div>
+                        </x-slot>
+                    </x-adminlte-input>
+
                     <x-adminlte-input name="capacidad" label="Capacidad" type="number" value="5"
                         fgroup-class="col-md-2" required>
                         <x-slot name="appendSlot">
@@ -64,7 +78,10 @@
                             <div class="input-group-text"><i class="fas fa-phone"></i></div>
                         </x-slot>
                     </x-adminlte-input>
+                </div>
 
+                {{-- FILA 3 --}}
+                <div class="row">
                     <x-adminlte-input name="telefono2" id="telefono2" label="Teléfono Secundario" placeholder="Opcional"
                         fgroup-class="col-md-3">
                         <x-slot name="prependSlot">
@@ -89,16 +106,13 @@
                             <div class="input-group-text"><i class="fas fa-list-ol"></i></div>
                         </x-slot>
                     </x-adminlte-input>
-                </div>
 
-                {{-- FILA 3 --}}
-                <div class="row">
                     <x-adminlte-select name="rol" id="rol" label="Rol del Vehículo" fgroup-class="col-md-3">
                         <option value="PUNTERO" selected>PUNTERO</option>
                         <option value="LOGISTICA">LOGISTICA</option>
                     </x-adminlte-select>
 
-                    <div class="col-md-6">
+                    <div class="col-md-2">
                         <label for="id_equipo" class="form-label fw-bold">
                             Equipo <span id="equipoRequired" class="text-danger">*</span>
                         </label>
@@ -109,14 +123,62 @@
                             @endforeach
                         </x-adminlte-select2>
                     </div>
+                </div>
 
-                    <div class="col-md-3 d-flex align-items-end">
+                {{-- FILA 4: Botón Guardar --}}
+                
+
+                {{-- FILA 5: DATOS DEL PROPONENTE (Opcionales) --}}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card card-outline card-secondary">
+                            <div class="card-header">
+                                <h6 class="card-title">
+                                    <i class="fas fa-user-check"></i> Datos del Proponente (Opcional)
+                                </h6>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <x-adminlte-input name="cedulaproponente" id="cedulaproponente" 
+                                        label="Cédula del Proponente" placeholder="Ej: 1.234.567"
+                                        fgroup-class="col-md-3">
+                                        <x-slot name="prependSlot">
+                                            <div class="input-group-text"><i class="fas fa-id-card"></i></div>
+                                        </x-slot>
+                                    </x-adminlte-input>
+
+                                    <x-adminlte-input name="nombreproponente" id="nombreproponente" 
+                                        label="Nombre del Proponente" placeholder="Nombre completo"
+                                        fgroup-class="col-md-5">
+                                        <x-slot name="prependSlot">
+                                            <div class="input-group-text"><i class="fas fa-user-tie"></i></div>
+                                        </x-slot>
+                                    </x-adminlte-input>
+
+                                    <x-adminlte-input name="telefonoproponente" id="telefonoproponente" 
+                                        label="Teléfono del Proponente" placeholder="0981xxxxxx"
+                                        fgroup-class="col-md-4">
+                                        <x-slot name="prependSlot">
+                                            <div class="input-group-text"><i class="fas fa-phone"></i></div>
+                                        </x-slot>
+                                    </x-adminlte-input>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
                         <button class="btn btn-success w-100" id="btnGuardar">
                             <i class="fas fa-save"></i> Guardar Vehículo
                         </button>
                     </div>
                 </div>
-
             </div>
         </form>
     </div>
@@ -184,6 +246,29 @@
 
                         @if ($vehiculo->numero_auto)
                             <p class="mb-0"><i class="fas fa-car-side"></i> {{ $vehiculo->numero_auto }}</p>
+                        @endif
+                        
+                        {{-- Mostrar dirección y barrio si existen --}}
+                        @if($vehiculo->direccion || $vehiculo->barriocompania)
+                            <hr class="my-2">
+                            @if($vehiculo->direccion)
+                                <p class="mb-0 small text-muted">
+                                    <i class="fas fa-map-marker-alt"></i> {{ $vehiculo->direccion }}
+                                </p>
+                            @endif
+                            @if($vehiculo->barriocompania)
+                                <p class="mb-0 small text-muted">
+                                    <i class="fas fa-building"></i> {{ $vehiculo->barriocompania }}
+                                </p>
+                            @endif
+                        @endif
+
+                        {{-- Mostrar datos del proponente si existen --}}
+                        @if($vehiculo->nombreproponente)
+                            <hr class="my-2">
+                            <p class="mb-0 small text-muted">
+                                <i class="fas fa-user-check"></i> Prop: {{ $vehiculo->nombreproponente }}
+                            </p>
                         @endif
                     </div>
 
@@ -317,7 +402,7 @@
             }
         }
 
-        // =================== BÚSQUEDA POR CÉDULA ===================
+        // =================== BÚSQUEDA POR CÉDULA DEL CHOFER ===================
         function buscarPorCedulaChofer() {
             let cedula = $('#cedulachofer').val().trim();
             if (cedula.length < 3) return;
@@ -326,13 +411,62 @@
                 if (response.encontrado) {
                     $('#nombre').val(response.data.nombre ?? '');
                     $('#telefono1').val(response.data.telefono ?? '');
+                    $('#direccion').val(response.data.direccion ?? '');
+                    $('#barriocompania').val(response.data.barrio ?? '');
                 } else {
                     $('#nombre').val('');
                     $('#telefono1').val('');
+                    $('#direccion').val('');
+                    $('#barriocompania').val('');
                 }
             }).fail(function() {
                 console.log('Error en la búsqueda de cédula');
             });
+        }
+
+        // =================== BÚSQUEDA POR CÉDULA DEL PROPONENTE ===================
+        function buscarPorCedulaProponente() {
+            let cedula = $('#cedulaproponente').val().trim();
+            
+            // Si la cédula está vacía o tiene menos de 3 caracteres, limpiar campos
+            if (cedula.length < 3) {
+                $('#nombreproponente').val('');
+                $('#telefonoproponente').val('');
+                $('#cedulaproponente').removeClass('is-valid is-invalid');
+                return;
+            }
+
+            // Mostrar indicador de carga
+            $('#nombreproponente').prop('placeholder', 'Buscando...');
+            
+            $.get(BASE_URL + "/dirigente/buscar-por-cedulap/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#nombreproponente').val(response.data.nombre ?? '');
+                    $('#telefonoproponente').val(response.data.telefono ?? '');
+                    
+                    // Cambiar color de borde a verde para indicar éxito
+                    $('#cedulaproponente').removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $('#nombreproponente').val('');
+                    $('#telefonoproponente').val('');
+                    
+                    // Cambiar color de borde a rojo para indicar no encontrado
+                    $('#cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+                }
+                
+                // Restaurar placeholder
+                $('#nombreproponente').prop('placeholder', 'Nombre completo');
+            }).fail(function() {
+                console.log('Error en la búsqueda de cédula del proponente');
+                $('#nombreproponente').prop('placeholder', 'Nombre completo');
+            });
+        }
+
+        // =================== LIMPIAR CAMPOS DEL PROPONENTE ===================
+        function limpiarCamposProponente() {
+            $('#nombreproponente').val('');
+            $('#telefonoproponente').val('');
+            $('#cedulaproponente').removeClass('is-valid is-invalid');
         }
 
         // =================== VALIDACIÓN ANTES DE GUARDAR ===================
@@ -493,17 +627,45 @@
                 toggleEquipoRequired();
             });
 
-            // Evento blur para búsqueda por cédula
+            // =================== EVENTOS PARA CHOFER ===================
+            // Evento blur para búsqueda por cédula del chofer
             $('#cedulachofer').on('blur', function() {
                 buscarPorCedulaChofer();
             });
 
-            // Evento keypress para búsqueda por cédula con Enter
+            // Evento keypress para búsqueda por cédula del chofer con Enter
             $('#cedulachofer').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
                     buscarPorCedulaChofer();
                     $('#nombre').focus();
+                }
+            });
+
+            // =================== EVENTOS PARA PROPONENTE ===================
+            // Evento blur para búsqueda por cédula del proponente
+            $('#cedulaproponente').on('blur', function() {
+                buscarPorCedulaProponente();
+            });
+
+            // Evento keypress para búsqueda por cédula del proponente con Enter
+            $('#cedulaproponente').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    buscarPorCedulaProponente();
+                    $('#nombreproponente').focus();
+                }
+            });
+
+            // Evento focus para limpiar validaciones cuando el usuario modifica la cédula
+            $('#cedulaproponente').on('focus', function() {
+                $(this).removeClass('is-valid is-invalid');
+            });
+
+            // Evento change para limpiar campos si se borra la cédula
+            $('#cedulaproponente').on('change', function() {
+                if ($(this).val().trim() === '') {
+                    limpiarCamposProponente();
                 }
             });
 
@@ -593,10 +755,9 @@
         }
 
         // Eliminar vehículo con SweetAlert
-        // Eliminar vehículo con SweetAlert - VERSIÓN MEJORADA
         document.querySelectorAll('.btn-delete').forEach(btn => {
             btn.addEventListener('click', function(e) {
-                e.preventDefault(); // Prevenir comportamiento por defecto
+                e.preventDefault();
 
                 let form = this.closest('.form-delete');
                 if (!form) return;
@@ -611,7 +772,6 @@
                     confirmButtonText: 'Sí, eliminar'
                 }).then(result => {
                     if (result.isConfirmed) {
-                        // Mostrar loading
                         Swal.fire({
                             title: 'Eliminando...',
                             text: 'Por favor espere',
@@ -620,8 +780,6 @@
                                 Swal.showLoading();
                             }
                         });
-
-                        // Enviar el formulario
                         form.submit();
                     }
                 });

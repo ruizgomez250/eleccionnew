@@ -51,6 +51,7 @@ class UserAdminController extends Controller
 
     public function store(Request $request)
     {
+
         // Validación base
         $request->validate([
             'name' => 'required|string|max:255',
@@ -95,31 +96,28 @@ class UserAdminController extends Controller
                 // 🔹 CREAR EQUIPOS PARA EL NUEVO SISTEMA
                 // Obtener la ciudad electoral del sistema origen
                 $ciudad = CiudadElectoral::findOrFail($sistemaOrigen->id_ciudad_electoral);
-
                 // Insert masivo de equipos para el nuevo sistema
-                DB::statement("
-                INSERT INTO equipo (sist, ciudad, colegio, descripcion, created_at, updated_at)
-                SELECT 
-                    ? AS sist,
-                    li.distrito_nombre AS ciudad,
-                    li.local_interna AS colegio,
-                    li.local_interna AS descripcion,
-                    NOW(),
-                    NOW()
-                FROM locales_internas li
-                LEFT JOIN equipo e
-                    ON e.sist = ?
-                    AND e.ciudad = li.distrito_nombre
-                    AND e.colegio = li.local_interna
-                WHERE e.id IS NULL
-                AND li.distrito_nombre = ?
-                AND li.departamento_nombre = ?
-            ", [
-                    $sistema->id,
-                    $sistema->id,
-                    $ciudad->descripcion,
-                    $ciudad->departamento
-                ]);
+                // Usar DB::insert para obtener el número de filas afectadas
+                $insertados = DB::insert("
+                    INSERT INTO equipo (sist, ciudad, colegio, descripcion, created_at, updated_at)
+                    SELECT 
+                        ? AS sist,
+                        li.distrito_nombre AS ciudad,
+                        li.local_interna AS colegio,
+                        li.local_interna AS descripcion,
+                        NOW(),
+                        NOW()
+                    FROM locales_internas li
+                    LEFT JOIN equipo e
+                        ON e.sist = ?
+                        AND e.ciudad = li.distrito_nombre
+                        AND e.colegio = li.local_interna
+                    WHERE e.id IS NULL
+                    AND li.distrito_nombre = ?
+                    AND li.departamento_nombre = ?
+                ", [$sistema->id, $sistema->id, $ciudad->descripcion, $ciudad->departamento]);
+
+                //dd($insertados);
             } else {
                 // Usar sistema existente (puede ser null)
                 $sistemaId = $request->sistema ?? null;

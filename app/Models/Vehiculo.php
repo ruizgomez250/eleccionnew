@@ -26,6 +26,11 @@ class Vehiculo extends Model
         'id_equipo',
         'rol',
         'id_sistema',
+        'direccion',
+        'barriocompania',
+        'cedulaproponente',
+        'telefonoproponente',
+        'nombreproponente',
     ];
      public function punteros()
     {

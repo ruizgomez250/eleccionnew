@@ -122,14 +122,14 @@
                                     <td>{{ $user->email }}</td>
                                     <td>
                                         @if ($user->id == 1)
-                                            Dpto. Central ({{ $user->sistemaRelacion->nombre }})
+                                            Dpto. Central{{--  ({{ $user->sistemaRelacion->nombre }}) --}}
                                         @else
                                             {{ $user->sistemaRelacion->nombre ?? '' }}
                                         @endif
                                     </td>
                                     <td>
                                         <button class="btn btn-warning btn-sm"
-                                            onclick="editarUsuario({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->sistema }}')">
+                                            onclick="editarUsuario({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->sistema }}','{{ $user->getRoleNames()->first() ?? '' }}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('useradmin.destroy', $user->id) }}" method="POST"
@@ -200,17 +200,16 @@
                                                 <option value="Convencional Juventud">Convencional Juventud</option>
                                             </select>
                                         </div>
-
                                         <div class="form-group">
-                                            <x-adminlte-select2 name="candidatosup" label="Candidato Superior"
-                                                label-class="text-lightblue" igroup-size="lg">
+                                            <label>Candidato Superior <span class="text-danger">*</span></label>
+                                            <select name="candidatosup" id="candidatosup" class="form-control" required>
                                                 <option value="0">Sin Dato</option>
                                                 @foreach ($users as $user)
                                                     <option value="{{ $user->id }}">
                                                         {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
                                                     </option>
                                                 @endforeach
-                                            </x-adminlte-select2>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -409,7 +408,11 @@
                                                 <option value="0">Sin Dato</option>
                                                 @foreach ($users as $user)
                                                     <option value="{{ $user->id }}">
-                                                        {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
+                                                        @if ($user->id == 1)
+                                                            {{ 'Depto. Central' . ' - ' . $user->name }}
+                                                        @else
+                                                            {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
+                                                        @endif
                                                     </option>
                                                 @endforeach
                                             </x-adminlte-select>
@@ -508,12 +511,12 @@
 
         // Inicializar select2 al abrir el modal
         $('#modalUsuario').on('shown.bs.modal', function() {
-            $('#sistema_candidatosup1').select2({ // Cambiado a sistema_candidatosup1
-                width: '100%',
-                dropdownParent: $('#modalUsuario'),
-                placeholder: 'Seleccionar Candidato Superior',
-                allowClear: true
-            });
+            // $('#sistema_candidatosup1').select2({ // Cambiado a sistema_candidatosup1
+            //     width: '100%',
+            //     dropdownParent: $('#modalUsuario'),
+            //     placeholder: 'Seleccionar Candidato Superior',
+            //     allowClear: true
+            // });
 
             $('.select2-roles-usuario').select2({
                 width: '100%',
@@ -568,11 +571,11 @@
                 placeholder: 'Seleccionar Ciudad',
                 allowClear: true
             });
-            $('#candidatosup').select2({
-                width: '100%',
-                dropdownParent: $('#modalSistema'),
-                allowClear: true
-            });
+            // $('#candidatosup').select2({
+            //     width: '100%',
+            //     dropdownParent: $('#modalSistema'),
+            //     allowClear: true
+            // });
         });
 
         function abrirModalReporte() {
@@ -666,11 +669,18 @@
             $('#modalSistema').modal('show');
         }
 
-        function editarUsuario(id, name, email, sistema) {
+        // El parámetro 'rol' debe ser el NOMBRE del rol, ej: "Administrador"
+        function editarUsuario(id, name, email, sistema, rol) {
             $('#user_id').val(id);
             $('#name').val(name);
             $('#email').val(email);
             $('#sistema').val(sistema);
+
+            // Seleccionar el rol por su NOMBRE
+            if (rol && rol !== '') {
+                $('#roles').val(rol); // Esto funciona porque el value es el nombre
+            }
+
             $('#modalUsuario .modal-title').text('Editar Usuario');
             $('#modalUsuario').modal('show');
         }
