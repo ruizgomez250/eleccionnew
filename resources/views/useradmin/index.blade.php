@@ -206,7 +206,9 @@
                                                 <option value="0">Sin Dato</option>
                                                 @foreach ($users as $user)
                                                     <option value="{{ $user->id }}">
-                                                        {{ $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
+                                                        {{ $user->id == 1
+                                                            ? 'Dpto Central - ' . $user->name
+                                                            : $user->sistemaRelacion->nombre . ' - ' . $user->sistemaRelacion->tipo . ' - ' . $user->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
