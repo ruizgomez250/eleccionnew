@@ -504,8 +504,8 @@ class PunteroController extends Controller
     {
         try {
             $dirigente = Dirigente::findOrFail($dirigenteId);
-            $equipo = Equipo::findOrFail($dirigente->id_equipo);
-            $sistema = Sistema::findOrFail($equipo->sist);
+            //$equipo = Equipo::findOrFail($dirigente->id_equipo);
+            $sistema = Sistema::findOrFail(Auth::user()->sistema);
             $nombreSistema = $sistema->nombre;
 
             // Obtener equipos del sistema
@@ -587,12 +587,11 @@ class PunteroController extends Controller
         try {
             $equipoId = $request->equipo_id;
             $dirigenteId = $request->dirigente_id;
-            $EquipoAux = Equipo::findOrFail($equipoId);
 
             $query = Puntero::with(['dirigente', 'equipo', 'votantes'])
-                ->whereHas('dirigente.equipo', function ($q) use ($EquipoAux) {  // ← Agrega use ($EquipoAux)
-                    $q->where('sist', $EquipoAux->sist);
-                });
+            ->whereHas('dirigente.equipo', function ($q) {
+                $q->where('sist', Auth::user()->sistema);
+            });
 
             if ($equipoId) {
                 $query->where('id_equipo', $equipoId);
