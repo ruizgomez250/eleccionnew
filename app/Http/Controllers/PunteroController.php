@@ -587,10 +587,11 @@ class PunteroController extends Controller
         try {
             $equipoId = $request->equipo_id;
             $dirigenteId = $request->dirigente_id;
+            $EquipoAux = Equipo::findOrFail($equipoId);
 
             $query = Puntero::with(['dirigente', 'equipo', 'votantes'])
-                ->whereHas('dirigente.equipo', function ($q) {
-                    $q->where('sist', Auth::user()->sistema);
+                ->whereHas('dirigente.equipo', function ($q) use ($EquipoAux) {  // ← Agrega use ($EquipoAux)
+                    $q->where('sist', $EquipoAux->sist);
                 });
 
             if ($equipoId) {
@@ -614,8 +615,6 @@ class PunteroController extends Controller
             $equipos = Equipo::where('sist', Auth::user()->sistema)->get();
             $dirigentes = Dirigente::whereHas('equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
-            })->when($equipoId, function ($q) use ($equipoId) {
-                $q->where('id_equipo', $equipoId);
             })->get();
             $equipoSeleccionado = $equipoId;
             $dirigenteSeleccionado = $dirigenteId;

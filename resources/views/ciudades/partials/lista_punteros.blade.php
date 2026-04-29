@@ -545,7 +545,6 @@
         let equipoId = $('#equipo_punteros').val();
         let dirigenteId = $('#dirigente_punteros').val();
         let url = `{{ url('/') }}/punteros/filtrar?equipo_id=${equipoId}`;
-
         if (dirigenteId) {
             url += `&dirigente_id=${dirigenteId}`;
         }
