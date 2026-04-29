@@ -51,7 +51,14 @@
     <div class="row mb-2">
         <div class="col-md-2">
             <label>Cédula</label>
-            <input type="text" name="cedula" id="puntero_cedula_lista" class="form-control" required>
+            <div class="input-group">
+                <input type="text" name="cedula" id="puntero_cedula_lista" class="form-control" required>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-info" onclick="abrirModalBuscarPersonaPuntero()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
             <small class="text-danger" id="error-cedula"></small>
         </div>
         <div class="col-md-4">
@@ -187,6 +194,64 @@
                                     </td>
                                 </tr>
                             @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{-- MODAL DE BÚSQUEDA DE PERSONAS DEL PADRÓN PARA PUNTEROS --}}
+<div class="modal fade" id="modalBuscarPersonaPadronPuntero" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-search"></i> Buscar Persona en el Padrón (Punteros)
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <label>Nombre</label>
+                        <input type="text" id="buscar_nombre_padron_puntero" class="form-control"
+                            placeholder="Ingrese nombre...">
+                    </div>
+                    <div class="col-md-5">
+                        <label>Apellido</label>
+                        <input type="text" id="buscar_apellido_padron_puntero" class="form-control"
+                            placeholder="Ingrese apellido...">
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary btn-block" onclick="buscarPersonasPadronPuntero()">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table id="tablaPersonasPadronPuntero" class="table table-bordered table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Partido</th>
+                                <th>Mesa</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    Ingrese criterios de búsqueda
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -715,5 +780,134 @@
             $('#ciudad').val(v.ciudad);
             $('#departamento').val(v.departamento);
         });
+    }
+
+    //comienza las funciones de busqueda 
+    // Funciones específicas para PUNTEROS
+    function abrirModalBuscarPersonaPuntero() {
+        // Limpiar campos de búsqueda
+        $('#buscar_nombre_padron_puntero').val('');
+        $('#buscar_apellido_padron_puntero').val('');
+
+        // Limpiar tabla
+        $('#tablaPersonasPadronPuntero tbody').html(`
+        <tr>
+            <td colspan="6" class="text-center">
+                Ingrese criterios de búsqueda
+            </td>
+        </tr>
+    `);
+
+        $('#modalBuscarPersonaPadronPuntero').modal('show');
+    }
+
+    function buscarPersonasPadronPuntero() {
+        let nombre = $('#buscar_nombre_padron_puntero').val().trim();
+        let apellido = $('#buscar_apellido_padron_puntero').val().trim();
+
+        if (!nombre && !apellido) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Debe ingresar al menos nombre o apellido para buscar',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+            return;
+        }
+
+        // Mostrar loading
+        $('#tablaPersonasPadronPuntero tbody').html(`
+        <tr>
+            <td colspan="6" class="text-center">
+                <i class="fas fa-spinner fa-spin"></i> Buscando...
+            </td>
+        </tr>
+    `);
+
+        $.ajax({
+            url: "{{ route('buscar.personas.padron') }}",
+            type: 'GET',
+            data: {
+                nombre: nombre,
+                apellido: apellido
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success && response.data.length > 0) {
+                    let html = '';
+                    response.data.forEach(persona => {
+                        let cedula = persona.cedula || '';
+                        let nombrePersona = (persona.nombre || '').replace(/'/g, "\\'");
+                        let apellidoPersona = (persona.apellido || '').replace(/'/g, "\\'");
+
+                        html += `
+                        <tr>
+                            <td>${cedula}</td>
+                            <td>${persona.nombre || ''}</td>
+                            <td>${persona.apellido || ''}</td>
+                            <td>${persona.partido || ''}</td>
+                            <td>${persona.mesa || ''}</td>
+                            <td class="text-center">
+                                <button class="btn btn-success btn-sm" 
+                                    onclick="seleccionarPersonaPadronPuntero('${cedula}', '${nombrePersona}', '${apellidoPersona}')">
+                                    <i class="fas fa-check"></i> Seleccionar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    });
+                    $('#tablaPersonasPadronPuntero tbody').html(html);
+                } else {
+                    $('#tablaPersonasPadronPuntero tbody').html(`
+                    <tr>
+                        <td colspan="6" class="text-center text-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No se encontraron resultados
+                        </td>
+                    </tr>
+                `);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr);
+                $('#tablaPersonasPadronPuntero tbody').html(`
+                <tr>
+                    <td colspan="6" class="text-center text-danger">
+                        <i class="fas fa-times-circle"></i> Error al buscar. Intente nuevamente.
+                    </td>
+                </tr>
+            `);
+            }
+        });
+    }
+
+    function seleccionarPersonaPadronPuntero(cedula, nombre, apellido) {
+        let nombreCompleto = `${nombre} ${apellido}`.trim();
+
+        // Cargar en formulario de PUNTEROS
+        $('#puntero_cedula_lista').val(cedula);
+        $('#puntero_nombre_lista').val(nombreCompleto);
+
+        // Disparar búsqueda automática para llenar teléfono y barrio
+        buscarPunteroPorCedulaLista();
+
+        // Cerrar el modal
+        $('#modalBuscarPersonaPadronPuntero').modal('hide');
+
+        // Mostrar mensaje de éxito
+        Swal.fire({
+            icon: 'success',
+            title: 'Persona seleccionada',
+            text: `Se cargaron los datos de ${nombreCompleto}`,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+
+        // Enfocar el siguiente campo
+        $('#puntero_nombre_lista').focus();
     }
 </script>

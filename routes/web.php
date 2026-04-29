@@ -187,7 +187,7 @@ Route::middleware('auth')->group(function () {
         ->name('configuracion_montos.reporte')
         ->middleware(['auth', 'permission:Administracion General']);
     Route::resource('ciudades_electorales', CiudadElectoralController::class);
-    
+
     Route::get('/ciudades', [SistemaController::class, 'mostrarCiudades'])
         ->name('ciudades.index'); // opcional según tu sistema de autenticación
     Route::get('/distritos/{idCiudad}/sistemas', [SistemaController::class, 'sistemasPorDistrito'])
@@ -205,7 +205,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/destroy-ajax', [PunteroController::class, 'destroyAjax'])->name('destroy.ajax');
         Route::post('/store-ajax', [PunteroController::class, 'storeAjax'])->name('store.ajax');
     });
-
+    // En tu archivo web.php, dentro del grupo middleware('auth')
+    // Ruta única para buscar personas en el padrón (reutilizable)
+    Route::get('/buscar-personas-padron', [PunteroController::class, 'buscarPersonas'])
+        ->name('buscar.personas.padron')
+        ->middleware('auth');
     // Ruta para obtener punteros por sistema
     Route::get('/sistemas/{sistema}/punteros', [PunteroController::class, 'porSistema'])->name('sistemas.punteros');
     Route::get('/dirigente/{dirigente}/punteros', [PunteroController::class, 'porDirigente'])->name('dirigentes.punteros');

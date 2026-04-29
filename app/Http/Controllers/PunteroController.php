@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dirigente;
 use App\Models\Puntero;
 use App\Models\Equipo;
+use App\Models\PadronIluminado;
 use App\Models\Sistema;
 use Exception;
 use Illuminate\Http\Request;
@@ -589,9 +590,9 @@ class PunteroController extends Controller
             $dirigenteId = $request->dirigente_id;
 
             $query = Puntero::with(['dirigente', 'equipo', 'votantes'])
-            ->whereHas('dirigente.equipo', function ($q) {
-                $q->where('sist', Auth::user()->sistema);
-            });
+                ->whereHas('dirigente.equipo', function ($q) {
+                    $q->where('sist', Auth::user()->sistema);
+                });
 
             if ($equipoId) {
                 $query->where('id_equipo', $equipoId);
@@ -656,6 +657,39 @@ class PunteroController extends Controller
             return response()->json($vehiculos);
         } catch (\Exception $e) {
             return response()->json([], 500);
+        }
+    }
+    public function buscarPersonas(Request $request)
+    {
+        try {
+            $nombre = $request->get('nombre');
+            $apellido = $request->get('apellido');
+            
+            $query = PadronIluminado::query();
+            
+            if ($nombre) {
+                $query->where('nombre', 'LIKE', "%{$nombre}%");
+            }
+            
+            if ($apellido) {
+                $query->where('apellido', 'LIKE', "%{$apellido}%");
+            }
+            
+            // Limitar resultados para mejor rendimiento
+            $personas = $query->limit(50)->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $personas,
+                'count' => $personas->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error en buscarPersonas: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al buscar personas: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

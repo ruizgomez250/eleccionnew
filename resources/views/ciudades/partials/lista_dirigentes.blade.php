@@ -27,7 +27,14 @@
     <div class="row mb-2">
         <div class="col-md-2">
             <label>Cédula</label>
-            <input type="text" name="cedula" class="form-control" required autofocus>
+            <div class="input-group">
+                <input type="text" name="cedula" id="cedula_dirigente" class="form-control" required>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-info" onclick="abrirModalBuscarPersonaDirigente()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
             <small class="text-danger" id="error-cedula"></small>
         </div>
         <div class="col-md-4">
@@ -107,6 +114,64 @@
         </div>
     </div>
 </div>
+{{-- MODAL DE BÚSQUEDA DE PERSONAS DEL PADRÓN (UNIVERSAL) --}}
+<div class="modal fade" id="modalBuscarPersonaPadron" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-search"></i> Buscar Persona en el Padrón
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <label>Nombre</label>
+                        <input type="text" id="buscar_nombre_padron" class="form-control"
+                            placeholder="Ingrese nombre...">
+                    </div>
+                    <div class="col-md-5">
+                        <label>Apellido</label>
+                        <input type="text" id="buscar_apellido_padron" class="form-control"
+                            placeholder="Ingrese apellido...">
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary btn-block" onclick="buscarPersonasPadronUniversal()">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table id="tablaPersonasPadronUniversal" class="table table-bordered table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Partido</th>
+                                <th>Mesa</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    Ingrese criterios de búsqueda
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <h4 class="mb-3">
     Total General de Votos:
     <span class="badge badge-success">
@@ -168,9 +233,9 @@
 <script>
     function generarPDFporDir(id) {
 
-            var url = `{{ url('/') }}/votantespordirigente/${id}`;
-            window.open(url, '_blank');
-        }
+        var url = `{{ url('/') }}/votantespordirigente/${id}`;
+        window.open(url, '_blank');
+    }
     $(document).ready(function() {
 
         // Inicializar Select2 cuando se abre el modal (esto va en la página principal, no aquí)
@@ -402,65 +467,221 @@
         // DISPARAR EL FILTRO
         $('#equipo_id_dir').trigger('change');
     }
+
     function eliminarDirigente(dirigenteId) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción no se puede revertir. Se eliminarán también sus punteros y votantes.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Eliminando...',
+                    text: 'Por favor espera',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                let url = `{{ url('/') }}/dirigentes/ajax/${dirigenteId}`;
+
+                $.ajax({
+                    url: url,
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        if (typeof filtrarDirigentes === 'function') {
+                            filtrarDirigentes();
+                        } else {
+                            location.reload();
+                        }
+                    },
+                    error: function(xhr) {
+                        let mensaje = 'Error al eliminar el dirigente';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            mensaje = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: mensaje
+                        });
+                    }
+                });
+            }
+        });
+    }
+    // Variable para almacenar qué formulario está usando el modal
+    let formularioActivoPadron = null; // 'dirigente' o 'puntero'
+
+    // Abrir modal para DIRIGENTES
+    function abrirModalBuscarPersonaDirigente() {
+        formularioActivoPadron = 'dirigente';
+        abrirModalBuscarPersonaUniversal();
+    }
+
+    // Abrir modal para PUNTEROS
+    function abrirModalBuscarPersonaPuntero() {
+        formularioActivoPadron = 'puntero';
+        abrirModalBuscarPersonaUniversal();
+    }
+
+    // Abrir modal universal
+    function abrirModalBuscarPersonaUniversal() {
+        // Limpiar campos de búsqueda
+        $('#buscar_nombre_padron').val('');
+        $('#buscar_apellido_padron').val('');
+
+        // Limpiar tabla
+        $('#tablaPersonasPadronUniversal tbody').html(`
+        <tr>
+            <td colspan="6" class="text-center">
+                Ingrese criterios de búsqueda
+            </td>
+        </tr>
+    `);
+
+        $('#modalBuscarPersonaPadron').modal('show');
+    }
+
+    // Buscar personas en el padrón
+    function buscarPersonasPadronUniversal() {
+        let nombre = $('#buscar_nombre_padron').val().trim();
+        let apellido = $('#buscar_apellido_padron').val().trim();
+
+        if (!nombre && !apellido) {
             Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Esta acción no se puede revertir. Se eliminarán también sus punteros y votantes.",
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Eliminando...',
-                        text: 'Por favor espera',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    let url = `{{ url('/') }}/dirigentes/ajax/${dirigenteId}`;
-
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Eliminado!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-
-                            if (typeof filtrarDirigentes === 'function') {
-                                filtrarDirigentes();
-                            } else {
-                                location.reload();
-                            }
-                        },
-                        error: function(xhr) {
-                            let mensaje = 'Error al eliminar el dirigente';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                mensaje = xhr.responseJSON.message;
-                            }
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: mensaje
-                            });
-                        }
-                    });
-                }
+                title: 'Atención',
+                text: 'Debe ingresar al menos nombre o apellido para buscar',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
             });
+            return;
         }
+
+        // Mostrar loading
+        $('#tablaPersonasPadronUniversal tbody').html(`
+        <tr>
+            <td colspan="6" class="text-center">
+                <i class="fas fa-spinner fa-spin"></i> Buscando...
+            </td>
+        </tr>
+    `);
+
+        $.ajax({
+            url: "{{ route('buscar.personas.padron') }}",
+            type: 'GET',
+            data: {
+                nombre: nombre,
+                apellido: apellido
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success && response.data.length > 0) {
+                    let html = '';
+                    response.data.forEach(persona => {
+                        let cedula = persona.cedula || '';
+                        let nombrePersona = (persona.nombre || '').replace(/'/g, "\\'");
+                        let apellidoPersona = (persona.apellido || '').replace(/'/g, "\\'");
+
+                        html += `
+                        <tr>
+                            <td>${cedula}</td>
+                            <td>${persona.nombre || ''}</td>
+                            <td>${persona.apellido || ''}</td>
+                            <td>${persona.partido || ''}</td>
+                            <td>${persona.mesa || ''}</td>
+                            <td class="text-center">
+                                <button class="btn btn-success btn-sm" 
+                                    onclick="seleccionarPersonaPadronUniversal('${cedula}', '${nombrePersona}', '${apellidoPersona}')">
+                                    <i class="fas fa-check"></i> Seleccionar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    });
+                    $('#tablaPersonasPadronUniversal tbody').html(html);
+                } else {
+                    $('#tablaPersonasPadronUniversal tbody').html(`
+                    <tr>
+                        <td colspan="6" class="text-center text-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No se encontraron resultados
+                        </td>
+                    </tr>
+                `);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr);
+                $('#tablaPersonasPadronUniversal tbody').html(`
+                </td>
+                    <td colspan="6" class="text-center text-danger">
+                        <i class="fas fa-times-circle"></i> Error al buscar. Intente nuevamente.
+                    </td>
+                </tr>
+            `);
+            }
+        });
+    }
+
+    // Seleccionar persona y cargar en el formulario correspondiente
+    function seleccionarPersonaPadronUniversal(cedula, nombre, apellido) {
+        let nombreCompleto = `${nombre} ${apellido}`.trim();
+
+        if (formularioActivoPadron === 'dirigente') {
+            // Cargar en formulario de DIRIGENTES
+            $('#formAgregarDirigente input[name="cedula"]').val(cedula);
+            $('#formAgregarDirigente input[name="nombre"]').val(nombreCompleto);
+
+            // Disparar búsqueda automática
+            let cedulaInput = $('#formAgregarDirigente input[name="cedula"]');
+            let nombreInput = $('#formAgregarDirigente input[name="nombre"]');
+            let telefonoInput = $('#formAgregarDirigente input[name="telefono"]');
+            let barrioInput = $('#formAgregarDirigente input[name="barrio"]');
+            buscarPorCedula(cedulaInput, nombreInput, telefonoInput, barrioInput);
+
+        } else if (formularioActivoPadron === 'puntero') {
+            // Cargar en formulario de PUNTEROS
+            $('#puntero_cedula_lista').val(cedula);
+            $('#puntero_nombre_lista').val(nombreCompleto);
+
+            // Disparar búsqueda automática
+            buscarPunteroPorCedulaLista();
+        }
+
+        // Cerrar el modal
+        $('#modalBuscarPersonaPadron').modal('hide');
+
+        // Mostrar mensaje de éxito
+        Swal.fire({
+            icon: 'success',
+            title: 'Persona seleccionada',
+            text: `Se cargaron los datos de ${nombreCompleto}`,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
 </script>
