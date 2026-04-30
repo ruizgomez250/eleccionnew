@@ -548,15 +548,17 @@
                     }
                 });
             });
+            // En tu archivo, dentro del $(document).ready(), reemplaza el evento submit del formulario de votantes:
+
             $('#formAgregarVotante').on('submit', function(e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
                 let submitBtn = $(this).find('button[type="submit"]');
                 let nombrePuntero = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '')
-                    .trim();
+            .trim();
 
                 submitBtn.prop('disabled', true).html(
-                    '<i class="fas fa-spinner fa-spin"></i> Guardando...');
+                '<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
                 $.ajax({
                     url: "{{ route('votante.store.ajax') }}",
@@ -596,6 +598,37 @@
                     }
                 });
             });
+
+            // Función para limpiar el formulario de votantes
+            function limpiarFormularioVotante() {
+                $('#votante_cedula').val('');
+                $('#votante_nombre').val('');
+                $('#direccion').val('');
+                $('#mesa').val('');
+                $('#orden').val('');
+                $('#partido').val('');
+                $('#escuela').val('');
+                $('#ciudad').val('');
+                $('#departamento').val('');
+                $('#tipo_votante').val('seguro');
+
+                // Opcional: Quitar clases de error si las hay
+                $('#votante_cedula').removeClass('is-invalid');
+                $('#votante_nombre').removeClass('is-invalid');
+                $('#direccion').removeClass('is-invalid');
+                $('#mesa').removeClass('is-invalid');
+                $('#orden').removeClass('is-invalid');
+                $('#partido').removeClass('is-invalid');
+                $('#escuela').removeClass('is-invalid');
+                $('#ciudad').removeClass('is-invalid');
+                $('#departamento').removeClass('is-invalid');
+
+                // Limpiar mensajes de error
+                $('.text-danger').text('');
+
+                // Enfocar el campo de cédula para la siguiente entrada
+                $('#votante_cedula').focus();
+            }
 
             // Función para limpiar el formulario de votantes
             function limpiarFormularioVotante() {
