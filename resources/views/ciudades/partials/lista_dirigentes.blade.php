@@ -530,7 +530,8 @@
         });
     }
     // Variable para almacenar qué formulario está usando el modal
-    let formularioActivoPadron = null; // 'dirigente' o 'puntero'
+    // Variable global para almacenar qué formulario está usando el modal
+window.formularioActivoPadron = window.formularioActivoPadron || null;
 
     // Abrir modal para DIRIGENTES
     function abrirModalBuscarPersonaDirigente() {
