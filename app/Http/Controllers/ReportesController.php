@@ -59,14 +59,14 @@ class ReportesController extends Controller
 
     public function votantesPorDirigente($idDirigente)
     {
-        dd($idDirigente);
+        
         // Solo dirigente del sistema del usuario
         $dirigente = Dirigente::with(['punteros.votantes'])
             ->whereHas('equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
             })
             ->findOrFail($idDirigente);
-        
+        dd($dirigente);
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
 
         // Configuración general
