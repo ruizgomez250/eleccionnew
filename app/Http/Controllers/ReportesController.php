@@ -59,7 +59,6 @@ class ReportesController extends Controller
 
     public function votantesPorDirigente($idDirigente)
     {
-        dd('llego');
         // Solo dirigente del sistema del usuario
         $dirigente = Dirigente::with(['punteros.votantes'])
             ->whereHas('equipo', function ($q) {
