@@ -362,7 +362,9 @@ class PunteroController extends Controller
     public function porSistema($sistemaId)
     {
         try {
-            Auth::user()->sistema=$sistemaId;
+            $user = Auth::user();
+            $user->sistema = $sistemaId;
+            $user->save();
             $sistema = Sistema::findOrFail($sistemaId);
 
             // Obtener equipos del sistema
@@ -665,26 +667,25 @@ class PunteroController extends Controller
         try {
             $nombre = $request->get('nombre');
             $apellido = $request->get('apellido');
-            
+
             $query = PadronIluminado::query();
-            
+
             if ($nombre) {
                 $query->where('nombre', 'LIKE', "%{$nombre}%");
             }
-            
+
             if ($apellido) {
                 $query->where('apellido', 'LIKE', "%{$apellido}%");
             }
-            
+
             // Limitar resultados para mejor rendimiento
             $personas = $query->limit(50)->get();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $personas,
                 'count' => $personas->count()
             ]);
-            
         } catch (\Exception $e) {
             Log::error('Error en buscarPersonas: ' . $e->getMessage());
             return response()->json([
