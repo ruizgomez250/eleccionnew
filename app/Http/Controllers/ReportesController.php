@@ -66,7 +66,6 @@ class ReportesController extends Controller
                 $q->where('sist', Auth::user()->sistema);
             })
             ->findOrFail($idDirigente);
-        dd($dirigente);
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
 
         // Configuración general

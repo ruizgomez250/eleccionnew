@@ -202,6 +202,7 @@ class DirigenteController extends Controller
     }
     public function dirigentesPorSistema($sistemaId, Request $request)
     {
+        Auth::user()->sistema=$sistemaId;
         $equipoId = $request->equipo_id;
         $equipoSeleccionado = request('equipo_id');
         // Equipos del sistema

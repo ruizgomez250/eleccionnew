@@ -362,6 +362,7 @@ class PunteroController extends Controller
     public function porSistema($sistemaId)
     {
         try {
+            Auth::user()->sistema=$sistemaId;
             $sistema = Sistema::findOrFail($sistemaId);
 
             // Obtener equipos del sistema
