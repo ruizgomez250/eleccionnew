@@ -645,7 +645,6 @@ class PunteroController extends Controller
             if (!$puntero) {
                 return response()->json([]);
             }
-
             $vehiculos = $puntero->vehiculos->map(function ($v) {
                 return [
                     'id' => $v->id,
@@ -654,6 +653,8 @@ class PunteroController extends Controller
                     'cedulachofer' => $v->cedulachofer,
                     'telefono1' => $v->telefono1,
                     'rol' => $v->rol,
+                    'nombreproponente' => $v->nombreproponente,
+                    'telefonoproponente' => $v->telefonoproponente,
                 ];
             });
 

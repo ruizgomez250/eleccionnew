@@ -3,24 +3,38 @@
 @section('title', 'Vehículos')
 
 @section('content_header')
-    <h1 class="m-0">
-        <i class="fas fa-car text-primary"></i> Gestión de Vehículos
-    </h1>
+    <div class="row mb-2">
+        <div class="col-md-4">
+            <label for="equipo_id" class="form-label fw-bold">
+                Equipos
+            </label>
+            <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarPorEquipo()" disable-faster-look>
+                <option value="">Todos los equipos</option>
+                @foreach ($equipos as $eq)
+                    <option value="{{ $eq->id }}" @if ($equipoId == $eq->id) selected @endif>
+                        {{ $eq->descripcion }}
+                    </option>
+                @endforeach
+            </x-adminlte-select2>
+        </div>
+        
+        <div class="col-md-8 text-right">
+            <button class="btn btn-danger" data-toggle="modal" data-target="#modalReporteEquipos">
+                <i class="fas fa-file-pdf"></i> Reporte por Equipo
+            </button>
+        </div>
+    </div>
 @stop
 
 @section('content')
-
-    {{-- =================== FORMULARIO NUEVO VEHÍCULO =================== --}}
+    {{-- FORMULARIO NUEVO VEHÍCULO --}}
     <div class="card mb-4">
         <div class="card-header bg-primary">
             <strong><i class="fas fa-plus-circle"></i> Nuevo Vehículo</strong>
         </div>
-
         <form action="{{ route('vehiculo.store') }}" method="POST" id="formVehiculo">
             @csrf
             <div class="card-body">
-
-                {{-- FILA 1 --}}
                 <div class="row">
                     <x-adminlte-input name="cedulachofer" id="cedulachofer" label="Cédula del Chofer"
                         placeholder="Ej: 1.234.567" fgroup-class="col-md-3" required>
@@ -42,54 +56,47 @@
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-select name="tipovehiculo" label="Tipo de Vehículo" fgroup-class="col-md-2">
-                        <option value="AUTOMOVIL" selected>AUTOMÓVIL</option>
+                    <x-adminlte-select name="tipovehiculo" label="Tipo" fgroup-class="col-md-2">
+                        <option value="AUTOMOVIL">AUTOMÓVIL</option>
                         <option value="CAMIONETA">CAMIONETA</option>
                         <option value="FURGONETA">FURGONETA</option>
                     </x-adminlte-select>
                 </div>
 
-                {{-- FILA 2 --}}
                 <div class="row">
-                    <x-adminlte-input name="direccion" id="direccion" label="Dirección del Chofer" 
-                        placeholder="Ej: Calle Fulgencio Yegros N° 123" fgroup-class="col-md-4">
+                    <x-adminlte-input name="direccion" id="direccion" label="Dirección" fgroup-class="col-md-4">
                         <x-slot name="prependSlot">
                             <div class="input-group-text"><i class="fas fa-map-marker-alt"></i></div>
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-input name="barriocompania" id="barriocompania" label="Barrio/Compañía" 
-                        placeholder="Ej: Barrio San Rafael" fgroup-class="col-md-3">
+                    <x-adminlte-input name="barriocompania" id="barriocompania" label="Barrio/Compañía" fgroup-class="col-md-3">
                         <x-slot name="prependSlot">
                             <div class="input-group-text"><i class="fas fa-building"></i></div>
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-input name="capacidad" label="Capacidad" type="number" value="5"
-                        fgroup-class="col-md-2" required>
+                    <x-adminlte-input name="capacidad" label="Capacidad" type="number" value="5" fgroup-class="col-md-2" required>
                         <x-slot name="appendSlot">
                             <div class="input-group-text"><i class="fas fa-users"></i></div>
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-input name="telefono1" id="telefono1" label="Teléfono Principal" placeholder="0981xxxxxx"
-                        fgroup-class="col-md-3" required>
+                    <x-adminlte-input name="telefono1" id="telefono1" label="Teléfono" placeholder="0981xxxxxx" fgroup-class="col-md-3" required>
                         <x-slot name="prependSlot">
                             <div class="input-group-text"><i class="fas fa-phone"></i></div>
                         </x-slot>
                     </x-adminlte-input>
                 </div>
 
-                {{-- FILA 3 --}}
                 <div class="row">
-                    <x-adminlte-input name="telefono2" id="telefono2" label="Teléfono Secundario" placeholder="Opcional"
-                        fgroup-class="col-md-3">
+                    <x-adminlte-input name="telefono2" id="telefono2" label="Teléfono 2" fgroup-class="col-md-3">
                         <x-slot name="prependSlot">
                             <div class="input-group-text"><i class="fas fa-phone"></i></div>
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-select name="montopagar" label="Monto a Pagar (Gs.)" fgroup-class="col-md-2">
+                    <x-adminlte-select name="montopagar" label="Monto (Gs.)" fgroup-class="col-md-2">
                         <option value="0">0</option>
                         <option value="200000">200.000</option>
                         <option value="300000" selected>300.000</option>
@@ -100,14 +107,13 @@
                         <option value="550000">550.000</option>
                     </x-adminlte-select>
 
-                    <x-adminlte-input name="cantidadpagos" label="Cantidad de Pagos" type="number" value="2"
-                        fgroup-class="col-md-2" required>
+                    <x-adminlte-input name="cantidadpagos" label="Cantidad Pagos" type="number" value="2" fgroup-class="col-md-2" required>
                         <x-slot name="appendSlot">
                             <div class="input-group-text"><i class="fas fa-list-ol"></i></div>
                         </x-slot>
                     </x-adminlte-input>
 
-                    <x-adminlte-select name="rol" id="rol" label="Rol del Vehículo" fgroup-class="col-md-3">
+                    <x-adminlte-select name="rol" id="rol" label="Rol" fgroup-class="col-md-3">
                         <option value="PUNTERO" selected>PUNTERO</option>
                         <option value="LOGISTICA">LOGISTICA</option>
                     </x-adminlte-select>
@@ -116,62 +122,76 @@
                         <label for="id_equipo" class="form-label fw-bold">
                             Equipo <span id="equipoRequired" class="text-danger">*</span>
                         </label>
-                        <x-adminlte-select2 name="id_equipo" id="id_equipo" enable-old-support>
+                        <select name="id_equipo" id="id_equipo" class="form-control">
                             <option value="">Sin Equipo</option>
                             @foreach ($equipos as $eq)
                                 <option value="{{ $eq->id }}">{{ $eq->descripcion }}</option>
                             @endforeach
-                        </x-adminlte-select2>
+                        </select>
                     </div>
                 </div>
 
-                {{-- FILA 4: Botón Guardar --}}
-                
-
-                {{-- FILA 5: DATOS DEL PROPONENTE (Opcionales) --}}
+                {{-- =================== SECCIÓN PROPONENTE (OBLIGATORIO) =================== --}}
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="card card-outline card-secondary">
-                            <div class="card-header">
-                                <h6 class="card-title">
-                                    <i class="fas fa-user-check"></i> Datos del Proponente (Opcional)
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-user-check"></i> Datos del Proponente <span class="text-danger">*</span>
                                 </h6>
                                 <div class="card-tools">
-                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <button type="button" class="btn btn-tool text-white" data-card-widget="collapse">
                                         <i class="fas fa-minus"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <x-adminlte-input name="cedulaproponente" id="cedulaproponente" 
-                                        label="Cédula del Proponente" placeholder="Ej: 1.234.567"
-                                        fgroup-class="col-md-3">
-                                        <x-slot name="prependSlot">
-                                            <div class="input-group-text"><i class="fas fa-id-card"></i></div>
-                                        </x-slot>
-                                    </x-adminlte-input>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="cedulaproponente">Cédula del Proponente <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                                </div>
+                                                <input type="text" name="cedulaproponente" id="cedulaproponente" 
+                                                    class="form-control" placeholder="Ej: 1.234.567" required>
+                                            </div>
+                                            <small class="text-muted">Ingrese la cédula para buscar automáticamente</small>
+                                        </div>
+                                    </div>
 
-                                    <x-adminlte-input name="nombreproponente" id="nombreproponente" 
-                                        label="Nombre del Proponente" placeholder="Nombre completo"
-                                        fgroup-class="col-md-5">
-                                        <x-slot name="prependSlot">
-                                            <div class="input-group-text"><i class="fas fa-user-tie"></i></div>
-                                        </x-slot>
-                                    </x-adminlte-input>
+                                    <div class="col-md-5">
+                                        <div class="form-group">
+                                            <label for="nombreproponente">Nombre del Proponente <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+                                                </div>
+                                                <input type="text" name="nombreproponente" id="nombreproponente" 
+                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <x-adminlte-input name="telefonoproponente" id="telefonoproponente" 
-                                        label="Teléfono del Proponente" placeholder="0981xxxxxx"
-                                        fgroup-class="col-md-4">
-                                        <x-slot name="prependSlot">
-                                            <div class="input-group-text"><i class="fas fa-phone"></i></div>
-                                        </x-slot>
-                                    </x-adminlte-input>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="telefonoproponente">Teléfono del Proponente <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                </div>
+                                                <input type="text" name="telefonoproponente" id="telefonoproponente" 
+                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="row mt-3">
                     <div class="col-md-12">
                         <button class="btn btn-success w-100" id="btnGuardar">
@@ -183,179 +203,113 @@
         </form>
     </div>
 
-    {{-- =================== BUSCADOR =================== --}}
-
-    <div class="card mb-3">
+    {{-- TABLA DE VEHÍCULOS (DATATABLE) --}}
+    <div class="card">
         <div class="card-body">
-
-            {{-- ACCIONES --}}
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                <h6 class="mb-0 text-muted">
-                    <i class="fas fa-tools"></i> Acciones
-                </h6>
-
-                <div class="btn-group">
-                    <button class="btn btn-danger" data-toggle="modal" data-target="#modalReporteEquipos">
-                        <i class="fas fa-file-pdf"></i> Reporte Vehículos por Equipo
-                    </button>
-                </div>
-            </div>
-
-            {{-- BUSCADOR --}}
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text bg-primary">
-                        <i class="fas fa-search text-white"></i>
-                    </span>
-                </div>
-                <input type="text" id="buscadorVehiculo" class="form-control"
-                    placeholder="Buscar por chofer o chapa">
-            </div>
-
+            <table id="vehiculos-table" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cédula Chofer</th>
+                        <th>Chofer</th>
+                        <th>Chapa</th>
+                        <th>Tipo</th>
+                        <th>Teléfono</th>
+                        <th>Equipo</th>
+                        <th>Rol</th>
+                        <th>Proponente</th>
+                        <th>Punteros</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($vehiculos as $vehiculo)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ number_format($vehiculo->cedulachofer, 0, ',', '.') }}</td>
+                            <td>{{ $vehiculo->nombre }}</td>
+                            <td>{{ $vehiculo->chapa }}</td>
+                            <td>{{ $vehiculo->tipovehiculo }}</td>
+                            <td>{{ $vehiculo->telefono1 }}{{ $vehiculo->telefono2 ? ' / ' . $vehiculo->telefono2 : '' }}</td>
+                            <td>{{ $vehiculo->equipo->descripcion ?? 'Sin equipo' }}</td>
+                            <td>
+                                <span class="badge badge-{{ $vehiculo->rol == 'PUNTERO' ? 'primary' : 'secondary' }}">
+                                    {{ $vehiculo->rol }}
+                                </span>
+                            </td>
+                            <td>{{ $vehiculo->nombreproponente ?? 'N/A' }}</td>
+                            <td class="text-center">
+                                <span class="badge badge-info">
+                                    {{ $vehiculo->punteros_count ?? 0 }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" 
+                                    onclick="generarPDFContratoVehicular({{ $vehiculo->id }})"
+                                    title="Contrato de Alquiler">
+                                    <i class="fas fa-file-pdf"></i>
+                                </button>
+                                
+                                <button class="btn btn-warning btn-sm" 
+                                    onclick="abrirModalPunteros({{ $vehiculo->id }}, '{{ addslashes($vehiculo->nombre) }}', {{ $vehiculo->id_equipo ?? 0 }})"
+                                    title="Asignar Punteros">
+                                    <i class="fas fa-users"></i>
+                                </button>
+                                
+                                <a href="{{ route('vehiculo.edit', $vehiculo->id) }}" 
+                                    class="btn btn-secondary btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <form action="{{ route('vehiculo.destroy', $vehiculo->id) }}" 
+                                    method="POST" class="form-delete d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm btn-delete" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 
-    {{-- =================== LISTA DE VEHÍCULOS =================== --}}
-    <div class="row">
-        @foreach ($vehiculos as $vehiculo)
-            <div class="col-md-3 mb-4 vehiculo-card"
-                data-search="{{ strtolower($vehiculo->nombre . ' ' . $vehiculo->chapa) }}">
-                <div class="card shadow h-100">
-                    <div class="card-header text-center bg-light">
-                        <i class="fas fa-car fa-3x text-primary"></i>
-                    </div>
-
-                    <div class="card-body text-center">
-                        <h6 class="font-weight-bold">{{ $vehiculo->nombre }}</h6>
-                        <p class="mb-1"><i class="fas fa-id-card"></i>
-                            {{ number_format($vehiculo->cedulachofer, 0, ',', '.') }}</p>
-                        <p class="mb-1"><i class="fas fa-hashtag"></i> {{ $vehiculo->chapa }}</p>
-                        <p class="mb-1">
-                            <i class="fas fa-users-cog"></i> {{ $vehiculo->equipo->descripcion ?? 'Sin equipo' }}
-                        </p>
-
-                        @php
-                            $telefonos = collect([$vehiculo->telefono1, $vehiculo->telefono2, $vehiculo->telefono3])
-                                ->filter()
-                                ->implode(' - ');
-                        @endphp
-
-                        @if ($telefonos)
-                            <p class="mb-1"><i class="fas fa-phone-alt"></i> {{ $telefonos }}</p>
-                        @endif
-
-                        @if ($vehiculo->numero_auto)
-                            <p class="mb-0"><i class="fas fa-car-side"></i> {{ $vehiculo->numero_auto }}</p>
-                        @endif
-                        
-                        {{-- Mostrar dirección y barrio si existen --}}
-                        @if($vehiculo->direccion || $vehiculo->barriocompania)
-                            <hr class="my-2">
-                            @if($vehiculo->direccion)
-                                <p class="mb-0 small text-muted">
-                                    <i class="fas fa-map-marker-alt"></i> {{ $vehiculo->direccion }}
-                                </p>
-                            @endif
-                            @if($vehiculo->barriocompania)
-                                <p class="mb-0 small text-muted">
-                                    <i class="fas fa-building"></i> {{ $vehiculo->barriocompania }}
-                                </p>
-                            @endif
-                        @endif
-
-                        {{-- Mostrar datos del proponente si existen --}}
-                        @if($vehiculo->nombreproponente)
-                            <hr class="my-2">
-                            <p class="mb-0 small text-muted">
-                                <i class="fas fa-user-check"></i> Prop: {{ $vehiculo->nombreproponente }}
-                            </p>
-                        @endif
-                    </div>
-
-                    {{-- Botón Contrato --}}
-                    <button class="btn btn-primary btn-sm" onclick="generarPDFContratoVehicular({{ $vehiculo->id }})">
-                        <i class="fas fa-file-pdf"></i> Contrato de Alquiler
-                    </button>
-
-                    {{-- Botón Punteros --}}
-                    <button class="btn btn-warning btn-sm mt-1"
-                        onclick="window.abrirModalPunteros({{ $vehiculo->id }}, '{{ addslashes($vehiculo->nombre) }}', {{ $vehiculo->id_equipo ?? 0 }})">
-                        <i class="fas fa-users-cog"></i> Punteros
-                    </button>
-
-                    <div class="card-footer text-center">
-                        <div class="btn-group w-100">
-                            <a href="{{ route('vehiculo.edit', $vehiculo->id) }}"
-                                class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-
-                            <form action="{{ route('vehiculo.destroy', $vehiculo->id) }}" method="POST"
-                                class="form-delete d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger btn-delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        @endforeach
-    </div>
-
+    {{-- MODALES --}}
     <div class="modal fade" id="modalReporteEquipos" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-md" role="document">
+        <div class="modal-dialog modal-md">
             <div class="modal-content">
-
                 <div class="modal-header bg-danger">
-                    <h5 class="modal-title">
-                        <i class="fas fa-file-pdf"></i> Reporte de Vehículos y Punteros
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
+                    <h5 class="modal-title"><i class="fas fa-file-pdf"></i> Reporte por Equipo</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
-
                 <div class="modal-body">
                     <div class="form-group">
                         <label><i class="fas fa-users"></i> Equipo</label>
                         <select id="selectEquipoReporte" class="form-control select2" style="width:100%">
-                            <option value="0">Sin Equipo</option>
+                            <option value="">Seleccione un equipo</option>
                             @foreach ($equipos as $equipo)
-                                <option value="{{ $equipo->id }}">
-                                    {{ $equipo->descripcion }}
-                                </option>
+                                <option value="{{ $equipo->id }}">{{ $equipo->descripcion }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i> Cerrar
-                    </button>
-
-                    <button class="btn btn-danger" id="btnAbrirReporte">
-                        <i class="fas fa-file-pdf"></i> Ver PDF
-                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Cerrar</button>
+                    <button class="btn btn-danger" id="btnAbrirReporte"><i class="fas fa-file-pdf"></i> Ver PDF</button>
                 </div>
-
             </div>
         </div>
     </div>
 
-    {{-- Modal genérico punteros --}}
     <div class="modal fade" id="modalPunteros" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
                     <h5 class="modal-title" id="modalPunterosLabel"></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -372,437 +326,292 @@
                     </table>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i> Cerrar
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
+@stop
 
+@section('css')
+    <style>
+        .is-valid {
+            border-color: #28a745 !important;
+            background-color: #f0fff0 !important;
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+            background-color: #fff0f0 !important;
+        }
+    </style>
 @stop
 
 @section('js')
-    <script>
-        const BASE_URL = '{{ url('/') }}';
-        let vehiculoActual = null;
-        let nombreVehiculoActual = '';
-        let equipoActual = null;
-        let tabla = null;
+<script>
+    const BASE_URL = '{{ url('/') }}';
+    let vehiculoActual = null;
+    let nombreVehiculoActual = '';
+    let equipoActual = null;
+    let tablaAsignados = null;
 
-        // =================== MOSTRAR/OCULTAR ASTERISCO Y VALIDAR EQUIPO SEGÚN ROL ===================
-        function toggleEquipoRequired() {
-            const rolSeleccionado = $('#rol').val();
-            const equipoRequired = $('#equipoRequired');
+    $(document).ready(function() {
+        inicializarTablaVehiculos();
+        inicializarSelects();
+        inicializarEventos();
+        
+        // Mensaje de éxito
+        const successAlert = @json(session('success'));
+        if (successAlert) {
+            Swal.fire({ icon: 'success', title: 'Éxito', text: successAlert, timer: 1800, showConfirmButton: false });
+        }
+    });
 
-            if (rolSeleccionado === 'PUNTERO') {
-                equipoRequired.show();
-            } else { // LOGISTICA
-                equipoRequired.hide();
+    function inicializarTablaVehiculos() {
+        $('#vehiculos-table').DataTable({
+            dom: "<'row'<'col-md-6'f><'col-md-6 text-right'B>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+            buttons: [
+                { extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-info', title: 'Lista de Vehículos', filename: 'vehiculos_export_{{ date('Y-m-d') }}', exportOptions: { columns: ':visible' } },
+                { extend: 'pdfHtml5', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn btn-danger', title: 'Lista de Vehículos', filename: 'vehiculos_export_{{ date('Y-m-d') }}', exportOptions: { columns: ':visible' } },
+                { extend: 'print', text: '<i class="fas fa-print"></i> Imprimir', className: 'btn btn-secondary', exportOptions: { columns: ':visible' } }
+            ],
+            responsive: true,
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+            columnDefs: [
+                { targets: 0, orderable: false, searchable: false },
+                { targets: 9, orderable: false, searchable: false },
+                { targets: 10, orderable: false, searchable: false }
+            ]
+        });
+    }
+
+    function inicializarSelects() {
+        $('#id_equipo, #selectEquipoReporte').select2({ theme: 'bootstrap4', width: '100%' });
+        toggleEquipoRequired();
+    }
+
+    function inicializarEventos() {
+        // Búsqueda de chofer
+        $('#cedulachofer').on('blur', buscarPorCedulaChofer);
+        $('#cedulachofer').on('keypress', function(e) {
+            if (e.which === 13) { e.preventDefault(); buscarPorCedulaChofer(); $('#nombre').focus(); }
+        });
+
+        // Búsqueda de proponente
+        $('#cedulaproponente').on('blur', buscarPorCedulaProponente);
+        $('#cedulaproponente').on('keypress', function(e) {
+            if (e.which === 13) { e.preventDefault(); buscarPorCedulaProponente(); }
+        });
+        $('#cedulaproponente').on('focus', function() { $(this).removeClass('is-valid is-invalid'); });
+
+        // Validaciones
+        $('#rol').on('change', toggleEquipoRequired);
+        $('#formVehiculo').on('submit', function(e) { if (!validarFormulario()) e.preventDefault(); });
+
+        // Reporte PDF
+        $('#btnAbrirReporte').on('click', function() {
+            let equipoId = $('#selectEquipoReporte').val();
+            if (!equipoId) { Swal.fire('Atención', 'Debe seleccionar un equipo', 'warning'); return; }
+            window.open(`{{ url('reportes/vehiculos-equipo') }}/${equipoId}`, '_blank');
+        });
+
+        // Asignar puntero
+        $('#btnAsignar').on('click', asignarPuntero);
+    }
+
+    function filtrarPorEquipo() {
+        let equipoId = $('#equipo_id').val();
+        window.location.href = "{{ url('vehiculos') }}/" + (equipoId || '');
+    }
+
+    function generarPDFContratoVehicular(id) {
+        window.open(`${BASE_URL}/vehiculos/contrato/${id}`, '_blank');
+    }
+
+    // ==================== BÚSQUEDA DE CHOFER ====================
+    function buscarPorCedulaChofer() {
+        let cedula = $('#cedulachofer').val().trim();
+        if (cedula.length < 3) return;
+
+        $.get(BASE_URL + "/dirigente/buscar-por-cedulap/" + cedula, function(response) {
+            if (response.encontrado) {
+                $('#nombre').val(response.data.nombre ?? '');
+                $('#telefono1').val(response.data.telefono ?? '');
+                $('#direccion').val(response.data.direccion ?? '');
+                $('#barriocompania').val(response.data.barrio ?? '');
+            } else {
+                $('#nombre, #telefono1, #direccion, #barriocompania').val('');
             }
-        }
+        });
+    }
 
-        // =================== BÚSQUEDA POR CÉDULA DEL CHOFER ===================
-        function buscarPorCedulaChofer() {
-            let cedula = $('#cedulachofer').val().trim();
-            if (cedula.length < 3) return;
-
-            $.get(BASE_URL + "/dirigente/buscar-por-cedulap/" + cedula, function(response) {
-                if (response.encontrado) {
-                    $('#nombre').val(response.data.nombre ?? '');
-                    $('#telefono1').val(response.data.telefono ?? '');
-                    $('#direccion').val(response.data.direccion ?? '');
-                    $('#barriocompania').val(response.data.barrio ?? '');
-                } else {
-                    $('#nombre').val('');
-                    $('#telefono1').val('');
-                    $('#direccion').val('');
-                    $('#barriocompania').val('');
-                }
-            }).fail(function() {
-                console.log('Error en la búsqueda de cédula');
-            });
-        }
-
-        // =================== BÚSQUEDA POR CÉDULA DEL PROPONENTE ===================
-        function buscarPorCedulaProponente() {
-            let cedula = $('#cedulaproponente').val().trim();
-            
-            // Si la cédula está vacía o tiene menos de 3 caracteres, limpiar campos
-            if (cedula.length < 3) {
-                $('#nombreproponente').val('');
-                $('#telefonoproponente').val('');
-                $('#cedulaproponente').removeClass('is-valid is-invalid');
-                return;
-            }
-
-            // Mostrar indicador de carga
-            $('#nombreproponente').prop('placeholder', 'Buscando...');
-            
-            $.get(BASE_URL + "/dirigente/buscar-por-cedulap/" + cedula, function(response) {
-                if (response.encontrado) {
-                    $('#nombreproponente').val(response.data.nombre ?? '');
-                    $('#telefonoproponente').val(response.data.telefono ?? '');
-                    
-                    // Cambiar color de borde a verde para indicar éxito
-                    $('#cedulaproponente').removeClass('is-invalid').addClass('is-valid');
-                } else {
-                    $('#nombreproponente').val('');
-                    $('#telefonoproponente').val('');
-                    
-                    // Cambiar color de borde a rojo para indicar no encontrado
-                    $('#cedulaproponente').removeClass('is-valid').addClass('is-invalid');
-                }
-                
-                // Restaurar placeholder
-                $('#nombreproponente').prop('placeholder', 'Nombre completo');
-            }).fail(function() {
-                console.log('Error en la búsqueda de cédula del proponente');
-                $('#nombreproponente').prop('placeholder', 'Nombre completo');
-            });
-        }
-
-        // =================== LIMPIAR CAMPOS DEL PROPONENTE ===================
-        function limpiarCamposProponente() {
+    // ==================== BÚSQUEDA DE PROPONENTE (OBLIGATORIO) ====================
+    function buscarPorCedulaProponente() {
+        let cedula = $('#cedulaproponente').val().trim();
+        
+        if (cedula === '') {
             $('#nombreproponente').val('');
             $('#telefonoproponente').val('');
             $('#cedulaproponente').removeClass('is-valid is-invalid');
+            return;
         }
-
-        // =================== VALIDACIÓN ANTES DE GUARDAR ===================
-        function validarFormulario() {
-            const rolSeleccionado = $('#rol').val();
-            const equipoValue = $('#id_equipo').val();
-
-            // Si el rol es PUNTERO, el equipo es obligatorio
-            if (rolSeleccionado === 'PUNTERO') {
-                if (!equipoValue || equipoValue === '') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Campo requerido',
-                        text: 'Debe seleccionar un equipo para los vehículos con rol PUNTERO',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    return false;
-                }
+        
+        if (cedula.length < 3) {
+            Swal.fire({ icon: 'warning', title: 'Cédula muy corta', text: 'Ingrese al menos 3 dígitos', timer: 2000, showConfirmButton: false });
+            $('#nombreproponente').val('');
+            $('#telefonoproponente').val('');
+            $('#cedulaproponente').removeClass('is-valid is-invalid');
+            return;
+        }
+        
+        $('#nombreproponente').val('Buscando...');
+        
+        $.get(BASE_URL + "/dirigente/buscar-por-cedulap/" + cedula, function(response) {
+            if (response.encontrado) {
+                $('#nombreproponente').val(response.data.nombre ?? '');
+                $('#telefonoproponente').val(response.data.telefono ?? '');
+                $('#cedulaproponente').removeClass('is-invalid').addClass('is-valid');
+                
+                Swal.fire({ icon: 'success', title: 'Proponente encontrado', text: `Nombre: ${response.data.nombre}`, timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+            } else {
+                $('#nombreproponente').val('');
+                $('#telefonoproponente').val('');
+                $('#cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+                
+                Swal.fire({ icon: 'error', title: 'Proponente no encontrado', text: `No se encontró un proponente con la cédula ${cedula}`, confirmButtonColor: '#dc3545' });
             }
+        }).fail(function() {
+            $('#nombreproponente').val('');
+            $('#telefonoproponente').val('');
+            $('#cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Error al buscar la cédula', confirmButtonColor: '#dc3545' });
+        });
+    }
 
-            // Si el rol es LOGISTICA, el equipo es opcional
-            return true;
+    // ==================== VALIDACIONES ====================
+    function toggleEquipoRequired() {
+        const isPuntero = $('#rol').val() === 'PUNTERO';
+        $('#equipoRequired').toggle(isPuntero);
+    }
+
+    function validarProponente() {
+        let cedula = $('#cedulaproponente').val().trim();
+        let nombre = $('#nombreproponente').val().trim();
+        
+        if (cedula === '') {
+            Swal.fire({ icon: 'error', title: 'Campo requerido', text: 'Debe ingresar la cédula del proponente', confirmButtonColor: '#dc3545' });
+            $('#cedulaproponente').focus();
+            return false;
         }
+        
+        if (cedula.length < 3) {
+            Swal.fire({ icon: 'error', title: 'Cédula inválida', text: 'La cédula debe tener al menos 3 dígitos', confirmButtonColor: '#dc3545' });
+            $('#cedulaproponente').focus();
+            return false;
+        }
+        
+        if (nombre === '' || nombre === 'Buscando...') {
+            Swal.fire({ icon: 'error', title: 'Proponente no encontrado', text: 'Debe buscar y seleccionar un proponente válido', confirmButtonColor: '#dc3545' });
+            $('#cedulaproponente').focus();
+            return false;
+        }
+        
+        return true;
+    }
 
-        // =================== FUNCIONES GLOBALES ===================
+    function validarFormulario() {
+        // Validar equipo para rol PUNTERO
+        if ($('#rol').val() === 'PUNTERO') {
+            let equipo = $('#id_equipo').val();
+            if (!equipo || equipo === '') {
+                Swal.fire('Campo requerido', 'Debe seleccionar un equipo para rol PUNTERO', 'error');
+                return false;
+            }
+        }
+        
+        // ✅ VALIDAR PROPONENTE OBLIGATORIO
+        if (!validarProponente()) {
+            return false;
+        }
+        
+        return true;
+    }
 
-        window.abrirModalPunteros = function(idVehiculo, nombreVehiculo, idEquipo) {
-            vehiculoActual = idVehiculo;
-            nombreVehiculoActual = nombreVehiculo;
-            equipoActual = idEquipo;
+    // ==================== FUNCIONES DE PUNTEROS ====================
+    window.abrirModalPunteros = function(idVehiculo, nombreVehiculo, idEquipo) {
+        vehiculoActual = idVehiculo;
+        nombreVehiculoActual = nombreVehiculo;
+        equipoActual = idEquipo;
 
-            $('#modalPunterosLabel').text(`Punteros - ${nombreVehiculo}`);
+        $('#modalPunterosLabel').text(`Punteros - ${nombreVehiculo}`);
+        
+        const url = `${BASE_URL}/vehiculosasignar/${vehiculoActual}/punteros?equipo=${equipoActual}`;
 
-            const url = `${BASE_URL}/vehiculosasignar/${vehiculoActual}/punteros?equipo=${equipoActual}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                $('#selectPunteros').empty();
+                if (data.todos?.length > 0) {
+                    data.todos.forEach(p => { $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`); });
+                } else {
+                    $('#selectPunteros').append('<option value="">No hay punteros disponibles</option>');
+                }
 
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    $('#selectPunteros').empty();
+                $('#selectPunteros').select2({ dropdownParent: $('#modalPunteros'), width: '100%', placeholder: 'Seleccione un puntero' });
 
-                    if (data.todos && data.todos.length > 0) {
-                        data.todos.forEach(p => {
-                            $('#selectPunteros').append(`<option value="${p.id}">${p.nombre}</option>`);
-                        });
-                    } else {
-                        $('#selectPunteros').append(
-                            '<option value="">No hay punteros disponibles en este equipo</option>');
-                    }
+                if (tablaAsignados) { tablaAsignados.destroy(); }
 
-                    if ($('#selectPunteros').data('select2')) {
-                        $('#selectPunteros').select2('destroy');
-                    }
-
-                    $('#selectPunteros').select2({
-                        dropdownParent: $('#modalPunteros'),
-                        width: '100%',
-                        placeholder: 'Seleccione un puntero'
-                    });
-
-                    if (tabla) {
-                        tabla.destroy();
-                        tabla = null;
-                    }
-
-                    const asignados = data.asignados || [];
-
-                    tabla = $('#tablaAsignados').DataTable({
-                        data: asignados,
-                        columns: [{
-                                data: 'nombre',
-                                title: 'Nombre'
-                            },
-                            {
-                                data: 'id',
-                                title: 'Acción',
-                                width: '80px',
-                                render: function(id) {
-                                    return `<button class="btn btn-danger btn-sm" onclick="window.quitarPuntero(${id})">
-                                                <i class="fas fa-trash"></i>
-                                            </button>`;
-                                }
-                            }
-                        ],
-                        language: {
-                            emptyTable: 'No hay punteros asignados',
-                            info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
-                            infoEmpty: 'Mostrando 0 a 0 de 0 registros',
-                            search: 'Buscar:',
-                            zeroRecords: 'No se encontraron registros'
-                        }
-                    });
-
-                    $('#modalPunteros').modal('show');
-                })
-                .catch(error => {
-                    console.error('ERROR en la petición:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al cargar los punteros: ' + error.message
-                    });
+                tablaAsignados = $('#tablaAsignados').DataTable({
+                    data: data.asignados || [],
+                    columns: [
+                        { data: 'nombre', title: 'Nombre' },
+                        { data: 'id', title: 'Acción', width: '80px', render: function(id) { return `<button class="btn btn-danger btn-sm" onclick="quitarPuntero(${id})"><i class="fas fa-trash"></i></button>`; } }
+                    ],
+                    language: { emptyTable: 'No hay punteros asignados', info: 'Mostrando _START_ a _END_ de _TOTAL_ registros', search: 'Buscar:' }
                 });
-        };
 
-        window.quitarPuntero = function(punteroId) {
-            if (!vehiculoActual) return;
+                $('#modalPunteros').modal('show');
+            })
+            .catch(error => { console.error('Error:', error); Swal.fire('Error', 'Error al cargar los punteros', 'error'); });
+    };
 
-            Swal.fire({
-                title: '¿Quitar puntero?',
-                text: 'Este puntero ya no estará asignado a este vehículo',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonText: 'Cancelar',
-                confirmButtonText: 'Sí, quitar'
-            }).then((result) => {
+    window.quitarPuntero = function(punteroId) {
+        if (!vehiculoActual) return;
+        Swal.fire({ title: '¿Quitar puntero?', text: 'Este puntero ya no estará asignado', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, quitar' })
+            .then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            }
-                        })
+                    fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } })
                         .then(response => response.json())
-                        .then(() => {
-                            Swal.fire('Eliminado', 'Puntero removido exitosamente', 'success');
-                            window.abrirModalPunteros(vehiculoActual, nombreVehiculoActual, equipoActual);
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire('Error', 'No se pudo quitar el puntero', 'error');
-                        });
+                        .then(() => { Swal.fire('Eliminado', 'Puntero removido exitosamente', 'success'); abrirModalPunteros(vehiculoActual, nombreVehiculoActual, equipoActual); })
+                        .catch(error => { console.error('Error:', error); Swal.fire('Error', 'No se pudo quitar el puntero', 'error'); });
                 }
             });
-        };
+    };
 
-        // =================== FUNCIONES AUXILIARES ===================
-
-        function generarPDFContratoVehicular(id) {
-            window.open(`${BASE_URL}/vehiculos/contrato/${id}`, '_blank');
-        }
-
-        // =================== EVENTOS ===================
-
-        $(document).ready(function() {
-
-            // Configuración inicial del asterisco según rol inicial
-            toggleEquipoRequired();
-
-            // Evento change del select de rol
-            $('#rol').on('change', function() {
-                toggleEquipoRequired();
-            });
-
-            // =================== EVENTOS PARA CHOFER ===================
-            // Evento blur para búsqueda por cédula del chofer
-            $('#cedulachofer').on('blur', function() {
-                buscarPorCedulaChofer();
-            });
-
-            // Evento keypress para búsqueda por cédula del chofer con Enter
-            $('#cedulachofer').on('keypress', function(e) {
-                if (e.which === 13) {
-                    e.preventDefault();
-                    buscarPorCedulaChofer();
-                    $('#nombre').focus();
+    function asignarPuntero() {
+        const punteroId = $('#selectPunteros').val();
+        if (!punteroId) { Swal.fire('Error', 'Debe seleccionar un puntero', 'warning'); return; }
+        Swal.fire({ title: 'Asignar puntero', text: '¿Deseas asignar este puntero al vehículo?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, asignar' })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/json' } })
+                        .then(response => response.json())
+                        .then(() => { Swal.fire('Asignado', 'Puntero asignado exitosamente', 'success'); abrirModalPunteros(vehiculoActual, nombreVehiculoActual, equipoActual); })
+                        .catch(error => { console.error('Error:', error); Swal.fire('Error', 'No se pudo asignar el puntero', 'error'); });
                 }
             });
+    }
 
-            // =================== EVENTOS PARA PROPONENTE ===================
-            // Evento blur para búsqueda por cédula del proponente
-            $('#cedulaproponente').on('blur', function() {
-                buscarPorCedulaProponente();
-            });
-
-            // Evento keypress para búsqueda por cédula del proponente con Enter
-            $('#cedulaproponente').on('keypress', function(e) {
-                if (e.which === 13) {
-                    e.preventDefault();
-                    buscarPorCedulaProponente();
-                    $('#nombreproponente').focus();
-                }
-            });
-
-            // Evento focus para limpiar validaciones cuando el usuario modifica la cédula
-            $('#cedulaproponente').on('focus', function() {
-                $(this).removeClass('is-valid is-invalid');
-            });
-
-            // Evento change para limpiar campos si se borra la cédula
-            $('#cedulaproponente').on('change', function() {
-                if ($(this).val().trim() === '') {
-                    limpiarCamposProponente();
-                }
-            });
-
-            // Validación antes de enviar el formulario
-            $('#formVehiculo').on('submit', function(e) {
-                if (!validarFormulario()) {
-                    e.preventDefault();
-                }
-            });
-
-            // Select2 para reporte
-            $('#selectEquipoReporte').select2({
-                dropdownParent: $('#modalReporteEquipos'),
-                theme: 'bootstrap4',
-                placeholder: 'Seleccione un equipo'
-            });
-
-            // Botón abrir reporte
-            $('#btnAbrirReporte').on('click', function() {
-                let equipoId = $('#selectEquipoReporte').val();
-
-                if (!equipoId) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Atención',
-                        text: 'Debe seleccionar un equipo'
-                    });
-                    return;
-                }
-
-                let url = `{{ url('reportes/vehiculos-equipo') }}/${equipoId}`;
-                window.open(url, '_blank');
-            });
-
-            // Asignar puntero
-            $('#btnAsignar').on('click', function() {
-                const punteroId = $('#selectPunteros').val();
-                if (!punteroId) {
-                    Swal.fire('Error', 'Debe seleccionar un puntero', 'warning');
-                    return;
-                }
-
-                Swal.fire({
-                    title: 'Asignar puntero',
-                    text: '¿Deseas asignar este puntero al vehículo?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, asignar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`${BASE_URL}/vehiculos/${vehiculoActual}/punteros/${punteroId}`, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json'
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(() => {
-                                Swal.fire('Asignado', 'Puntero asignado exitosamente',
-                                    'success');
-                                window.abrirModalPunteros(vehiculoActual, nombreVehiculoActual,
-                                    equipoActual);
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire('Error', 'No se pudo asignar el puntero', 'error');
-                            });
-                    }
-                });
-            });
-
+    // Eliminar vehículo
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            let form = this.closest('.form-delete');
+            if (!form) return;
+            Swal.fire({ title: '¿Eliminar vehículo?', text: 'Esta acción no se puede deshacer', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, eliminar' })
+                .then(result => { if (result.isConfirmed) { form.submit(); } });
         });
-
-        // Mensaje SweetAlert al crear/actualizar
-        const successAlert = @json(session('success'));
-        if (successAlert) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: successAlert,
-                timer: 1800,
-                showConfirmButton: false
-            });
-        }
-
-        // Eliminar vehículo con SweetAlert
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                let form = this.closest('.form-delete');
-                if (!form) return;
-
-                Swal.fire({
-                    title: '¿Eliminar vehículo?',
-                    text: 'Esta acción no se puede deshacer',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonText: 'Sí, eliminar'
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Eliminando...',
-                            text: 'Por favor espere',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-                        form.submit();
-                    }
-                });
-            });
-        });
-
-        // Buscador dinámico
-        const buscador = document.getElementById('buscadorVehiculo');
-        if (buscador) {
-            buscador.addEventListener('keyup', function() {
-                let texto = this.value.toLowerCase();
-                document.querySelectorAll('.vehiculo-card').forEach(card => {
-                    card.style.display = card.dataset.search.includes(texto) ? '' : 'none';
-                });
-            });
-        }
-
-        // Asegurar que el modal de punteros se cierre correctamente
-        $('#modalPunteros').on('hidden.bs.modal', function() {
-            if (tabla) {
-                tabla.destroy();
-                tabla = null;
-            }
-        });
-    </script>
-@endsection
+    });
+</script>
+@stop

@@ -7,6 +7,7 @@ use App\Models\Equipo;
 use App\Models\Puntero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class VehiculoController extends Controller
@@ -575,35 +576,46 @@ El pago final del 50% del monto que falta será efectuado al término de las ele
         ]);
     }
     public function storeFromPuntero(Request $request)
-    {
-        try {
-            // Validación
-            $validated = $request->validate([
-                'nombre' => 'required|string|max:150',
-                'cedulachofer' => 'required',
-                'chapa' => 'required',
-                'tipovehiculo' => 'required',
-                'capacidad' => 'required|integer',
-                'telefono1' => 'required',
-                'telefono2' => 'nullable',
-                'montopagar' => 'required|numeric',
-                'cantidadpagos' => 'required|integer',
-                'rolvehiculo' => 'required|string',
-                'id_puntero' => 'required|exists:puntero,id',
-            ]);
+{
+    try {
+        // ✅ Log para depuración
+        Log::info('Datos recibidos en storeFromPuntero:', $request->all());
+        
+        // Validación
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:150',
+            'cedulachofer' => 'required',
+            'chapa' => 'required',
+            'tipovehiculo' => 'required',
+            'capacidad' => 'required|integer',
+            'telefono1' => 'required',
+            'telefono2' => 'nullable',
+            'montopagar' => 'required|numeric',
+            'cantidadpagos' => 'required|integer',
+            'rolvehiculo' => 'required|string',
+            'direccion' => 'nullable|string',
+            'barriocompania' => 'nullable|string',
+            'id_equipo' => 'nullable|exists:equipos,id',
+            
+            'cedulaproponente' => 'required|string',
+            'nombreproponente' => 'required|string|max:150',
+            'telefonoproponente' => 'required|string',
+            
+            'id_puntero' => 'required|exists:puntero,id',
+        ]);
 
-            // Obtener el puntero con su equipo
-            $puntero = Puntero::with('equipo')->find($validated['id_puntero']);
+        // Obtener el puntero con su equipo
+        $puntero = Puntero::with('equipo')->find($validated['id_puntero']);
 
-            // Verificar que el puntero existe
-            if (!$puntero) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Puntero no encontrado'
-                ], 422);
-            }
+        if (!$puntero) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Puntero no encontrado'
+            ], 422);
+        }
 
-            // Verificar que el puntero tiene equipo
+        // Si no se envió id_equipo, usar el del puntero
+        if (empty($validated['id_equipo'])) {
             if (!$puntero->id_equipo) {
                 return response()->json([
                     'success' => false,
@@ -611,7 +623,6 @@ El pago final del 50% del monto que falta será efectuado al término de las ele
                 ], 422);
             }
 
-            // Verificar que el equipo tiene sistema
             if (!$puntero->equipo || !$puntero->equipo->sist) {
                 return response()->json([
                     'success' => false,
@@ -619,48 +630,152 @@ El pago final del 50% del monto que falta será efectuado al término de las ele
                 ], 422);
             }
 
-            // Asignar el id_equipo desde el puntero
             $validated['id_equipo'] = $puntero->id_equipo;
-
-            // Asignar el id_sistema desde el equipo del puntero
             $validated['id_sistema'] = $puntero->equipo->sist;
+        } else {
+            $equipo = Equipo::find($validated['id_equipo']);
+            if ($equipo && $equipo->sist) {
+                $validated['id_sistema'] = $equipo->sist;
+            }
+        }
 
-            // Buscar el último numero_auto del equipo
-            $ultimoNumero = Vehiculo::where('id_equipo', $validated['id_equipo'])
-                ->max('numero_auto');
+        // ==================== VERIFICAR DUPLICADOS ====================
+        
+        // 1. Verificar si la chapa ya existe en el MISMO sistema
+        $vehiculoExistente = Vehiculo::where('chapa', $validated['chapa'])
+            ->where('id_sistema', $validated['id_sistema'])
+            ->first();
 
-            $validated['numero_auto'] = $ultimoNumero ? $ultimoNumero + 1 : 1;
+        if ($vehiculoExistente) {
+            // Verificar si el vehículo ya está asignado a ESTE puntero
+            $yaAsignado = $vehiculoExistente->punteros()
+                ->where('puntero_id', $validated['id_puntero'])
+                ->exists();
 
-            // Crear vehículo
-            $vehiculo = Vehiculo::create($validated);
+            if ($yaAsignado) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '⚠️ Este vehículo (chapa ' . $validated['chapa'] . ') YA está asignado a este puntero en el sistema ' . ($vehiculoExistente->equipo->sistema->nombre ?? 'actual')
+                ], 422);
+            }
 
-            // Asignar el puntero al vehículo recién creado
-            $vehiculo->punteros()->attach($validated['id_puntero'], [
-                'fecha_asignacion' => now()
+            // Verificar si el vehículo está asignado a OTRO puntero en el MISMO sistema
+            $otroPuntero = $vehiculoExistente->punteros()
+                ->where('puntero_id', '!=', $validated['id_puntero'])
+                ->first();
+
+            if ($otroPuntero) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '⚠️ El vehículo con chapa ' . $validated['chapa'] . ' YA está asignado al puntero "' . $otroPuntero->nombre . '" en el sistema ' . ($vehiculoExistente->equipo->sistema->nombre ?? 'actual')
+                ], 422);
+            }
+
+            // Si el vehículo existe pero NO está asignado a ningún puntero, lo reutilizamos
+            $vehiculo = $vehiculoExistente;
+            
+            // Actualizar los datos del vehículo (por si cambiaron)
+            $vehiculo->update([
+                'nombre' => $validated['nombre'],
+                'cedulachofer' => $validated['cedulachofer'],
+                'tipovehiculo' => $validated['tipovehiculo'],
+                'capacidad' => $validated['capacidad'],
+                'telefono1' => $validated['telefono1'],
+                'telefono2' => $validated['telefono2'],
+                'montopagar' => $validated['montopagar'],
+                'cantidadpagos' => $validated['cantidadpagos'],
+                'rolvehiculo' => $validated['rolvehiculo'],
+                'direccion' => $validated['direccion'] ?? null,
+                'barriocompania' => $validated['barriocompania'] ?? null,
+                'cedulaproponente' => $validated['cedulaproponente'],
+                'nombreproponente' => $validated['nombreproponente'],
+                'telefonoproponente' => $validated['telefonoproponente'],
             ]);
-
+            
+            Log::info('Vehículo existente reutilizado:', ['id' => $vehiculo->id, 'chapa' => $vehiculo->chapa]);
+            
+            // Verificar si ya está asignado a este puntero (por si acaso)
+            $yaAsignado = $vehiculo->punteros()->where('puntero_id', $validated['id_puntero'])->exists();
+            if (!$yaAsignado) {
+                $vehiculo->punteros()->attach($validated['id_puntero'], ['fecha_asignacion' => now()]);
+            }
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Vehículo creado y asignado correctamente',
+                'message' => 'Vehículo reutilizado y asignado correctamente (ya existía en el sistema)',
                 'data' => [
                     'vehiculo_id' => $vehiculo->id,
                     'chapa' => $vehiculo->chapa,
                     'id_equipo' => $vehiculo->id_equipo,
-                    'id_sistema' => $vehiculo->id_sistema
+                    'id_sistema' => $vehiculo->id_sistema,
+                    'proponente' => $vehiculo->nombreproponente,
+                    'telefono_proponente' => $vehiculo->telefonoproponente,
+                    'reutilizado' => true
                 ]
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
         }
+
+        // 2. Verificar si la chapa existe en OTRO sistema (diferente)
+        $vehiculoOtroSistema = Vehiculo::where('chapa', $validated['chapa'])
+            ->where('id_sistema', '!=', $validated['id_sistema'])
+            ->first();
+
+        if ($vehiculoOtroSistema) {
+            $nombreOtroSistema = $vehiculoOtroSistema->equipo->sistema->nombre ?? 'desconocido';
+            return response()->json([
+                'success' => false,
+                'message' => '⚠️ El vehículo con chapa ' . $validated['chapa'] . ' YA existe en el sistema "' . $nombreOtroSistema . '". No se puede duplicar en diferentes sistemas.'
+            ], 422);
+        }
+
+        // Buscar el último numero_auto del equipo
+        $ultimoNumero = Vehiculo::where('id_equipo', $validated['id_equipo'])
+            ->max('numero_auto');
+
+        $validated['numero_auto'] = $ultimoNumero ? $ultimoNumero + 1 : 1;
+
+        // ✅ Log antes de crear
+        Log::info('Datos a guardar en vehículo (nuevo):', $validated);
+
+        // Crear vehículo NUEVO
+        $vehiculo = Vehiculo::create($validated);
+
+        // ✅ Log después de crear
+        Log::info('Vehículo creado:', $vehiculo->toArray());
+
+        // Asignar el puntero al vehículo
+        $vehiculo->punteros()->attach($validated['id_puntero'], [
+            'fecha_asignacion' => now()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vehículo creado y asignado correctamente',
+            'data' => [
+                'vehiculo_id' => $vehiculo->id,
+                'chapa' => $vehiculo->chapa,
+                'id_equipo' => $vehiculo->id_equipo,
+                'id_sistema' => $vehiculo->id_sistema,
+                'proponente' => $vehiculo->nombreproponente,
+                'telefono_proponente' => $vehiculo->telefonoproponente,
+                'reutilizado' => false
+            ]
+        ]);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::error('Error de validación:', $e->errors());
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        Log::error('Error general:', ['message' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ], 500);
     }
+}
     public function desvincularPuntero($vehiculoId, $punteroId)
     {
         try {

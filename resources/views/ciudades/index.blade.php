@@ -32,7 +32,6 @@
                     style="cursor:pointer; transition: transform 0.2s;"
                     data-ciudad-id="{{ $totales['id_ciudad_electoral'] }}" data-distrito="{{ $distrito }}">
                     <div class="card-body text-center">
-                        {{-- Icono y nombre del distrito --}}
                         <div class="row mb-2 justify-content-center align-items-center">
                             <div class="col-12">
                                 <h5 class="card-title font-weight-bold">
@@ -40,8 +39,6 @@
                                 </h5>
                             </div>
                         </div>
-
-                        {{-- CONCEJALES (NUEVO) --}}
                         <div class="row mb-1 justify-content-center">
                             <div class="col-12">
                                 <p class="mb-0">
@@ -53,8 +50,6 @@
                                 </p>
                             </div>
                         </div>
-
-                        {{-- DIRIGENTES --}}
                         <div class="row mb-1 justify-content-center">
                             <div class="col-12">
                                 <p class="mb-0">
@@ -66,8 +61,6 @@
                                 </p>
                             </div>
                         </div>
-
-                        {{-- PUNTEROS --}}
                         <div class="row mb-1 justify-content-center">
                             <div class="col-12">
                                 <p class="mb-0">
@@ -79,8 +72,6 @@
                                 </p>
                             </div>
                         </div>
-
-                        {{-- VOTANTES --}}
                         <div class="row justify-content-center">
                             <div class="col-12">
                                 <p class="mb-0">
@@ -99,8 +90,7 @@
     </div>
 
     {{-- MODAL SISTEMAS --}}
-    <div class="modal fade" id="modalSistemas" tabindex="-1" role="dialog" aria-labelledby="modalSistemasTitle"
-        aria-hidden="true">
+    <div class="modal fade" id="modalSistemas" tabindex="-1" role="dialog" aria-labelledby="modalSistemasTitle" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -124,9 +114,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalDirigentes" tabindex="-1" role="dialog" aria-labelledby="tituloDirigentes"
-        aria-hidden="true">
-        {{-- Modal que ocupa casi toda la pantalla --}}
+    <div class="modal fade" id="modalDirigentes" tabindex="-1" role="dialog" aria-labelledby="tituloDirigentes" aria-hidden="true">
         <div class="modal-dialog modal-xl" style="max-width: 98%; width: 98%; margin: 10px auto;">
             <div class="modal-content" style="height: 98vh; max-height: 98vh;">
                 <div class="modal-header bg-warning">
@@ -137,7 +125,6 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                {{-- Body con AMBOS scrolls (horizontal y vertical) --}}
                 <div class="modal-body" id="contenidoDirigentes" style="overflow: auto; height: calc(98vh - 120px);">
                     <div class="text-center p-4">
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -145,7 +132,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-
                     <button type="button" class="btn btn-danger" data-dismiss="modal">
                         <i class="fas fa-arrow-left"></i>Volver Atras
                     </button>
@@ -153,10 +139,9 @@
             </div>
         </div>
     </div>
+
     {{-- MODAL PUNTEROS (lista completa) --}}
-    <div class="modal fade" id="modalPunterosLista" tabindex="-1" role="dialog" aria-labelledby="tituloPunterosLista"
-        aria-hidden="true">
-        {{-- Modal que ocupa casi toda la pantalla --}}
+    <div class="modal fade" id="modalPunterosLista" tabindex="-1" role="dialog" aria-labelledby="tituloPunterosLista" aria-hidden="true">
         <div class="modal-dialog modal-xl" style="max-width: 98%; width: 98%; margin: 10px auto;">
             <div class="modal-content" style="height: 98vh; max-height: 98vh;">
                 <div class="modal-header bg-info text-white">
@@ -167,7 +152,6 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                {{-- Body con AMBOS scrolls (horizontal y vertical) --}}
                 <div class="modal-body" id="contenidoPunteros" style="overflow: auto; height: calc(98vh - 120px);">
                     <div class="text-center p-4">
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -175,7 +159,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-
                     <button type="button" class="btn btn-danger" data-dismiss="modal">
                         <i class="fas fa-arrow-left"></i>Volver Atras
                     </button>
@@ -183,7 +166,8 @@
             </div>
         </div>
     </div>
-    {{-- MODAL DE VEHÍCULOS DEL PUNTERO --}}
+
+    {{-- MODAL DE VEHÍCULOS DEL PUNTERO (CON PROPONENTE) --}}
     <div class="modal fade" id="modalVehiculosPuntero" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -194,7 +178,7 @@
                     <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    {{-- FORMULARIO PARA CREAR NUEVO VEHÍCULO --}}
+                    {{-- FORMULARIO NUEVO VEHÍCULO --}}
                     <div class="card mb-3">
                         <div class="card-header bg-success text-white">
                             <i class="fas fa-plus-circle"></i> Nuevo Vehículo
@@ -208,22 +192,19 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Cédula del Chofer <span class="text-danger">*</span></label>
-                                            <input type="text" name="cedulachofer" id="vehiculo_cedulachofer"
-                                                class="form-control" required>
+                                            <input type="text" name="cedulachofer" id="vehiculo_cedulachofer" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-5">
                                         <div class="form-group">
                                             <label>Nombre del Chofer <span class="text-danger">*</span></label>
-                                            <input type="text" name="nombre" id="vehiculo_nombre"
-                                                class="form-control" required>
+                                            <input type="text" name="nombre" id="vehiculo_nombre" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label>Chapa <span class="text-danger">*</span></label>
-                                            <input type="text" name="chapa" id="vehiculo_chapa"
-                                                class="form-control" required>
+                                            <input type="text" name="chapa" id="vehiculo_chapa" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
@@ -242,22 +223,19 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label>Capacidad</label>
-                                            <input type="number" name="capacidad" id="vehiculo_capacidad"
-                                                class="form-control" value="5">
+                                            <input type="number" name="capacidad" id="vehiculo_capacidad" class="form-control" value="5">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Teléfono Principal <span class="text-danger">*</span></label>
-                                            <input type="text" name="telefono1" id="vehiculo_telefono1"
-                                                class="form-control" required>
+                                            <input type="text" name="telefono1" id="vehiculo_telefono1" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Teléfono Secundario</label>
-                                            <input type="text" name="telefono2" id="vehiculo_telefono2"
-                                                class="form-control">
+                                            <input type="text" name="telefono2" id="vehiculo_telefono2" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
@@ -278,13 +256,24 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label>Cantidad Pagos</label>
-                                            <input type="number" name="cantidadpagos" id="vehiculo_cantidadpagos"
-                                                class="form-control" value="2">
+                                            <input type="number" name="cantidadpagos" id="vehiculo_cantidadpagos" class="form-control" value="2">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Dirección</label>
+                                            <input type="text" name="direccion" id="vehiculo_direccion" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Barrio/Compañía</label>
+                                            <input type="text" name="barriocompania" id="vehiculo_barriocompania" class="form-control">
+                                        </div>
+                                    </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Rol del Vehículo</label>
@@ -294,10 +283,67 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-2">
                                         {{-- Espacio vacío --}}
                                     </div>
-                                    <div class="col-md-3 d-flex align-items-end">
+                                </div>
+
+                                {{-- SECCIÓN PROPONENTE --}}
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card card-outline card-secondary">
+                                            <div class="card-header bg-secondary text-white">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-user-check"></i> Datos del Proponente <span class="text-danger">*</span>
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Cédula del Proponente <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-prepend">
+                                                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                                                </div>
+                                                                <input type="text" name="cedulaproponente" id="vehiculo_cedulaproponente" 
+                                                                    class="form-control" placeholder="Ej: 1.234.567" required>
+                                                            </div>
+                                                            <small class="text-muted">Ingrese la cédula para buscar automáticamente</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <label>Nombre del Proponente <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-prepend">
+                                                                    <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+                                                                </div>
+                                                                <input type="text" name="nombreproponente" id="vehiculo_nombreproponente" 
+                                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label>Teléfono del Proponente <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-prepend">
+                                                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                                </div>
+                                                                <input type="text" name="telefonoproponente" id="vehiculo_telefonoproponente" 
+                                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
                                         <button type="submit" class="btn btn-primary w-100">
                                             <i class="fas fa-save"></i> Guardar Vehículo
                                         </button>
@@ -323,13 +369,13 @@
                                             <th>Cédula</th>
                                             <th>Teléfono</th>
                                             <th>Rol</th>
+                                            <th>Proponente</th>
+                                            <th>Tel. Proponente</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td colspan="7" class="text-center">Seleccione un puntero</td>
-                                        </tr>
+                                        <tr><td colspan="9" class="text-center">Seleccione un puntero</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -344,6 +390,7 @@
             </div>
         </div>
     </div>
+
     {{-- MODAL VOTANTES --}}
     <div class="modal fade" id="modalVotantes" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -361,15 +408,12 @@
                         @csrf
                         <input type="hidden" name="idpuntero" id="votante_id_puntero">
                         <input type="hidden" name="idusuario" value="{{ auth()->id() }}">
-
                         <div class="row mb-2">
                             <div class="col-md-3">
-                                <input name="cedula" id="votante_cedula" class="form-control" placeholder="Cédula"
-                                    required>
+                                <input name="cedula" id="votante_cedula" class="form-control" placeholder="Cédula" required>
                             </div>
                             <div class="col-md-5">
-                                <input name="nombre" id="votante_nombre" class="form-control" placeholder="Nombre"
-                                    required readonly>
+                                <input name="nombre" id="votante_nombre" class="form-control" placeholder="Nombre" required readonly>
                             </div>
                             <div class="col-md-4">
                                 <select name="tipo_votante" class="form-control" id="tipo_votante">
@@ -379,11 +423,9 @@
                                 </select>
                             </div>
                         </div>
-
                         <div class="row mb-2">
                             <div class="col-md-4">
-                                <input name="direccion" id="direccion" class="form-control" placeholder="Dirección"
-                                    readonly>
+                                <input name="direccion" id="direccion" class="form-control" placeholder="Dirección" readonly>
                             </div>
                             <div class="col-md-2">
                                 <input name="mesa" id="mesa" class="form-control" placeholder="Mesa" readonly>
@@ -392,44 +434,33 @@
                                 <input name="orden" id="orden" class="form-control" placeholder="Orden" readonly>
                             </div>
                             <div class="col-md-4">
-                                <input name="partido" id="partido" class="form-control" placeholder="Partido"
-                                    readonly>
+                                <input name="partido" id="partido" class="form-control" placeholder="Partido" readonly>
                             </div>
                         </div>
-
                         <div class="row mb-2">
                             <div class="col-md-4">
-                                <input name="escuela" id="escuela" class="form-control" placeholder="Escuela"
-                                    readonly>
+                                <input name="escuela" id="escuela" class="form-control" placeholder="Escuela" readonly>
                             </div>
                             <div class="col-md-4">
                                 <input name="ciudad" id="ciudad" class="form-control" placeholder="Ciudad" readonly>
                             </div>
                             <div class="col-md-4">
-                                <input name="departamento" id="departamento" class="form-control"
-                                    placeholder="Departamento" readonly>
+                                <input name="departamento" id="departamento" class="form-control" placeholder="Departamento" readonly>
                             </div>
                         </div>
-
-                        {{-- 👇 BOTONES ORGANIZADOS EN UNA FILA --}}
                         <div class="row mt-3">
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save"></i> Guardar Votante
                                 </button>
-
-
                             </div>
                             <div class="col-md-6 text-right">
-
-
                                 <button type="button" class="btn btn-danger ml-2" data-dismiss="modal">
                                     <i class="fas fa-arrow-left"></i> Volver a Punteros
                                 </button>
                             </div>
                         </div>
                     </form>
-
                 </div>
                 <div class="modal-body" id="contenidoVotantes">
                     <div class="text-center p-4">
@@ -438,7 +469,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-
                     <button type="button" class="btn btn-danger" data-dismiss="modal">
                         <i class="fas fa-arrow-left"></i>Volver a Punteros
                     </button>
@@ -454,11 +484,9 @@
             transform: scale(1.03) !important;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
         }
-
         .modal-xl {
             max-width: 90%;
         }
-
         @media (min-width: 1200px) {
             .modal-xl {
                 max-width: 1140px;
@@ -469,193 +497,48 @@
 
 @section('js')
     <script>
-        // Guardar puntero por AJAX
+        // =============================================
+        // FUNCIONES GENERALES Y DE DISTRITOS
+        // =============================================
         $(document).ready(function() {
-            $('#formAgregarPuntero').on('submit', function(e) {
-                e.preventDefault();
-
-                // Verificar que el id_dirigente esté presente
-                let dirigenteId = $('#puntero_id_dirigente').val();
-                if (!dirigenteId) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'No se ha seleccionado un dirigente',
-                        confirmButtonColor: '#dc3545'
-                    });
-                    return;
-                }
-
-                let formData = $(this).serialize();
-                let submitBtn = $('#btnGuardarPuntero');
-
-                console.log('Datos a enviar:', formData); // Para depuración
-
-                submitBtn.prop('disabled', true).html(
-                    '<i class="fas fa-spinner fa-spin"></i> Guardando...');
-
-                $.ajax({
-                    url: "{{ route('puntero.store.ajax') }}",
-                    type: 'POST',
-                    data: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': $('input[name="_token"]').val()
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Éxito',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-
-                            // Limpiar formulario pero mantener el id_dirigente
-                            $('#puntero_cedula, #puntero_nombre, #puntero_telefono, #puntero_barrio')
-                                .val('');
-                            $('#puntero_cedula').focus();
-
-                            // Recargar la tabla de punteros con un pequeño retraso
-                            setTimeout(function() {
-                                cargarPunteros(dirigenteId);
-                            }, 100);
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'Error al guardar el puntero';
-
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = '<ul>';
-                            $.each(xhr.responseJSON.errors, function(key, value) {
-                                errorMessage += '<li>' + value + '</li>';
-                            });
-                            errorMessage += '</ul>';
-                        }
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            html: errorMessage,
-                            confirmButtonColor: '#dc3545'
-                        });
-                    },
-                    complete: function() {
-                        submitBtn.prop('disabled', false).html(
-                            '<i class="fas fa-save"></i> Guardar Puntero');
-                    }
-                });
-            });
-            // En tu archivo, dentro del $(document).ready(), reemplaza el evento submit del formulario de votantes:
-
+            // === VOTANTES ===
             $('#formAgregarVotante').on('submit', function(e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
                 let submitBtn = $(this).find('button[type="submit"]');
-                let nombrePuntero = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '')
-            .trim();
-
-                submitBtn.prop('disabled', true).html(
-                '<i class="fas fa-spinner fa-spin"></i> Guardando...');
-
+                let nombrePuntero = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
                 $.ajax({
                     url: "{{ route('votante.store.ajax') }}",
                     type: 'POST',
                     data: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': $('input[name="_token"]').val()
-                    },
+                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() },
                     success: function(response) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
-                            text: response.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-
-                        // ✅ LIMPIAR EL FORMULARIO COMPLETAMENTE
+                        Swal.fire({ icon: 'success', title: 'Éxito', text: response.message, timer: 1500, showConfirmButton: false });
                         limpiarFormularioVotante();
-
                         setTimeout(() => {
                             let punteroId = $('#votante_id_puntero').val();
                             window.cargarVotantes(punteroId, nombrePuntero);
                         }, 100);
                     },
                     error: function(xhr) {
-                        let errorMsg = xhr.responseJSON?.message || 'Error al guardar';
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: errorMsg
-                        });
+                        Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Error al guardar' });
                     },
                     complete: function() {
-                        submitBtn.prop('disabled', false).html(
-                            '<i class="fas fa-save"></i> Guardar Votante');
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Votante');
                     }
                 });
             });
 
-            // Función para limpiar el formulario de votantes
             function limpiarFormularioVotante() {
-                $('#votante_cedula').val('');
-                $('#votante_nombre').val('');
-                $('#direccion').val('');
-                $('#mesa').val('');
-                $('#orden').val('');
-                $('#partido').val('');
-                $('#escuela').val('');
-                $('#ciudad').val('');
-                $('#departamento').val('');
+                $('#votante_cedula, #votante_nombre, #direccion, #mesa, #orden, #partido, #escuela, #ciudad, #departamento').val('');
                 $('#tipo_votante').val('seguro');
-
-                // Opcional: Quitar clases de error si las hay
                 $('#votante_cedula').removeClass('is-invalid');
-                $('#votante_nombre').removeClass('is-invalid');
-                $('#direccion').removeClass('is-invalid');
-                $('#mesa').removeClass('is-invalid');
-                $('#orden').removeClass('is-invalid');
-                $('#partido').removeClass('is-invalid');
-                $('#escuela').removeClass('is-invalid');
-                $('#ciudad').removeClass('is-invalid');
-                $('#departamento').removeClass('is-invalid');
-
-                // Limpiar mensajes de error
-                $('.text-danger').text('');
-
-                // Enfocar el campo de cédula para la siguiente entrada
                 $('#votante_cedula').focus();
             }
 
-            // Función para limpiar el formulario de votantes
-            function limpiarFormularioVotante() {
-                $('#votante_cedula').val('');
-                $('#votante_nombre').val('');
-                $('#direccion').val('');
-                $('#mesa').val('');
-                $('#orden').val('');
-                $('#partido').val('');
-                $('#escuela').val('');
-                $('#ciudad').val('');
-                $('#departamento').val('');
-                $('#tipo_votante').val('seguro');
-
-                // Opcional: Quitar clases de error si las hay
-                $('#votante_cedula').removeClass('is-invalid');
-
-                // Enfocar el campo de cédula para la siguiente entrada
-                $('#votante_cedula').focus();
-            }
-
-            // Buscar votante por cédula (blur)
-            $('#votante_cedula').on('blur', function() {
-                buscarVotantePorCedula();
-            });
-
-            // Buscar votante por cédula (Enter)
+            // Buscar votante por cédula
+            $('#votante_cedula').on('blur', function() { buscarVotantePorCedula(); });
             $('#votante_cedula').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
@@ -664,703 +547,195 @@
                 }
             });
 
-            // También puedes limpiar cuando se cierra el modal
             $('#modalVotantes').on('hidden.bs.modal', function() {
                 limpiarFormularioVotante();
                 if ($.fn.DataTable && $.fn.DataTable.isDataTable('#votantes-table')) {
                     $('#votantes-table').DataTable().destroy();
                 }
             });
-            $('#votante_cedula').on('blur', function() {
-                buscarVotantePorCedula();
+
+            // Efecto hover en tarjetas de distritos
+            document.querySelectorAll('.distrito-card').forEach(card => {
+                card.addEventListener('mouseover', () => card.style.transform = 'scale(1.03)');
+                card.addEventListener('mouseout', () => card.style.transform = 'scale(1)');
             });
 
-            // Buscar votante por cédula (Enter)
-            $('#votante_cedula').on('keypress', function(e) {
-                if (e.which === 13) {
-                    e.preventDefault();
-                    buscarVotantePorCedula();
-                    $('#tipo_votante').focus();
-                }
-            });
-
-        });
-        localStorage.setItem('modaldirigenteAbierto', 'false');
-
-        // Función para buscar votante por cédula (agregar en index.blade)
-        function buscarVotantePorCedula() {
-            let cedula = $('#votante_cedula').val().trim();
-
-            // Validar que la cédula tenga al menos 3 dígitos
-            if (cedula.length < 3) {
-                if (cedula.length > 0 && cedula.length < 3) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Cédula muy corta',
-                        text: 'Ingresa al menos 3 dígitos para buscar',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
+            // Buscador de distritos
+            const buscador = document.getElementById('buscadorDistrito');
+            if (buscador) {
+                buscador.addEventListener('keyup', function() {
+                    let query = this.value.toLowerCase().trim();
+                    document.querySelectorAll('.distrito-card').forEach(card => {
+                        let distrito = card.dataset.distrito.toLowerCase();
+                        card.closest('.col-md-3').style.display = distrito.includes(query) ? 'block' : 'none';
                     });
-                }
-                return;
+                    const visibleCards = document.querySelectorAll('.distrito-card:visible').length;
+                    const sinResultados = document.getElementById('sinResultadosDistritos');
+                    if (visibleCards === 0) {
+                        if (!sinResultados) {
+                            const mensaje = document.createElement('div');
+                            mensaje.id = 'sinResultadosDistritos';
+                            mensaje.className = 'col-12 text-center text-muted py-5';
+                            mensaje.innerHTML = `<i class="fas fa-search fa-3x mb-3"></i><p>No se encontraron distritos que coincidan con "${query}"</p>`;
+                            document.getElementById('listaDistritos').appendChild(mensaje);
+                        }
+                    } else if (sinResultados) {
+                        sinResultados.remove();
+                    }
+                });
             }
 
-            // Mostrar loading en el campo de nombre
-            $('#votante_nombre').val('Buscando...');
-
-            $.get("{{ url('votante/buscar-por-cedula') }}/" + cedula, function(response) {
-                if (!response.encontrado) {
-                    // Limpiar campos
-                    limpiarCamposVotante();
-
-                    // Mostrar mensaje de votante no encontrado
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Votante no encontrado',
-                        text: `No se encontró ningún votante con la cédula ${cedula}`,
-                        timer: 3000,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
-                    });
-                    return;
-                }
-
-                let v = response.data;
-                $('#votante_nombre').val(v.nombre);
-                $('#direccion').val(v.direccion || '');
-                $('#mesa').val(v.mesa || '');
-                $('#orden').val(v.orden || '');
-                $('#partido').val(v.partido || '');
-                $('#escuela').val(v.escuela || '');
-                $('#ciudad').val(v.ciudad || '');
-                $('#departamento').val(v.departamento || '');
-
-                // Mensaje de éxito
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Votante encontrado',
-                    text: `Nombre: ${v.nombre}`,
-                    timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
-                });
-            }).fail(function(error) {
-                console.error('Error buscando votante:', error);
-                limpiarCamposVotante();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error al buscar la cédula. Intente nuevamente.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            });
-        }
-
-        function limpiarCamposVotante() {
-            $('#votante_nombre').val('');
-            $('#direccion').val('');
-            $('#mesa').val('');
-            $('#orden').val('');
-            $('#partido').val('');
-            $('#escuela').val('');
-            $('#ciudad').val('');
-            $('#departamento').val('');
-        }
-
-        // Mostrar mensaje de éxito si existe
-        const successAlert = @json(session('success'));
-        if (successAlert) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: successAlert,
-                timer: 1800,
-                showConfirmButton: false
-            });
-        }
-
-        // Efecto hover en tarjetas
-        document.querySelectorAll('.distrito-card').forEach(card => {
-            card.addEventListener('mouseover', () => card.style.transform = 'scale(1.03)');
-            card.addEventListener('mouseout', () => card.style.transform = 'scale(1)');
-        });
-
-        // Buscador de distritos
-        const buscador = document.getElementById('buscadorDistrito');
-        if (buscador) {
-            buscador.addEventListener('keyup', function() {
-                let query = this.value.toLowerCase().trim();
-                document.querySelectorAll('.distrito-card').forEach(card => {
-                    let distrito = card.dataset.distrito.toLowerCase();
-                    card.closest('.col-md-3').style.display =
-                        distrito.includes(query) ? 'block' : 'none';
-                });
-
-                // Mostrar mensaje si no hay resultados
-                const visibleCards = document.querySelectorAll('.distrito-card:visible').length;
-                const sinResultados = document.getElementById('sinResultadosDistritos');
-
-                if (visibleCards === 0) {
-                    if (!sinResultados) {
-                        const mensaje = document.createElement('div');
-                        mensaje.id = 'sinResultadosDistritos';
-                        mensaje.className = 'col-12 text-center text-muted py-5';
-                        mensaje.innerHTML = `
-                            <i class="fas fa-search fa-3x mb-3"></i>
-                            <p>No se encontraron distritos que coincidan con "${query}"</p>
-                        `;
-                        document.getElementById('listaDistritos').appendChild(mensaje);
-                    }
-                } else if (sinResultados) {
-                    sinResultados.remove();
-                }
-            });
-        }
-
-        // Cargar sistemas al hacer clic en un distrito - VERSIÓN CORREGIDA
-        document.querySelectorAll('.distrito-card').forEach(card => {
-            card.addEventListener('click', function() {
-                let ciudadId = this.dataset.ciudadId;
-                let distritoNombre = this.dataset.distrito;
-                let modalBody = document.getElementById('modalSistemasBody');
-                let modalTitle = document.querySelector('#modalSistemas .modal-title');
-
-                // Actualizar título del modal
-                if (modalTitle) {
-                    modalTitle.innerHTML =
-                        `<i class="fas fa-map-marker-alt"></i> Sistemas del Distrito: ${distritoNombre}`;
-                }
-
-                // Mostrar spinner de carga
-                modalBody.innerHTML = `
-                    <div class="text-center text-muted py-5">
-                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                            <span class="sr-only">Cargando...</span>
-                        </div>
-                        <p>Cargando sistemas del distrito ${distritoNombre}...</p>
-                    </div>
-                `;
-
-                // ABRIR EL MODAL PRIMERO (esto es clave)
-                $('#modalSistemas').modal('show');
-
-                // Luego cargar los datos
-                let url = `{{ url('/') }}/distritos/${ciudadId}/sistemas`;
-
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'text/html'
-                        }
-                    })
-                    .then(res => {
-                        if (!res.ok) throw new Error('Error en la respuesta');
-                        return res.text();
-                    })
-                    .then(html => {
-                        modalBody.innerHTML = html;
-
-                        // Inicializar DataTable si existe en el contenido cargado
-                        setTimeout(function() {
-                            if ($.fn.DataTable && $('#sistemas-table').length) {
-                                if ($.fn.DataTable.isDataTable('#sistemas-table')) {
-                                    $('#sistemas-table').DataTable().destroy();
+            // Cargar sistemas al hacer clic en distrito
+            document.querySelectorAll('.distrito-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    let ciudadId = this.dataset.ciudadId;
+                    let distritoNombre = this.dataset.distrito;
+                    let modalBody = document.getElementById('modalSistemasBody');
+                    let modalTitle = document.querySelector('#modalSistemas .modal-title');
+                    if (modalTitle) modalTitle.innerHTML = `<i class="fas fa-map-marker-alt"></i> Sistemas del Distrito: ${distritoNombre}`;
+                    modalBody.innerHTML = `<div class="text-center text-muted py-5"><div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"><span class="sr-only">Cargando...</span></div><p>Cargando sistemas del distrito ${distritoNombre}...</p></div>`;
+                    $('#modalSistemas').modal('show');
+                    let url = `{{ url('/') }}/distritos/${ciudadId}/sistemas`;
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
+                        .then(res => { if (!res.ok) throw new Error('Error'); return res.text(); })
+                        .then(html => {
+                            modalBody.innerHTML = html;
+                            setTimeout(function() {
+                                if ($.fn.DataTable && $('#sistemas-table').length) {
+                                    if ($.fn.DataTable.isDataTable('#sistemas-table')) $('#sistemas-table').DataTable().destroy();
+                                    $('#sistemas-table').DataTable({
+                                        dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>",
+                                        responsive: true,
+                                        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json', search: "Buscar sistema:", searchPlaceholder: "Nombre, ubicación..." },
+                                        buttons: [{ extend: 'print', text: '<i class="fas fa-print"></i> Imprimir', className: 'btn btn-secondary', autoPrint: true, title: 'Sistemas del Distrito', customize: function(win) { $(win.document.body).find('table').addClass('table table-bordered'); $(win.document.body).find('h1').css('text-align','center'); } }],
+                                        pageLength: 10, lengthMenu: [[10,25,50,-1],[10,25,50,"Todos"]]
+                                    });
                                 }
-
-                                // Inicializar DataTable de sistemas con buscador y botón imprimir
-                                $('#sistemas-table').DataTable({
-                                    dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
-                                        "<'row'<'col-sm-12'tr>>" +
-                                        "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-
-                                    responsive: true,
-
-                                    language: {
-                                        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                                        search: "Buscar sistema:",
-                                        searchPlaceholder: "Nombre, ubicación..."
-                                    },
-
-                                    buttons: [{
-                                        extend: 'print',
-                                        text: '<i class="fas fa-print"></i> Imprimir',
-                                        className: 'btn btn-secondary',
-                                        autoPrint: true,
-                                        title: 'Sistemas del Distrito',
-                                        customize: function(win) {
-                                            // Personalizar el documento impreso
-                                            $(win.document.body).find(
-                                                'table').addClass(
-                                                'table table-bordered');
-                                            $(win.document.body).find('h1')
-                                                .css('text-align',
-                                                    'center');
-                                        }
-                                    }],
-
-                                    pageLength: 10,
-                                    lengthMenu: [
-                                        [10, 25, 50, -1],
-                                        [10, 25, 50, "Todos"]
-                                    ]
-                                });
-                            }
-                        }, 100);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        modalBody.innerHTML = `
-                            <div class="text-center text-danger py-5">
-                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                                <p>No se pudieron cargar los sistemas. Intente nuevamente.</p>
-                                <p class="small text-muted">Error: ${error.message}</p>
-                                <button class="btn btn-sm btn-primary" onclick="cargarSistemasManual(${ciudadId}, '${distritoNombre}')">
-                                    <i class="fas fa-sync"></i> Reintentar
-                                </button>
-                            </div>
-                        `;
-                    });
+                            }, 100);
+                        })
+                        .catch(error => {
+                            modalBody.innerHTML = `<div class="text-center text-danger py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><p>No se pudieron cargar los sistemas. Intente nuevamente.</p><p class="small text-muted">Error: ${error.message}</p><button class="btn btn-sm btn-primary" onclick="cargarSistemasManual(${ciudadId}, '${distritoNombre}')"><i class="fas fa-sync"></i> Reintentar</button></div>`;
+                        });
+                });
             });
         });
 
-        // Función de respaldo para reintentar carga
         function cargarSistemasManual(ciudadId, distritoNombre) {
             let modalBody = document.getElementById('modalSistemasBody');
-
-            modalBody.innerHTML = `
-                <div class="text-center text-muted py-5">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="sr-only">Cargando...</span>
-                    </div>
-                    <p>Reintentando carga de sistemas...</p>
-                </div>
-            `;
-
+            modalBody.innerHTML = `<div class="text-center text-muted py-5"><div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"><span class="sr-only">Cargando...</span></div><p>Reintentando carga de sistemas...</p></div>`;
             let url = `{{ url('/') }}/distritos/${ciudadId}/sistemas`;
-
-            fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html'
-                    }
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Error en la respuesta');
-                    return res.text();
-                })
-                .then(html => {
-                    modalBody.innerHTML = html;
-                })
-                .catch(error => {
-                    modalBody.innerHTML = `
-                        <div class="text-center text-danger py-5">
-                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                            <p>Error persistente. Verifica la conexión.</p>
-                        </div>
-                    `;
-                });
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
+                .then(res => { if (!res.ok) throw new Error('Error'); return res.text(); })
+                .then(html => { modalBody.innerHTML = html; })
+                .catch(error => { modalBody.innerHTML = `<div class="text-center text-danger py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><p>Error persistente. Verifica la conexión.</p></div>`; });
         }
 
-        // Cargar dirigentes al hacer clic en el botón
+        // Cargar dirigentes al hacer clic en botón
         $(document).on("click", ".btn-dirigentes", function() {
             let sistema = $(this).data("sistema");
             let nombre = $(this).data("nombre");
-
-            $("#tituloDirigentes").html(
-                '<i class="fas fa-users"></i> Dirigentes del Sistema - ' + nombre
-            );
-
-            $("#contenidoDirigentes").html(
-                '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando...</p></div>'
-            );
-
+            $("#tituloDirigentes").html('<i class="fas fa-users"></i> Dirigentes del Sistema - ' + nombre);
+            $("#contenidoDirigentes").html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando...</p></div>');
             $("#modalDirigentes").modal("show");
-
-
             let url = `{{ url('/') }}/sistemas/${sistema}/dirigentes`;
-
             $.get(url, function(data) {
                 $("#contenidoDirigentes").html(data);
-                // inicializarSelect2();
-                // Reinicializar DataTable si existe en el contenido cargado
                 setTimeout(function() {
                     if ($.fn.DataTable && $('#dirigentes-table').length) {
-                        if ($.fn.DataTable.isDataTable('#dirigentes-table')) {
-                            $('#dirigentes-table').DataTable().destroy();
-                        }
-
+                        if ($.fn.DataTable.isDataTable('#dirigentes-table')) $('#dirigentes-table').DataTable().destroy();
                         $('#dirigentes-table').DataTable({
-                            dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
-                                "<'row'<'col-sm-12'tr>>" +
-                                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-
+                            dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>",
                             responsive: true,
-
-                            language: {
-                                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                                search: "Buscar dirigente:",
-                                searchPlaceholder: "Nombre, cédula o teléfono..."
-                            },
-
-                            buttons: [{
-                                extend: 'print',
-                                text: '<i class="fas fa-print"></i> Imprimir',
-                                className: 'btn btn-secondary',
-                                autoPrint: true,
-                                customize: function(win) {
-                                    // Personalizar el documento impreso
-                                    $(win.document.body).find('table').addClass(
-                                        'table table-bordered');
-                                }
-                            }],
-
-                            pageLength: 10,
-                            lengthMenu: [
-                                [5, 10, 25, 50, -1],
-                                [5, 10, 25, 50, "Todos"]
-                            ],
-                            columnDefs: [{
-                                orderable: false,
-                                targets: [8]
-                            }]
+                            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json', search: "Buscar dirigente:", searchPlaceholder: "Nombre, cédula o teléfono..." },
+                            buttons: [{ extend: 'print', text: '<i class="fas fa-print"></i> Imprimir', className: 'btn btn-secondary', autoPrint: true, customize: function(win) { $(win.document.body).find('table').addClass('table table-bordered'); } }],
+                            pageLength: 10, lengthMenu: [[5,10,25,50,-1],[5,10,25,50,"Todos"]], columnDefs: [{ orderable: false, targets: [8] }]
                         });
                     }
                 }, 100);
-            }).fail(function(xhr) {
-                console.log(xhr.responseText);
-                $("#contenidoDirigentes").html(
-                    '<div class="alert alert-danger text-center p-4">' +
-                    '<i class="fas fa-exclamation-circle fa-2x mb-3"></i>' +
-                    '<p>Error cargando dirigentes. Intente nuevamente.</p>' +
-                    '</div>'
-                );
+            }).fail(function() {
+                $("#contenidoDirigentes").html('<div class="alert alert-danger text-center p-4"><i class="fas fa-exclamation-circle fa-2x mb-3"></i><p>Error cargando dirigentes. Intente nuevamente.</p></div>');
             });
         });
 
-        // Función para cargar punteros
-        function cargarPunteros(dirigenteId) {
-            let tbody = $('#punteros-table tbody');
-            tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
-
-            let timestamp = new Date().getTime();
-            let url = "{{ url('dirigente') }}/" + dirigenteId + "/punteros?t=" + timestamp;
-
-            $.get(url, function(data) {
-                tbody.empty();
-
-                if (data.length === 0) {
-                    tbody.html('<tr><td colspan="6" class="text-center">No hay punteros registrados</td></tr>');
-
-                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
-                        $('#punteros-table').DataTable().destroy();
-                        $('#punteros-table').empty();
-                    }
-                    return;
-                }
-
-                let html = '';
-                data.forEach(function(puntero, index) {
-                    html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${puntero.cedula}</td>
-                        <td>${puntero.nombre}</td>
-                        <td>${puntero.telefono ?? ''}</td>
-                        <td>${puntero.barrio ?? ''}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                });
-
-                tbody.html(html);
-
-                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
-                    $('#punteros-table').DataTable().destroy();
-                    $('#punteros-table').empty();
-                    tbody.html(html);
-                }
-
-                $('#punteros-table').DataTable({
-                    responsive: true,
-                    language: {
-                        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                    },
-                    pageLength: 5,
-                    destroy: true,
-                    retrieve: false
-                });
-            }).fail(function(error) {
-                console.error('Error cargando punteros:', error);
-                tbody.html(
-                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
+        // =============================================
+        // FUNCIONES DE PUNTEROS (para el modal de lista)
+        // =============================================
+        function abrirModalPunterosLista(sistemaId, nombreSistema) {
+            $('#modalPunterosLista .modal-title').html(`<i class="fas fa-users"></i> Punteros del Sistema: ${nombreSistema}`);
+            $("#contenidoPunteros").html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando punteros...</p></div>');
+            $("#modalPunterosLista").modal("show");
+            let url = `{{ url('/') }}/sistemas/${sistemaId}/punteros`;
+            $.get(url, function(data) { $("#contenidoPunteros").html(data); }).fail(function() {
+                $("#contenidoPunteros").html('<div class="alert alert-danger text-center p-4"><i class="fas fa-exclamation-circle fa-2x mb-3"></i><p>Error cargando punteros. Intente nuevamente.</p></div>');
             });
         }
 
-        function cargarPunterosporEq(equipoId) {
-            let tbody = $('#punteros-table tbody');
-            tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
-
-            let timestamp = new Date().getTime();
-            let url = "{{ url('equipo') }}/" + equipoId + "/punteros?t=" + timestamp;
-
-            $.get(url, function(data) {
-                tbody.empty();
-
-                if (data.length === 0) {
-                    tbody.html('<tr><td colspan="6" class="text-center">No hay punteros registrados</td></tr>');
-
-                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
-                        $('#punteros-table').DataTable().destroy();
-                        $('#punteros-table').empty();
-                    }
-                    return;
-                }
-
-                let html = '';
-                data.forEach(function(puntero, index) {
-                    html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${puntero.cedula}</td>
-                        <td>${puntero.nombre}</td>
-                        <td>${puntero.telefono ?? ''}</td>
-                        <td>${puntero.barrio ?? ''}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                         </td>
-                    </tr>
-                `;
-                });
-
-                tbody.html(html);
-
-                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) {
-                    $('#punteros-table').DataTable().destroy();
-                    $('#punteros-table').empty();
-                    tbody.html(html);
-                }
-
-                $('#punteros-table').DataTable({
-                    responsive: true,
-                    language: {
-                        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                    },
-                    pageLength: 5,
-                    destroy: true,
-                    retrieve: false
-                });
-            }).fail(function(error) {
-                console.error('Error cargando punteros:', error);
-                tbody.html(
-                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>');
+        function abrirModalPunterosListapordir(idDir, nombreSistema) {
+            $('#modalPunterosLista .modal-title').html(`<i class="fas fa-users"></i> Punteros del Sistema: ${nombreSistema}`);
+            $("#contenidoPunteros").html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando punteros...</p></div>');
+            $("#modalPunterosLista").modal("show");
+            let url = `{{ url('/') }}/dirigente/${idDir}/punteros`;
+            $.get(url, function(data) { $("#contenidoPunteros").html(data); }).fail(function() {
+                $("#contenidoPunteros").html('<div class="alert alert-danger text-center p-4"><i class="fas fa-exclamation-circle fa-2x mb-3"></i><p>Error cargando punteros. Intente nuevamente.</p></div>');
             });
         }
 
-        // Función para filtrar punteros por equipo
-        function filtrarPunteros() {
-            let dirigenteId = $('#puntero_id_dirigente').val();
-            let equipoId = $('#equipo_punteros').val();
-
-            if (dirigenteId) {
-                cargarPunteros(dirigenteId);
-            } else {
-                cargarPunterosporEq(equipoId);
+        $('#modalPunterosLista').on('hidden.bs.modal', function() {
+            if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-lista-table')) {
+                $('#punteros-lista-table').DataTable().destroy();
             }
-        }
+        });
 
-        // Función para eliminar puntero
-        function eliminarPuntero(punteroId, dirigenteId) {
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Esta acción no se puede revertir",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Eliminando...',
-                        text: 'Por favor espera',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+        // =============================================
+        // FUNCIONES DE VEHÍCULOS (con Proponente)
+        // =============================================
+        window.abrirModalCrearVehiculo = function(punteroId, punteroNombre) {
+            $('#vehiculo_id_puntero').val(punteroId);
+            $('#vehiculo_puntero_nombre').text(punteroNombre);
+            $('#formCrearVehiculoPuntero')[0].reset();
+            $('#vehiculo_capacidad').val(5);
+            $('#vehiculo_cantidadpagos').val(2);
+            $('#vehiculo_montopagar').val('300000');
+            $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+            $('#vehiculo_rolvehiculo').val('PUNTERO');
+            $('#vehiculo_cedulaproponente, #vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+            $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
+            cargarVehiculosPuntero(punteroId);
+            setTimeout(function() { $('#vehiculo_cedulachofer').focus(); }, 500);
+            $('#modalVehiculosPuntero').modal('show');
+        };
 
-                    $.ajax({
-                        url: "{{ route('puntero.destroy.ajax') }}",
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            id: punteroId
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                Swal.close();
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Eliminado',
-                                    text: 'El puntero ha sido eliminado',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                                cargarPunteros(dirigenteId);
-                            }
-                        },
-                        error: function(xhr) {
-                            console.error('Error en eliminación:', xhr);
-                            Swal.close();
-                            let mensaje = 'No se pudo eliminar el puntero';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                mensaje = xhr.responseJSON.message;
-                            }
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: mensaje
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        // Función para eliminar dirigente
-        function eliminarDirigente(dirigenteId) {
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Esta acción no se puede revertir. Se eliminarán también sus punteros y votantes.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Eliminando...',
-                        text: 'Por favor espera',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    let url = `{{ url('/') }}/dirigentes/ajax/${dirigenteId}`;
-
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Eliminado!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-
-                            if (typeof filtrarDirigentes === 'function') {
-                                filtrarDirigentes();
-                            } else {
-                                location.reload();
-                            }
-                        },
-                        error: function(xhr) {
-                            let mensaje = 'Error al eliminar el dirigente';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                mensaje = xhr.responseJSON.message;
-                            }
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: mensaje
-                            });
-                        }
-                    });
-                }
-            });
-        }
-        // ==================== CARGAR VEHÍCULOS DEL PUNTERO ====================
         window.cargarVehiculosPuntero = function(punteroId) {
-            $('#vehiculos-puntero-table tbody').html(
-                '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>'
-            );
-
+            $('#vehiculos-puntero-table tbody').html('<td><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>');
             $.get(`{{ url('/') }}/puntero/${punteroId}/vehiculos`, function(vehiculos) {
                 let tbody = '';
-
                 if (vehiculos.length === 0) {
-                    tbody =
-                        '<tr><td colspan="7" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
+                    tbody = '<tr><td colspan="9" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
                 } else {
                     vehiculos.forEach((v, i) => {
-                        tbody += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${v.chapa}</td>
-                        <td>${v.nombre}</td>
-                        <td>${v.cedulachofer}</td>
-                        <td>${v.telefono1 || ''}</td>
-                        <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                        tbody += `<tr>
+                            <td>${i+1}</td>
+                            <td>${v.chapa}</td>
+                            <td>${v.nombre}</td>
+                            <td>${v.cedulachofer}</td>
+                            <td>${v.telefono1 || ''}</td>
+                            <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
+                            <td>${v.nombreproponente || ''}</td>
+                            <td>${v.telefonoproponente || ''}</td>
+                            <td class="text-center"><button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})"><i class="fas fa-trash"></i></button></td>
+                        </tr>`;
                     });
                 }
-
                 $('#vehiculos-puntero-table tbody').html(tbody);
-
-                // Destruir DataTable si existe y volver a inicializar
                 if ($.fn.DataTable && $('#vehiculos-puntero-table').length) {
-                    if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) {
-                        $('#vehiculos-puntero-table').DataTable().destroy();
-                    }
-                    $('#vehiculos-puntero-table').DataTable({
-                        responsive: true,
-                        language: {
-                            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                        },
-                        pageLength: 10,
-                        destroy: true
-                    });
+                    if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) $('#vehiculos-puntero-table').DataTable().destroy();
+                    $('#vehiculos-puntero-table').DataTable({ responsive: true, language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }, pageLength: 10, destroy: true });
                 }
-            }).fail(function() {
-                $('#vehiculos-puntero-table tbody').html(
-                    '<tr><td colspan="7" class="text-center text-danger">Error al cargar los vehículos</td></tr>'
-                );
-            });
-        }
-        // ==================== ELIMINAR VEHÍCULO DEL PUNTERO ====================
+            }).fail(() => $('#vehiculos-puntero-table tbody').html('<tr><td colspan="9" class="text-center text-danger">Error al cargar los vehículos</td></tr>'));
+        };
+
         window.eliminarVehiculoPuntero = function(vehiculoId) {
             let punteroId = $('#vehiculo_id_puntero').val();
-
             Swal.fire({
                 title: '¿Desvincular vehículo?',
                 text: 'El vehículo dejará de estar asignado a este puntero',
@@ -1374,469 +749,363 @@
                     $.ajax({
                         url: `{{ url('/') }}/vehiculo/${vehiculoId}/puntero/${punteroId}`,
                         type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
+                        data: { _token: '{{ csrf_token() }}' },
                         success: function(response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Desvinculado',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
+                            Swal.fire({ icon: 'success', title: 'Desvinculado', text: response.message, timer: 1500, showConfirmButton: false });
                             cargarVehiculosPuntero(punteroId);
                         },
                         error: function(xhr) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: xhr.responseJSON?.message ||
-                                    'No se pudo desvincular el vehículo'
-                            });
+                            Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'No se pudo desvincular el vehículo' });
                         }
                     });
                 }
             });
-        }
-        // ============================================
-        // FUNCIONES PARA MODALES
-        // ============================================
-        window.abrirModalCrearVehiculo = function(punteroId, punteroNombre) {
-            $('#vehiculo_id_puntero').val(punteroId);
-            $('#vehiculo_puntero_nombre').text(punteroNombre);
-
-            // Limpiar formulario
-            $('#formCrearVehiculoPuntero')[0].reset();
-            $('#vehiculo_capacidad').val(5);
-            $('#vehiculo_cantidadpagos').val(2);
-            $('#vehiculo_montopagar').val('300000');
-            $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
-            $('#vehiculo_rolvehiculo').val('PUNTERO');
-
-            // Limpiar campos específicos
-            $('#vehiculo_cedulachofer').val('');
-            $('#vehiculo_nombre').val('');
-            $('#vehiculo_telefono1').val('');
-            $('#vehiculo_telefono2').val('');
-            $('#vehiculo_chapa').val('');
-
-            // Cargar vehículos del puntero
-            cargarVehiculosPuntero(punteroId);
-
-            // Enfocar primer campo
-            setTimeout(function() {
-                $('#vehiculo_cedulachofer').focus();
-            }, 500);
-
-            $('#modalVehiculosPuntero').modal('show');
-        }
-        // Exponer funciones globalmente
-        window.eliminarDirigente = eliminarDirigente;
-        window.filtrarPunteros = filtrarPunteros;
-        window.eliminarPuntero = eliminarPuntero;
-        window.cargarSistemasManual = cargarSistemasManual;
-
-        // Limpiar DataTables cuando se cierran los modales
-        $('#modalSistemas').on('hidden.bs.modal', function() {
-            if ($.fn.DataTable && $.fn.DataTable.isDataTable('#sistemas-table')) {
-                $('#sistemas-table').DataTable().destroy();
-            }
-        });
-
-        $('#modalDirigentes').on('hidden.bs.modal', function() {
-            if ($.fn.DataTable && $.fn.DataTable.isDataTable('#dirigentes-table')) {
-                $('#dirigentes-table').DataTable().destroy();
-            }
-        });
-
-        function buscarPorCedula(inputCedula, inputNombre, inputTelefono, inputBarrio) {
-            let cedula = $(inputCedula).val().trim();
-            if (cedula.length < 3) return;
-
-            $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
-                if (response.encontrado) {
-                    $(inputNombre).val(response.data.nombre);
-                    $(inputTelefono).val(response.data.telefono);
-                    $(inputBarrio).val(response.data.direccion);
-                }
-            });
-        }
-
-
-        function abrirModalPunterosLista(sistemaId, nombreSistema) {
-            let modalTitle = document.querySelector('#modalPunterosLista .modal-title');
-            if (modalTitle) {
-                modalTitle.innerHTML = `<i class="fas fa-users"></i> Punteros del Sistema: ${nombreSistema}`;
-            }
-
-            $("#contenidoPunteros").html(
-                '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando punteros...</p></div>'
-            );
-
-            $("#modalPunterosLista").modal("show");
-
-            let url = `{{ url('/') }}/sistemas/${sistemaId}/punteros`;
-
-            $.get(url, function(data) {
-                $("#contenidoPunteros").html(data);
-                //inicializarSelect2();
-            }).fail(function(xhr) {
-                console.log(xhr.responseText);
-                $("#contenidoPunteros").html(
-                    '<div class="alert alert-danger text-center p-4">' +
-                    '<i class="fas fa-exclamation-circle fa-2x mb-3"></i>' +
-                    '<p>Error cargando punteros. Intente nuevamente.</p>' +
-                    '</div>'
-                );
-            });
-        }
-
-        function abrirModalPunterosListapordir(idDir, nombreSistema) {
-            let modalTitle = document.querySelector('#modalPunterosLista .modal-title');
-            if (modalTitle) {
-                modalTitle.innerHTML = `<i class="fas fa-users"></i> Punteros del Sistema: ${nombreSistema}`;
-            }
-
-            $("#contenidoPunteros").html(
-                '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando punteros...</p></div>'
-            );
-
-            $("#modalPunterosLista").modal("show");
-            let url = `{{ url('/') }}/dirigente/${idDir}/punteros`;
-
-            $.get(url, function(data) {
-                $("#contenidoPunteros").html(data);
-                //inicializarSelect2();
-            }).fail(function(xhr) {
-                console.log(xhr.responseText);
-                $("#contenidoPunteros").html(
-                    '<div class="alert alert-danger text-center p-4">' +
-                    '<i class="fas fa-exclamation-circle fa-2x mb-3"></i>' +
-                    '<p>Error cargando punteros. Intente nuevamente.</p>' +
-                    '</div>'
-                );
-            });
-        }
-
-        $('#modalPunterosLista').on('hidden.bs.modal', function() {
-            if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-lista-table')) {
-                $('#punteros-lista-table').DataTable().destroy();
-            }
-        });
-
-        // Exponer la función globalmente
-        window.abrirModalPunterosLista = abrirModalPunterosLista;
-        window.abrirModalVotantes = function(punteroId, nombre) {
-            $('#modalVotantes').modal('show');
-            $('#contenidoVotantes').html(
-                '<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>');
-            let url = `{{ url('/') }}/punteros/${punteroId}/votantes`;
-            $.get(url, function(data) {
-                $('#contenidoVotantes').html(data);
-            });
         };
 
-        // Función para cargar votantes de un puntero específico
-        function cargarVotantes(idPuntero, nombrePuntero = '') {
-            $('#tituloVotantes').html(`
-                <i class="fas fa-users"></i> Votantes del Puntero: ${nombrePuntero}
-            `);
+        // Búsqueda automática de chofer
+        function buscarChoferPorCedula() {
+            let cedula = $('#vehiculo_cedulachofer').val().trim();
+            if (cedula.length < 3) return;
+            $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#vehiculo_nombre').val(response.data.nombre ?? '');
+                    $('#vehiculo_telefono1').val(response.data.telefono ?? '');
+                    $('#vehiculo_telefono2').val(response.data.telefono2 ?? '');
+                    $('#vehiculo_direccion').val(response.data.direccion ?? '');
+                    $('#vehiculo_barriocompania').val(response.data.barrio ?? '');
+                } else {
+                    $('#vehiculo_nombre, #vehiculo_telefono1, #vehiculo_telefono2, #vehiculo_direccion, #vehiculo_barriocompania').val('');
+                }
+            }).fail(() => console.log('Error en búsqueda de chofer'));
+        }
+
+        // Búsqueda automática de proponente
+        function buscarProponentePorCedula() {
+            let cedula = $('#vehiculo_cedulaproponente').val().trim();
+            if (cedula === '') {
+                $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
+                return;
+            }
+            if (cedula.length < 3) {
+                Swal.fire({ icon: 'warning', title: 'Cédula muy corta', text: 'Ingrese al menos 3 dígitos', timer: 2000, showConfirmButton: false });
+                $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                return;
+            }
+            $('#vehiculo_nombreproponente').val('Buscando...');
+            $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                if (response.encontrado) {
+                    $('#vehiculo_nombreproponente').val(response.data.nombre ?? '');
+                    $('#vehiculo_telefonoproponente').val(response.data.telefono ?? '');
+                    $('#vehiculo_cedulaproponente').removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                    $('#vehiculo_cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+                    Swal.fire({ icon: 'error', title: 'No encontrado', text: `No se encontró un proponente con la cédula ${cedula}` });
+                }
+            }).fail(function() {
+                $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                $('#vehiculo_cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error al buscar la cédula' });
+            });
+        }
+
+        function validarProponente() {
+            let cedula = $('#vehiculo_cedulaproponente').val().trim();
+            let nombre = $('#vehiculo_nombreproponente').val().trim();
+            if (cedula === '') {
+                Swal.fire({ icon: 'error', title: 'Campo requerido', text: 'Debe ingresar la cédula del proponente' });
+                $('#vehiculo_cedulaproponente').focus();
+                return false;
+            }
+            if (cedula.length < 3) {
+                Swal.fire({ icon: 'error', title: 'Cédula inválida', text: 'La cédula debe tener al menos 3 dígitos' });
+                $('#vehiculo_cedulaproponente').focus();
+                return false;
+            }
+            if (nombre === '' || nombre === 'Buscando...') {
+                Swal.fire({ icon: 'error', title: 'Proponente no encontrado', text: 'Debe buscar y seleccionar un proponente válido' });
+                $('#vehiculo_cedulaproponente').focus();
+                return false;
+            }
+            return true;
+        }
+
+        $(document).ready(function() {
+            // Eventos de búsqueda en el modal de vehículos
+            $(document).on('blur', '#vehiculo_cedulachofer', buscarChoferPorCedula);
+            $(document).on('keypress', '#vehiculo_cedulachofer', function(e) { if (e.which === 13) { e.preventDefault(); buscarChoferPorCedula(); $('#vehiculo_nombre').focus(); } });
+            $(document).on('blur', '#vehiculo_cedulaproponente', buscarProponentePorCedula);
+            $(document).on('keypress', '#vehiculo_cedulaproponente', function(e) { if (e.which === 13) { e.preventDefault(); buscarProponentePorCedula(); } });
+
+            // Guardar vehículo
+            $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {
+                e.preventDefault();
+                if (!validarProponente()) return;
+                let btnSubmit = $(this).find('button[type="submit"]');
+                let punteroId = $('#vehiculo_id_puntero').val();
+                btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+                let formData = {
+                    nombre: $('#vehiculo_nombre').val(),
+                    cedulachofer: $('#vehiculo_cedulachofer').val(),
+                    chapa: $('#vehiculo_chapa').val(),
+                    tipovehiculo: $('#vehiculo_tipovehiculo').val(),
+                    capacidad: $('#vehiculo_capacidad').val(),
+                    telefono1: $('#vehiculo_telefono1').val(),
+                    telefono2: $('#vehiculo_telefono2').val(),
+                    montopagar: $('#vehiculo_montopagar').val(),
+                    cantidadpagos: $('#vehiculo_cantidadpagos').val(),
+                    rolvehiculo: $('#vehiculo_rolvehiculo').val(),
+                    direccion: $('#vehiculo_direccion').val(),
+                    barriocompania: $('#vehiculo_barriocompania').val(),
+                    cedulaproponente: $('#vehiculo_cedulaproponente').val(),
+                    nombreproponente: $('#vehiculo_nombreproponente').val(),
+                    telefonoproponente: $('#vehiculo_telefonoproponente').val(),
+                    id_puntero: punteroId,
+                    _token: '{{ csrf_token() }}'
+                };
+                $.ajax({
+                    url: "{{ route('vehiculo.store.from.puntero') }}",
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        Swal.fire({ icon: 'success', title: 'Éxito', text: response.message, timer: 1500, showConfirmButton: false });
+                        $('#formCrearVehiculoPuntero')[0].reset();
+                        $('#vehiculo_capacidad').val(5);
+                        $('#vehiculo_cantidadpagos').val(2);
+                        $('#vehiculo_montopagar').val('300000');
+                        $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+                        $('#vehiculo_rolvehiculo').val('PUNTERO');
+                        $('#vehiculo_cedulaproponente, #vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                        $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
+                        $('#vehiculo_cedulachofer').focus();
+                        cargarVehiculosPuntero(punteroId);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            let errorMessage = '';
+                            $.each(xhr.responseJSON.errors, function(key, value) { errorMessage += `${key}: ${value[0]}\n`; });
+                            Swal.fire({ icon: 'error', title: 'Error de validación', text: errorMessage });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Error al crear el vehículo' });
+                        }
+                    },
+                    complete: function() { btnSubmit.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Vehículo'); }
+                });
+            });
+        });
+
+        // =============================================
+        // FUNCIONES DE VOTANTES (globales)
+        // =============================================
+        function buscarVotantePorCedula() {
+            let cedula = $('#votante_cedula').val().trim();
+            if (cedula.length < 3) {
+                if (cedula.length > 0 && cedula.length < 3) {
+                    Swal.fire({ icon: 'info', title: 'Cédula muy corta', text: 'Ingresa al menos 3 dígitos para buscar', timer: 2000, showConfirmButton: false, toast: true, position: 'top-end' });
+                }
+                return;
+            }
+            $('#votante_nombre').val('Buscando...');
+            $.get("{{ url('votante/buscar-por-cedula') }}/" + cedula, function(response) {
+                if (!response.encontrado) {
+                    limpiarCamposVotante();
+                    Swal.fire({ icon: 'info', title: 'Votante no encontrado', text: `No se encontró ningún votante con la cédula ${cedula}`, timer: 3000, showConfirmButton: false, toast: true, position: 'top-end' });
+                    return;
+                }
+                let v = response.data;
+                $('#votante_nombre').val(v.nombre);
+                $('#direccion').val(v.direccion || '');
+                $('#mesa').val(v.mesa || '');
+                $('#orden').val(v.orden || '');
+                $('#partido').val(v.partido || '');
+                $('#escuela').val(v.escuela || '');
+                $('#ciudad').val(v.ciudad || '');
+                $('#departamento').val(v.departamento || '');
+                Swal.fire({ icon: 'success', title: 'Votante encontrado', text: `Nombre: ${v.nombre}`, timer: 2000, showConfirmButton: false, toast: true, position: 'top-end' });
+            }).fail(function() {
+                limpiarCamposVotante();
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error al buscar la cédula. Intente nuevamente.', timer: 2000, showConfirmButton: false });
+            });
+        }
+
+        function limpiarCamposVotante() {
+            $('#votante_nombre, #direccion, #mesa, #orden, #partido, #escuela, #ciudad, #departamento').val('');
+        }
+
+        window.cargarVotantes = function(idPuntero, nombrePuntero = '') {
+            $('#tituloVotantes').html(`<i class="fas fa-users"></i> Votantes del Puntero: ${nombrePuntero}`);
             $('#modalVotantes').modal('show');
-            $('#contenidoVotantes').html(`
-                <div class="text-center p-4">
-                    <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="sr-only">Cargando...</span>
-                    </div>
-                    <p class="mt-2">Cargando votantes del puntero...</p>
-                </div>
-            `);
+            $('#contenidoVotantes').html(`<div class="text-center p-4"><div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;"><span class="sr-only">Cargando...</span></div><p class="mt-2">Cargando votantes del puntero...</p></div>`);
             let url = `{{ url('puntero') }}/${idPuntero}/votantes`;
             $.ajax({
-                url: url,
-                type: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
+                url: url, type: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                 success: function(data) {
-                    let contenido = `
-                        <div class="table-responsive">
-                            <table id="votantes-table" class="table table-striped table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 5%">#</th>
-                                        <th>Cédula</th>
-                                        <th>Nombre</th>
-                                        <th>Escuela</th>
-                                        <th>Tipo Votante</th>
-                                        <th>Mesa</th>
-                                        <th>Orden</th>
-                                        <th style="width: 10%">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
+                    let contenido = `<div class="table-responsive"><table id="votantes-table" class="table table-striped table-bordered"><thead><tr><th style="width:5%">#</th><th>Cédula</th><th>Nombre</th><th>Escuela</th><th>Tipo Votante</th><th>Mesa</th><th>Orden</th><th style="width:10%">Acciones</th></tr></thead><tbody>`;
                     if (data.length === 0) {
-                        contenido += `
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="fas fa-info-circle fa-2x mb-2"></i>
-                                    <p>No hay votantes registrados para este puntero</p>
-                                </td>
-                            </tr>
-                        `;
+                        contenido += `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-info-circle fa-2x mb-2"></i><p>No hay votantes registrados para este puntero</p></td></tr>`;
                     } else {
                         data.forEach((v, i) => {
-                            contenido += `
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td>${v.cedula}</td>
-                                    <td>${v.nombre ?? ''}</td>
-                                    <td>${v.escuela ?? ''}</td>
-                                    <td>
-                                        <span class="badge badge-${v.tipo_votante === 'RESERVADO' ? 'warning' : 'info'}">
-                                            ${v.tipo_votante ?? ''}
-                                        </span>
-                                    </td>
-                                    <td>${v.mesa ?? ''}</td>
-                                    <td>${v.orden ?? ''}</td>
-                                    <td class="text-center">
-                                        <button class="btn btn-danger btn-sm" 
-                                            onclick="eliminarVotante(${v.id},'${nombrePuntero}')"
-                                            title="Eliminar votante">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
+                            contenido += `<tr><td>${i+1}</td><td>${v.cedula}</td><td>${v.nombre ?? ''}</td><td>${v.escuela ?? ''}</td><td><span class="badge badge-${v.tipo_votante === 'RESERVADO' ? 'warning' : 'info'}">${v.tipo_votante ?? ''}</span></td><td>${v.mesa ?? ''}</td><td>${v.orden ?? ''}</td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="eliminarVotante(${v.id},'${nombrePuntero}')" title="Eliminar votante"><i class="fas fa-trash"></i></button></td></tr>`;
                         });
                     }
-                    contenido += `
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
+                    contenido += `</tbody></table></div>`;
                     $('#contenidoVotantes').html(contenido);
                     setTimeout(function() {
                         if ($.fn.DataTable && $('#votantes-table').length) {
-                            if ($.fn.DataTable.isDataTable('#votantes-table')) {
-                                $('#votantes-table').DataTable().destroy();
-                            }
+                            if ($.fn.DataTable.isDataTable('#votantes-table')) $('#votantes-table').DataTable().destroy();
                             $('#votantes-table').DataTable({
                                 responsive: true,
-                                dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>>" +
-                                    "<'row'<'col-sm-12'tr>>" +
-                                    "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                                buttons: [{
-                                    extend: 'print',
-                                    className: 'btn btn-secondary btn-sm',
-                                    text: '<i class="fas fa-print"></i> Imprimir',
-                                    exportOptions: {
-                                        columns: [0, 1, 2, 3, 4, 5]
-                                    },
-                                    customize: function(win) {
-                                        $(win.document.body).find('table').addClass(
-                                            'table table-bordered');
-                                        $(win.document.body).find('h1').css(
-                                            'text-align', 'center');
-                                    }
-                                }],
-                                language: {
-                                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                                },
-                                pageLength: 10,
-                                lengthMenu: [
-                                    [10, 25, 50, -1],
-                                    [10, 25, 50, "Todos"]
-                                ]
+                                dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>",
+                                buttons: [{ extend: 'print', className: 'btn btn-secondary btn-sm', text: '<i class="fas fa-print"></i> Imprimir', exportOptions: { columns: [0,1,2,3,4,5] }, customize: function(win) { $(win.document.body).find('table').addClass('table table-bordered'); $(win.document.body).find('h1').css('text-align','center'); } }],
+                                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                                pageLength: 10, lengthMenu: [[10,25,50,-1],[10,25,50,"Todos"]]
                             });
                         }
                     }, 100);
                 },
-                error: function(xhr, status, error) {
-                    console.error('Error cargando votantes:', error);
-                    $('#contenidoVotantes').html(`
-                        <div class="alert alert-danger text-center p-4">
-                            <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                            <h5>Error al cargar los votantes</h5>
-                            <p class="mb-0">${xhr.responseJSON?.message || 'Intente nuevamente más tarde'}</p>
-                            <button class="btn btn-sm btn-outline-danger mt-3" onclick="cargarVotantes(${idPuntero}, '${nombrePuntero}')">
-                                <i class="fas fa-sync"></i> Reintentar
-                            </button>
-                        </div>
-                    `);
+                error: function(xhr) {
+                    $('#contenidoVotantes').html(`<div class="alert alert-danger text-center p-4"><i class="fas fa-exclamation-circle fa-3x mb-3"></i><h5>Error al cargar los votantes</h5><p class="mb-0">${xhr.responseJSON?.message || 'Intente nuevamente más tarde'}</p><button class="btn btn-sm btn-outline-danger mt-3" onclick="cargarVotantes(${idPuntero}, '${nombrePuntero}')"><i class="fas fa-sync"></i> Reintentar</button></div>`);
                 }
             });
-        }
+        };
 
-        // Función para eliminar votante
-        function eliminarVotante(id, nombre) {
-            Swal.fire({
-                title: '¿Eliminar votante?',
-                icon: 'warning',
-                showCancelButton: true
-            }).then(r => {
+        window.eliminarVotante = function(id, nombre) {
+            Swal.fire({ title: '¿Eliminar votante?', icon: 'warning', showCancelButton: true }).then(r => {
                 if (r.isConfirmed) {
                     $.ajax({
                         url: "{{ url('votante/delete') }}/" + id,
                         type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}"
-                        },
+                        data: { _token: "{{ csrf_token() }}" },
                         success: function(response) {
-                            Swal.fire('Eliminado', response.message ??
-                                'Votante eliminado correctamente', 'success');
-                            if (response.punteroId) {
-                                cargarVotantes(response.punteroId, nombre);
-                            }
-                            if (response.abrirModalVotante) {
-                                $('#modalVotante').modal('show');
-                            }
+                            Swal.fire('Eliminado', response.message ?? 'Votante eliminado correctamente', 'success');
+                            if (response.punteroId) cargarVotantes(response.punteroId, nombre);
+                            if (response.abrirModalVotante) $('#modalVotante').modal('show');
                         },
-                        error: function(xhr) {
-                            Swal.fire('Error', xhr.responseJSON?.message ??
-                                'No se pudo eliminar el votante', 'error');
-                        }
+                        error: function(xhr) { Swal.fire('Error', xhr.responseJSON?.message ?? 'No se pudo eliminar el votante', 'error'); }
                     });
                 }
             });
-        }
+        };
 
-        // Limpiar DataTable cuando se cierra el modal
+        // Limpiar DataTable cuando se cierra modal de votantes
         $('#modalVotantes').on('hidden.bs.modal', function() {
             if ($.fn.DataTable && $.fn.DataTable.isDataTable('#votantes-table')) {
                 $('#votantes-table').DataTable().destroy();
             }
         });
 
-        // Exponer funciones globalmente
-        window.cargarVotantes = cargarVotantes;
-        window.eliminarVotante = eliminarVotante;
+        // Exponer funciones globales necesarias
+        window.abrirModalPunterosLista = abrirModalPunterosLista;
         window.abrirModalPunterosListapordir = abrirModalPunterosListapordir;
-        // Eventos para búsqueda por cédula
-        $(document).on('blur', '#vehiculo_cedulachofer', function() {
-            buscarChoferPorCedula();
-        });
+        window.eliminarDirigente = eliminarDirigente;   // definida más abajo
+        window.filtrarPunteros = filtrarPunteros;       // definida más abajo
+        window.eliminarPuntero = eliminarPuntero;       // definida más abajo
+        window.cargarSistemasManual = cargarSistemasManual;
+        window.abrirModalVotantes = function(punteroId, nombre) {
+            $('#modalVotantes').modal('show');
+            $('#contenidoVotantes').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>');
+            let url = `{{ url('/') }}/punteros/${punteroId}/votantes`;
+            $.get(url, function(data) { $('#contenidoVotantes').html(data); });
+        };
 
-        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                buscarChoferPorCedula();
-                $('#vehiculo_nombre').focus();
-            }
-        });
-        // ==================== BÚSQUEDA POR CÉDULA EN VEHÍCULOS ====================
-        function buscarChoferPorCedula() {
-            let cedula = $('#vehiculo_cedulachofer').val().trim();
-            if (cedula.length < 3) return;
-
-            $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
-                if (response.encontrado) {
-                    $('#vehiculo_nombre').val(response.data.nombre ?? '');
-                    $('#vehiculo_telefono1').val(response.data.telefono ?? '');
-                    $('#vehiculo_telefono2').val(response.data.telefono2 ?? '');
-                } else {
-                    // Limpiar campos si no se encuentra
-                    $('#vehiculo_nombre').val('');
-                    $('#vehiculo_telefono1').val('');
-                    $('#vehiculo_telefono2').val('');
+        // Funciones de punteros (para uso interno dentro de lista_punteros)
+        function cargarPunteros(dirigenteId) {
+            let tbody = $('#punteros-table tbody');
+            tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
+            let url = "{{ url('dirigente') }}/" + dirigenteId + "/punteros?t=" + new Date().getTime();
+            $.get(url, function(data) {
+                tbody.empty();
+                if (data.length === 0) {
+                    tbody.html('<tr><td colspan="6" class="text-center">No hay punteros registrados</td></tr>');
+                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) $('#punteros-table').DataTable().destroy();
+                    return;
                 }
-            }).fail(function() {
-                console.log('Error en la búsqueda de cédula');
+                let html = '';
+                data.forEach((puntero, index) => {
+                    html += `<tr><td>${index+1}</td><td>${puntero.cedula}</td><td>${puntero.nombre}</td><td>${puntero.telefono ?? ''}</td><td>${puntero.barrio ?? ''}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${dirigenteId})"><i class="fas fa-trash"></i></button></td></tr>`;
+                });
+                tbody.html(html);
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) $('#punteros-table').DataTable().destroy();
+                $('#punteros-table').DataTable({ responsive: true, language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }, pageLength: 5, destroy: true });
+            }).fail(() => tbody.html('<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>'));
+        }
+
+        function cargarPunterosporEq(equipoId) {
+            let tbody = $('#punteros-table tbody');
+            tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
+            let url = "{{ url('equipo') }}/" + equipoId + "/punteros?t=" + new Date().getTime();
+            $.get(url, function(data) {
+                tbody.empty();
+                if (data.length === 0) {
+                    tbody.html('<tr><td colspan="6" class="text-center">No hay punteros registrados</td></tr>');
+                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) $('#punteros-table').DataTable().destroy();
+                    return;
+                }
+                let html = '';
+                data.forEach((puntero, index) => {
+                    html += `<tr><td>${index+1}</td><td>${puntero.cedula}</td><td>${puntero.nombre}</td><td>${puntero.telefono ?? ''}</td><td>${puntero.barrio ?? ''}</td><td><button class="btn btn-danger btn-sm" onclick="eliminarPuntero(${puntero.id}, ${puntero.id_dirigente})"><i class="fas fa-trash"></i></button></td></tr>`;
+                });
+                tbody.html(html);
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#punteros-table')) $('#punteros-table').DataTable().destroy();
+                $('#punteros-table').DataTable({ responsive: true, language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }, pageLength: 5, destroy: true });
+            }).fail(() => tbody.html('<tr><td colspan="6" class="text-center text-danger">Error al cargar punteros</td></tr>'));
+        }
+
+        function filtrarPunteros() {
+            let dirigenteId = $('#puntero_id_dirigente').val();
+            let equipoId = $('#equipo_punteros').val();
+            if (dirigenteId) cargarPunteros(dirigenteId);
+            else cargarPunterosporEq(equipoId);
+        }
+
+        function eliminarPuntero(punteroId, dirigenteId) {
+            Swal.fire({ title: '¿Estás seguro?', text: "Esta acción no se puede revertir", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, eliminar' }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    $.ajax({
+                        url: "{{ route('puntero.destroy.ajax') }}", type: 'DELETE', data: { _token: '{{ csrf_token() }}', id: punteroId },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.close();
+                                Swal.fire({ icon: 'success', title: 'Eliminado', text: 'El puntero ha sido eliminado', timer: 1500, showConfirmButton: false });
+                                cargarPunteros(dirigenteId);
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.close();
+                            Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'No se pudo eliminar el puntero' });
+                        }
+                    });
+                }
             });
         }
 
-        // Evento blur para búsqueda por cédula
-        $(document).on('blur', '#vehiculo_cedulachofer', function() {
-            buscarChoferPorCedula();
-        });
-
-        // Evento keypress para búsqueda por cédula con Enter
-        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                buscarChoferPorCedula();
-                $('#vehiculo_nombre').focus();
-            }
-        });
-        // ==================== GUARDAR VEHÍCULO DESDE MODAL ====================
-        $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {
-            e.preventDefault();
-
-            let btnSubmit = $(this).find('button[type="submit"]');
-            let punteroId = $('#vehiculo_id_puntero').val();
-
-            btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
-
-            let formData = {
-                nombre: $('#vehiculo_nombre').val(),
-                cedulachofer: $('#vehiculo_cedulachofer').val(),
-                chapa: $('#vehiculo_chapa').val(),
-                tipovehiculo: $('#vehiculo_tipovehiculo').val(),
-                capacidad: $('#vehiculo_capacidad').val(),
-                telefono1: $('#vehiculo_telefono1').val(),
-                telefono2: $('#vehiculo_telefono2').val(),
-                montopagar: $('#vehiculo_montopagar').val(),
-                cantidadpagos: $('#vehiculo_cantidadpagos').val(),
-                rolvehiculo: $('#vehiculo_rolvehiculo').val(),
-                id_puntero: punteroId,
-                _token: '{{ csrf_token() }}'
-            };
-
-            $.ajax({
-                url: "{{ route('vehiculo.store.from.puntero') }}",
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Éxito',
-                        text: response.message,
-                        timer: 1500,
-                        showConfirmButton: false
+        function eliminarDirigente(dirigenteId) {
+            Swal.fire({ title: '¿Estás seguro?', text: "Esta acción no se puede revertir. Se eliminarán también sus punteros y votantes.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, eliminar' }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    let url = `{{ url('/') }}/dirigentes/ajax/${dirigenteId}`;
+                    $.ajax({
+                        url: url, type: 'DELETE', data: { _token: '{{ csrf_token() }}' },
+                        success: function(response) {
+                            Swal.fire({ icon: 'success', title: '¡Eliminado!', text: response.message, timer: 2000, showConfirmButton: false });
+                            if (typeof filtrarDirigentes === 'function') filtrarDirigentes();
+                            else location.reload();
+                        },
+                        error: function(xhr) { Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Error al eliminar el dirigente' }); }
                     });
-
-                    // Limpiar formulario
-                    $('#formCrearVehiculoPuntero')[0].reset();
-                    $('#vehiculo_capacidad').val(5);
-                    $('#vehiculo_cantidadpagos').val(2);
-                    $('#vehiculo_montopagar').val('300000');
-                    $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
-                    $('#vehiculo_rolvehiculo').val('PUNTERO');
-                    $('#vehiculo_cedulachofer').focus();
-
-                    // Recargar la lista de vehículos
-                    cargarVehiculosPuntero(punteroId);
-
-                    btnSubmit.prop('disabled', false).html(
-                        '<i class="fas fa-save"></i> Guardar Vehículo');
-                },
-                error: function(xhr) {
-                    btnSubmit.prop('disabled', false).html(
-                        '<i class="fas fa-save"></i> Guardar Vehículo');
-
-                    if (xhr.status === 422 && xhr.responseJSON.errors) {
-                        let errors = xhr.responseJSON.errors;
-                        let errorMessage = '';
-                        $.each(errors, function(key, value) {
-                            errorMessage += `${key}: ${value[0]}\n`;
-                        });
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error de validación',
-                            text: errorMessage
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: xhr.responseJSON?.message || 'Error al crear el vehículo'
-                        });
-                    }
                 }
             });
-        });
+        }
+
+        // Limpiar DataTables al cerrar modales
+        $('#modalSistemas').on('hidden.bs.modal', function() { if ($.fn.DataTable && $.fn.DataTable.isDataTable('#sistemas-table')) $('#sistemas-table').DataTable().destroy(); });
+        $('#modalDirigentes').on('hidden.bs.modal', function() { if ($.fn.DataTable && $.fn.DataTable.isDataTable('#dirigentes-table')) $('#dirigentes-table').DataTable().destroy(); });
+
+        // Mensaje de éxito global
+        const successAlert = @json(session('success'));
+        if (successAlert) Swal.fire({ icon: 'success', title: 'Éxito', text: successAlert, timer: 1800, showConfirmButton: false });
     </script>
 @stop

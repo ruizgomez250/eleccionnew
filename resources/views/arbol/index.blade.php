@@ -1,4 +1,3 @@
-{{-- resources/views/arbol/index.blade.php --}}
 @extends('adminlte::page')
 
 @section('title', 'Árbol de Candidaturas')
@@ -123,7 +122,7 @@
             </div>
         </div>
     </div>
-    {{-- MODAL DE VEHÍCULOS DEL PUNTERO --}}
+    {{-- ================= MODAL DE VEHÍCULOS DEL PUNTERO (VERSIÓN COMPLETA CON PROPONENTE) ================= --}}
     <div class="modal fade" id="modalVehiculosPuntero" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -148,22 +147,19 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Cédula del Chofer <span class="text-danger">*</span></label>
-                                            <input type="text" name="cedulachofer" id="vehiculo_cedulachofer"
-                                                class="form-control" required>
+                                            <input type="text" name="cedulachofer" id="vehiculo_cedulachofer" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-5">
                                         <div class="form-group">
                                             <label>Nombre del Chofer <span class="text-danger">*</span></label>
-                                            <input type="text" name="nombre" id="vehiculo_nombre"
-                                                class="form-control" required>
+                                            <input type="text" name="nombre" id="vehiculo_nombre" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label>Chapa <span class="text-danger">*</span></label>
-                                            <input type="text" name="chapa" id="vehiculo_chapa"
-                                                class="form-control" required>
+                                            <input type="text" name="chapa" id="vehiculo_chapa" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
@@ -182,22 +178,19 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label>Capacidad</label>
-                                            <input type="number" name="capacidad" id="vehiculo_capacidad"
-                                                class="form-control" value="5">
+                                            <input type="number" name="capacidad" id="vehiculo_capacidad" class="form-control" value="5">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Teléfono Principal <span class="text-danger">*</span></label>
-                                            <input type="text" name="telefono1" id="vehiculo_telefono1"
-                                                class="form-control" required>
+                                            <input type="text" name="telefono1" id="vehiculo_telefono1" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Teléfono Secundario</label>
-                                            <input type="text" name="telefono2" id="vehiculo_telefono2"
-                                                class="form-control">
+                                            <input type="text" name="telefono2" id="vehiculo_telefono2" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
@@ -218,13 +211,24 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label>Cantidad Pagos</label>
-                                            <input type="number" name="cantidadpagos" id="vehiculo_cantidadpagos"
-                                                class="form-control" value="2">
+                                            <input type="number" name="cantidadpagos" id="vehiculo_cantidadpagos" class="form-control" value="2">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Dirección</label>
+                                            <input type="text" name="direccion" id="vehiculo_direccion" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Barrio/Compañía</label>
+                                            <input type="text" name="barriocompania" id="vehiculo_barriocompania" class="form-control">
+                                        </div>
+                                    </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Rol del Vehículo</label>
@@ -234,10 +238,67 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-2">
                                         {{-- Espacio vacío --}}
                                     </div>
-                                    <div class="col-md-3 d-flex align-items-end">
+                                </div>
+
+                                {{-- ================= SECCIÓN PROPONENTE ================= --}}
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card card-outline card-secondary">
+                                            <div class="card-header bg-secondary text-white">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-user-check"></i> Datos del Proponente <span class="text-danger">*</span>
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Cédula del Proponente <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-prepend">
+                                                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                                                </div>
+                                                                <input type="text" name="cedulaproponente" id="vehiculo_cedulaproponente" 
+                                                                    class="form-control" placeholder="Ej: 1.234.567" required>
+                                                            </div>
+                                                            <small class="text-muted">Ingrese la cédula para buscar automáticamente</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <label>Nombre del Proponente <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-prepend">
+                                                                    <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+                                                                </div>
+                                                                <input type="text" name="nombreproponente" id="vehiculo_nombreproponente" 
+                                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label>Teléfono del Proponente <span class="text-danger">*</span></label>
+                                                            <div class="input-group">
+                                                                <div class="input-group-prepend">
+                                                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                                </div>
+                                                                <input type="text" name="telefonoproponente" id="vehiculo_telefonoproponente" 
+                                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
                                         <button type="submit" class="btn btn-primary w-100">
                                             <i class="fas fa-save"></i> Guardar Vehículo
                                         </button>
@@ -263,13 +324,13 @@
                                             <th>Cédula</th>
                                             <th>Teléfono</th>
                                             <th>Rol</th>
+                                            <th>Proponente</th>
+                                            <th>Tel. Proponente</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td colspan="7" class="text-center">Seleccione un puntero</td>
-                                        </tr>
+                                        <tr><td colspan="9" class="text-center">Seleccione un puntero</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1027,64 +1088,45 @@
             });
 
             
-            // ==================== CARGAR VEHÍCULOS DEL PUNTERO ====================
+            // ==================== FUNCIONES DE VEHÍCULOS (VERSIÓN COMPLETA) ====================
             window.cargarVehiculosPuntero = function(punteroId) {
-                $('#vehiculos-puntero-table tbody').html(
-                    '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>'
-                );
-
+                $('#vehiculos-puntero-table tbody').html('<tr><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando vehículos...</td></tr>');
                 $.get(`{{ url('/') }}/puntero/${punteroId}/vehiculos`, function(vehiculos) {
                     let tbody = '';
-
                     if (vehiculos.length === 0) {
-                        tbody =
-                            '<tr><td colspan="7" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
+                        tbody = '<tr><td colspan="9" class="text-center">No hay vehículos asignados a este puntero</td></tr>';
                     } else {
                         vehiculos.forEach((v, i) => {
                             tbody += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${v.chapa}</td>
-                        <td>${v.nombre}</td>
-                        <td>${v.cedulachofer}</td>
-                        <td>${v.telefono1 || ''}</td>
-                        <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                                <tr>
+                                    <td>${i+1}</td>
+                                    <td>${v.chapa}</td>
+                                    <td>${v.nombre}</td>
+                                    <td>${v.cedulachofer}</td>
+                                    <td>${v.telefono1 || ''}</td>
+                                    <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
+                                    <td>${v.nombreproponente || ''}</td>
+                                    <td>${v.telefonoproponente || ''}</td>
+                                    <td class="text-center"><button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})"><i class="fas fa-trash"></i></button></td>
+                                </tr>
+                            `;
                         });
                     }
-
                     $('#vehiculos-puntero-table tbody').html(tbody);
-
-                    // Destruir DataTable si existe y volver a inicializar
                     if ($.fn.DataTable && $('#vehiculos-puntero-table').length) {
-                        if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) {
-                            $('#vehiculos-puntero-table').DataTable().destroy();
-                        }
+                        if ($.fn.DataTable.isDataTable('#vehiculos-puntero-table')) $('#vehiculos-puntero-table').DataTable().destroy();
                         $('#vehiculos-puntero-table').DataTable({
                             responsive: true,
-                            language: {
-                                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                            },
+                            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
                             pageLength: 10,
                             destroy: true
                         });
                     }
-                }).fail(function() {
-                    $('#vehiculos-puntero-table tbody').html(
-                        '<tr><td colspan="7" class="text-center text-danger">Error al cargar los vehículos</td></tr>'
-                    );
-                });
-            }
-            // ==================== ELIMINAR VEHÍCULO DEL PUNTERO ====================
+                }).fail(() => $('#vehiculos-puntero-table tbody').html('</td><td colspan="9" class="text-center text-danger">Error al cargar los vehículos</td></tr>'));
+            };
+
             window.eliminarVehiculoPuntero = function(vehiculoId) {
                 let punteroId = $('#vehiculo_id_puntero').val();
-
                 Swal.fire({
                     title: '¿Desvincular vehículo?',
                     text: 'El vehículo dejará de estar asignado a este puntero',
@@ -1098,63 +1140,168 @@
                         $.ajax({
                             url: `{{ url('/') }}/vehiculo/${vehiculoId}/puntero/${punteroId}`,
                             type: 'DELETE',
-                            data: {
-                                _token: '{{ csrf_token() }}'
-                            },
+                            data: { _token: '{{ csrf_token() }}' },
                             success: function(response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Desvinculado',
-                                    text: response.message,
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
+                                Swal.fire({ icon: 'success', title: 'Desvinculado', text: response.message, timer: 1500, showConfirmButton: false });
                                 cargarVehiculosPuntero(punteroId);
                             },
                             error: function(xhr) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: xhr.responseJSON?.message ||
-                                        'No se pudo desvincular el vehículo'
-                                });
+                                Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'No se pudo desvincular el vehículo' });
                             }
                         });
                     }
                 });
-            }
-            // ============================================
-            // FUNCIONES PARA MODALES
-            // ============================================
+            };
+
             window.abrirModalCrearVehiculo = function(punteroId, punteroNombre) {
                 $('#vehiculo_id_puntero').val(punteroId);
                 $('#vehiculo_puntero_nombre').text(punteroNombre);
-
-                // Limpiar formulario
                 $('#formCrearVehiculoPuntero')[0].reset();
                 $('#vehiculo_capacidad').val(5);
                 $('#vehiculo_cantidadpagos').val(2);
                 $('#vehiculo_montopagar').val('300000');
                 $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
                 $('#vehiculo_rolvehiculo').val('PUNTERO');
-
-                // Limpiar campos específicos
-                $('#vehiculo_cedulachofer').val('');
-                $('#vehiculo_nombre').val('');
-                $('#vehiculo_telefono1').val('');
-                $('#vehiculo_telefono2').val('');
-                $('#vehiculo_chapa').val('');
-
-                // Cargar vehículos del puntero
+                $('#vehiculo_cedulaproponente, #vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
                 cargarVehiculosPuntero(punteroId);
-
-                // Enfocar primer campo
-                setTimeout(function() {
-                    $('#vehiculo_cedulachofer').focus();
-                }, 500);
-
+                setTimeout(() => $('#vehiculo_cedulachofer').focus(), 500);
                 $('#modalVehiculosPuntero').modal('show');
+            };
+
+            // Búsqueda de chofer (actualizada con dirección y barrio)
+            function buscarChoferPorCedula() {
+                let cedula = $('#vehiculo_cedulachofer').val().trim();
+                if (cedula.length < 3) return;
+                $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                    if (response.encontrado) {
+                        $('#vehiculo_nombre').val(response.data.nombre ?? '');
+                        $('#vehiculo_telefono1').val(response.data.telefono ?? '');
+                        $('#vehiculo_telefono2').val(response.data.telefono2 ?? '');
+                        $('#vehiculo_direccion').val(response.data.direccion ?? '');
+                        $('#vehiculo_barriocompania').val(response.data.barrio ?? '');
+                    } else {
+                        $('#vehiculo_nombre, #vehiculo_telefono1, #vehiculo_telefono2, #vehiculo_direccion, #vehiculo_barriocompania').val('');
+                    }
+                }).fail(() => console.log('Error en búsqueda de chofer'));
             }
+
+            // Búsqueda de proponente por cédula (NUEVA)
+            function buscarProponentePorCedula() {
+                let cedula = $('#vehiculo_cedulaproponente').val().trim();
+                if (cedula === '') {
+                    $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                    $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
+                    return;
+                }
+                if (cedula.length < 3) {
+                    Swal.fire({ icon: 'warning', title: 'Cédula muy corta', text: 'Ingrese al menos 3 dígitos', timer: 2000, showConfirmButton: false });
+                    $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                    return;
+                }
+                $('#vehiculo_nombreproponente').val('Buscando...');
+                $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+                    if (response.encontrado) {
+                        $('#vehiculo_nombreproponente').val(response.data.nombre ?? '');
+                        $('#vehiculo_telefonoproponente').val(response.data.telefono ?? '');
+                        $('#vehiculo_cedulaproponente').removeClass('is-invalid').addClass('is-valid');
+                    } else {
+                        $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                        $('#vehiculo_cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+                        Swal.fire({ icon: 'error', title: 'No encontrado', text: `No se encontró un proponente con la cédula ${cedula}` });
+                    }
+                }).fail(function() {
+                    $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                    $('#vehiculo_cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Error al buscar la cédula' });
+                });
+            }
+
+            function validarProponente() {
+                let cedula = $('#vehiculo_cedulaproponente').val().trim();
+                let nombre = $('#vehiculo_nombreproponente').val().trim();
+                if (cedula === '') {
+                    Swal.fire({ icon: 'error', title: 'Campo requerido', text: 'Debe ingresar la cédula del proponente' });
+                    $('#vehiculo_cedulaproponente').focus();
+                    return false;
+                }
+                if (cedula.length < 3) {
+                    Swal.fire({ icon: 'error', title: 'Cédula inválida', text: 'La cédula debe tener al menos 3 dígitos' });
+                    $('#vehiculo_cedulaproponente').focus();
+                    return false;
+                }
+                if (nombre === '' || nombre === 'Buscando...') {
+                    Swal.fire({ icon: 'error', title: 'Proponente no encontrado', text: 'Debe buscar y seleccionar un proponente válido' });
+                    $('#vehiculo_cedulaproponente').focus();
+                    return false;
+                }
+                return true;
+            }
+
+            // Asignar eventos (asegurar que no se dupliquen)
+            $(document).off('blur', '#vehiculo_cedulachofer').on('blur', '#vehiculo_cedulachofer', buscarChoferPorCedula);
+            $(document).off('keypress', '#vehiculo_cedulachofer').on('keypress', '#vehiculo_cedulachofer', function(e) { if (e.which === 13) { e.preventDefault(); buscarChoferPorCedula(); $('#vehiculo_nombre').focus(); } });
+            $(document).off('blur', '#vehiculo_cedulaproponente').on('blur', '#vehiculo_cedulaproponente', buscarProponentePorCedula);
+            $(document).off('keypress', '#vehiculo_cedulaproponente').on('keypress', '#vehiculo_cedulaproponente', function(e) { if (e.which === 13) { e.preventDefault(); buscarProponentePorCedula(); } });
+
+            // Envío del formulario de vehículo
+            $(document).off('submit', '#formCrearVehiculoPuntero').on('submit', '#formCrearVehiculoPuntero', function(e) {
+                e.preventDefault();
+                if (!validarProponente()) return;
+                let btnSubmit = $(this).find('button[type="submit"]');
+                let punteroId = $('#vehiculo_id_puntero').val();
+                btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+                let formData = {
+                    nombre: $('#vehiculo_nombre').val(),
+                    cedulachofer: $('#vehiculo_cedulachofer').val(),
+                    chapa: $('#vehiculo_chapa').val(),
+                    tipovehiculo: $('#vehiculo_tipovehiculo').val(),
+                    capacidad: $('#vehiculo_capacidad').val(),
+                    telefono1: $('#vehiculo_telefono1').val(),
+                    telefono2: $('#vehiculo_telefono2').val(),
+                    montopagar: $('#vehiculo_montopagar').val(),
+                    cantidadpagos: $('#vehiculo_cantidadpagos').val(),
+                    rolvehiculo: $('#vehiculo_rolvehiculo').val(),
+                    direccion: $('#vehiculo_direccion').val(),
+                    barriocompania: $('#vehiculo_barriocompania').val(),
+                    cedulaproponente: $('#vehiculo_cedulaproponente').val(),
+                    nombreproponente: $('#vehiculo_nombreproponente').val(),
+                    telefonoproponente: $('#vehiculo_telefonoproponente').val(),
+                    id_puntero: punteroId,
+                    _token: '{{ csrf_token() }}'
+                };
+                $.ajax({
+                    url: "{{ route('vehiculo.store.from.puntero') }}",
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        Swal.fire({ icon: 'success', title: 'Éxito', text: response.message, timer: 1500, showConfirmButton: false });
+                        $('#formCrearVehiculoPuntero')[0].reset();
+                        $('#vehiculo_capacidad').val(5);
+                        $('#vehiculo_cantidadpagos').val(2);
+                        $('#vehiculo_montopagar').val('300000');
+                        $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
+                        $('#vehiculo_rolvehiculo').val('PUNTERO');
+                        $('#vehiculo_cedulaproponente, #vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                        $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
+                        $('#vehiculo_cedulachofer').focus();
+                        cargarVehiculosPuntero(punteroId);
+                    },
+                    error: function(xhr) {
+                        btnSubmit.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Vehículo');
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            let errorMessage = '';
+                            $.each(xhr.responseJSON.errors, function(key, value) { errorMessage += `${key}: ${value[0]}\n`; });
+                            Swal.fire({ icon: 'error', title: 'Error de validación', text: errorMessage });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Error al crear el vehículo' });
+                        }
+                    }
+                });
+            });
+
+            // ==================== EL RESTO DE FUNCIONES (DIRIGENTES, PUNTEROS, VOTANTES) PERMANECEN IGUAL ====================
             window.abrirModalDirigentes = function(sistemaId, nombre, tipo) {
                 $('#tituloDirigentes').html(`
                     <i class="fas fa-users"></i> Dirigentes - ${tipo}: ${nombre}
@@ -1509,132 +1656,6 @@
                 $('#departamento').val('');
                 $('#tipo_votante').val('seguro');
             }
-        });
-        
-
-        // Eventos para búsqueda por cédula
-        $(document).on('blur', '#vehiculo_cedulachofer', function() {
-            buscarChoferPorCedula();
-        });
-
-        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                buscarChoferPorCedula();
-                $('#vehiculo_nombre').focus();
-            }
-        });
-        // ==================== BÚSQUEDA POR CÉDULA EN VEHÍCULOS ====================
-        function buscarChoferPorCedula() {
-            let cedula = $('#vehiculo_cedulachofer').val().trim();
-            if (cedula.length < 3) return;
-
-            $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
-                if (response.encontrado) {
-                    $('#vehiculo_nombre').val(response.data.nombre ?? '');
-                    $('#vehiculo_telefono1').val(response.data.telefono ?? '');
-                    $('#vehiculo_telefono2').val(response.data.telefono2 ?? '');
-                } else {
-                    // Limpiar campos si no se encuentra
-                    $('#vehiculo_nombre').val('');
-                    $('#vehiculo_telefono1').val('');
-                    $('#vehiculo_telefono2').val('');
-                }
-            }).fail(function() {
-                console.log('Error en la búsqueda de cédula');
-            });
-        }
-
-        // Evento blur para búsqueda por cédula
-        $(document).on('blur', '#vehiculo_cedulachofer', function() {
-            buscarChoferPorCedula();
-        });
-
-        // Evento keypress para búsqueda por cédula con Enter
-        $(document).on('keypress', '#vehiculo_cedulachofer', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                buscarChoferPorCedula();
-                $('#vehiculo_nombre').focus();
-            }
-        });
-        // ==================== GUARDAR VEHÍCULO DESDE MODAL ====================
-        $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {
-            e.preventDefault();
-
-            let btnSubmit = $(this).find('button[type="submit"]');
-            let punteroId = $('#vehiculo_id_puntero').val();
-
-            btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
-
-            let formData = {
-                nombre: $('#vehiculo_nombre').val(),
-                cedulachofer: $('#vehiculo_cedulachofer').val(),
-                chapa: $('#vehiculo_chapa').val(),
-                tipovehiculo: $('#vehiculo_tipovehiculo').val(),
-                capacidad: $('#vehiculo_capacidad').val(),
-                telefono1: $('#vehiculo_telefono1').val(),
-                telefono2: $('#vehiculo_telefono2').val(),
-                montopagar: $('#vehiculo_montopagar').val(),
-                cantidadpagos: $('#vehiculo_cantidadpagos').val(),
-                rolvehiculo: $('#vehiculo_rolvehiculo').val(),
-                id_puntero: punteroId,
-                _token: '{{ csrf_token() }}'
-            };
-
-            $.ajax({
-                url: "{{ route('vehiculo.store.from.puntero') }}",
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Éxito',
-                        text: response.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    // Limpiar formulario
-                    $('#formCrearVehiculoPuntero')[0].reset();
-                    $('#vehiculo_capacidad').val(5);
-                    $('#vehiculo_cantidadpagos').val(2);
-                    $('#vehiculo_montopagar').val('300000');
-                    $('#vehiculo_tipovehiculo').val('AUTOMOVIL');
-                    $('#vehiculo_rolvehiculo').val('PUNTERO');
-                    $('#vehiculo_cedulachofer').focus();
-
-                    // Recargar la lista de vehículos
-                    cargarVehiculosPuntero(punteroId);
-
-                    btnSubmit.prop('disabled', false).html(
-                        '<i class="fas fa-save"></i> Guardar Vehículo');
-                },
-                error: function(xhr) {
-                    btnSubmit.prop('disabled', false).html(
-                        '<i class="fas fa-save"></i> Guardar Vehículo');
-
-                    if (xhr.status === 422 && xhr.responseJSON.errors) {
-                        let errors = xhr.responseJSON.errors;
-                        let errorMessage = '';
-                        $.each(errors, function(key, value) {
-                            errorMessage += `${key}: ${value[0]}\n`;
-                        });
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error de validación',
-                            text: errorMessage
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: xhr.responseJSON?.message || 'Error al crear el vehículo'
-                        });
-                    }
-                }
-            });
         });
     </script>
 @stop

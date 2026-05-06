@@ -51,21 +51,25 @@
     <div class="row mb-2">
         <div class="col-md-2">
             <label>Cédula</label>
+            <input type="text" name="cedula" id="puntero_cedula_lista" class="form-control" required>
+            <small class="text-danger" id="error-cedula"></small>
+        </div>
+
+        
+        <div class="col-md-4">
+            <label>Nombre</label>
             <div class="input-group">
-                <input type="text" name="cedula" id="puntero_cedula_lista" class="form-control" required>
+                <input type="text" name="nombre" id="puntero_nombre_lista" class="form-control" required>
                 <div class="input-group-append">
                     <button type="button" class="btn btn-info" onclick="abrirModalBuscarPersonaPuntero()">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
-            <small class="text-danger" id="error-cedula"></small>
-        </div>
-        <div class="col-md-4">
-            <label>Nombre</label>
-            <input type="text" name="nombre" id="puntero_nombre_lista" class="form-control" required>
             <small class="text-danger" id="error-nombre"></small>
         </div>
+
+
         <div class="col-md-2">
             <label>Teléfono</label>
             <input type="text" name="telefono" id="puntero_telefono_lista" class="form-control">
@@ -212,7 +216,7 @@
                 <h5 class="modal-title">
                     <i class="fas fa-search"></i> Buscar Persona en el Padrón (Punteros)
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <button type="button" class="close text-white" onclick="cerrarpersonapuntero()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="row mb-3">
@@ -257,7 +261,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarpersonapuntero()">Cerrar</button>
             </div>
         </div>
     </div>
@@ -432,6 +436,9 @@
 
     function cerrarequipopunteros() {
         $('#modalEquiposPunteros').modal('hide');
+    }
+    function cerrarpersonapuntero() {
+        $('#modalBuscarPersonaPadronPuntero').modal('hide');
     }
     // ABRIR MODAL DE EQUIPOS
     function abrirModalEquiposPunteros() {
