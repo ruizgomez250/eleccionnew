@@ -722,7 +722,16 @@
                             <td><span class="badge badge-${v.rol === 'PUNTERO' ? 'primary' : 'secondary'}">${v.rol}</span></td>
                             <td>${v.nombreproponente || ''}</td>
                             <td>${v.telefonoproponente || ''}</td>
-                            <td class="text-center"><button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})"><i class="fas fa-trash"></i></button></td>
+                            <td class="text-center">
+                                <button class="btn btn-primary btn-sm" 
+                                    onclick="generarPDFContratoVehicular(${v.id})"
+                                    title="Contrato de Alquiler">
+                                    <i class="fas fa-file-pdf"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarVehiculoPuntero(${v.id})"><i class="fas fa-trash"></i>
+                                </button>
+
+                                </td>
                         </tr>`;
                     });
                 }
@@ -733,7 +742,7 @@
                 }
             }).fail(() => $('#vehiculos-puntero-table tbody').html('<tr><td colspan="9" class="text-center text-danger">Error al cargar los vehículos</td></tr>'));
         };
-
+        
         window.eliminarVehiculoPuntero = function(vehiculoId) {
             let punteroId = $('#vehiculo_id_puntero').val();
             Swal.fire({
@@ -761,7 +770,10 @@
                 }
             });
         };
-
+        const BASE_URL = '{{ url('/') }}';
+        function generarPDFContratoVehicular(id) {
+        window.open(`${BASE_URL}/vehiculos/contrato/${id}`, '_blank');
+        }
         // Búsqueda automática de chofer
         function buscarChoferPorCedula() {
             let cedula = $('#vehiculo_cedulachofer').val().trim();
