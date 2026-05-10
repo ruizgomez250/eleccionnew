@@ -169,7 +169,7 @@
                                                     <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
                                                 </div>
                                                 <input type="text" name="nombreproponente" id="nombreproponente" 
-                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                    class="form-control"  required>
                                             </div>
                                         </div>
                                     </div>
@@ -182,7 +182,7 @@
                                                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                                 </div>
                                                 <input type="text" name="telefonoproponente" id="telefonoproponente" 
-                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                    class="form-control"  required>
                                             </div>
                                         </div>
                                     </div>
@@ -403,6 +403,9 @@
         $('#cedulaproponente').on('keypress', function(e) {
             if (e.which === 13) { e.preventDefault(); buscarPorCedulaProponente(); }
         });
+        $('#nombreproponente').on('keypress', function(e) {
+            if (e.which === 13) { e.preventDefault(); $('#telefonoproponente').focus(); }
+        });
         $('#cedulaproponente').on('focus', function() { $(this).removeClass('is-valid is-invalid'); });
 
         // Validaciones
@@ -454,6 +457,7 @@
             $('#nombreproponente').val('');
             $('#telefonoproponente').val('');
             $('#cedulaproponente').removeClass('is-valid is-invalid');
+            $('#nombreproponente').focus();
             return;
         }
         
@@ -462,6 +466,7 @@
             $('#nombreproponente').val('');
             $('#telefonoproponente').val('');
             $('#cedulaproponente').removeClass('is-valid is-invalid');
+            $('#nombreproponente').focus();
             return;
         }
         
@@ -474,18 +479,21 @@
                 $('#cedulaproponente').removeClass('is-invalid').addClass('is-valid');
                 
                 Swal.fire({ icon: 'success', title: 'Proponente encontrado', text: `Nombre: ${response.data.nombre}`, timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+                $('#nombreproponente').focus();
             } else {
                 $('#nombreproponente').val('');
                 $('#telefonoproponente').val('');
                 $('#cedulaproponente').removeClass('is-valid').addClass('is-invalid');
                 
                 Swal.fire({ icon: 'error', title: 'Proponente no encontrado', text: `No se encontró un proponente con la cédula ${cedula}`, confirmButtonColor: '#dc3545' });
+                $('#nombreproponente').focus();
             }
         }).fail(function() {
             $('#nombreproponente').val('');
             $('#telefonoproponente').val('');
             $('#cedulaproponente').removeClass('is-valid').addClass('is-invalid');
             Swal.fire({ icon: 'error', title: 'Error', text: 'Error al buscar la cédula', confirmButtonColor: '#dc3545' });
+            $('#nombreproponente').focus();
         });
     }
 

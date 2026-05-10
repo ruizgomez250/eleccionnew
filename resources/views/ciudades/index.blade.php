@@ -320,7 +320,7 @@
                                                                     <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
                                                                 </div>
                                                                 <input type="text" name="nombreproponente" id="vehiculo_nombreproponente" 
-                                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                                    class="form-control"  required>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -332,7 +332,7 @@
                                                                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                                                 </div>
                                                                 <input type="text" name="telefonoproponente" id="vehiculo_telefonoproponente" 
-                                                                    class="form-control" placeholder="Se llenará automáticamente" readonly required>
+                                                                    class="form-control"  required>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -797,11 +797,13 @@
             if (cedula === '') {
                 $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
                 $('#vehiculo_cedulaproponente').removeClass('is-valid is-invalid');
+                $('#vehiculo_nombreproponente').focus();
                 return;
             }
             if (cedula.length < 3) {
                 Swal.fire({ icon: 'warning', title: 'Cédula muy corta', text: 'Ingrese al menos 3 dígitos', timer: 2000, showConfirmButton: false });
                 $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
+                $('#vehiculo_nombreproponente').focus();
                 return;
             }
             $('#vehiculo_nombreproponente').val('Buscando...');
@@ -810,15 +812,20 @@
                     $('#vehiculo_nombreproponente').val(response.data.nombre ?? '');
                     $('#vehiculo_telefonoproponente').val(response.data.telefono ?? '');
                     $('#vehiculo_cedulaproponente').removeClass('is-invalid').addClass('is-valid');
+                    $('#vehiculo_nombreproponente').focus();
+                    
                 } else {
                     $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
                     $('#vehiculo_cedulaproponente').removeClass('is-valid').addClass('is-invalid');
                     Swal.fire({ icon: 'error', title: 'No encontrado', text: `No se encontró un proponente con la cédula ${cedula}` });
+                    $('#vehiculo_nombreproponente').focus();
                 }
             }).fail(function() {
                 $('#vehiculo_nombreproponente, #vehiculo_telefonoproponente').val('');
                 $('#vehiculo_cedulaproponente').removeClass('is-valid').addClass('is-invalid');
+
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Error al buscar la cédula' });
+                $('#vehiculo_nombreproponente').focus();
             });
         }
 
@@ -849,6 +856,7 @@
             $(document).on('keypress', '#vehiculo_cedulachofer', function(e) { if (e.which === 13) { e.preventDefault(); buscarChoferPorCedula(); $('#vehiculo_nombre').focus(); } });
             $(document).on('blur', '#vehiculo_cedulaproponente', buscarProponentePorCedula);
             $(document).on('keypress', '#vehiculo_cedulaproponente', function(e) { if (e.which === 13) { e.preventDefault(); buscarProponentePorCedula(); } });
+            $(document).on('keypress', '#vehiculo_nombreproponente', function(e) { if (e.which === 13) { e.preventDefault(); $('#vehiculo_telefonoproponente').focus();; } });
 
             // Guardar vehículo
             $(document).on('submit', '#formCrearVehiculoPuntero', function(e) {

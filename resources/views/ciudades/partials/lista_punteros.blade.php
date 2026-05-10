@@ -407,7 +407,7 @@
                 e.preventDefault();
                 let inputs = $('#formAgregarPunteroLista').find('input:visible');
                 let index = inputs.index(this);
-
+                
                 if (index === inputs.length - 1) {
                     guardarPunteroListaAjax();
                 } else {
