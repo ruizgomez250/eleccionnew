@@ -59,13 +59,13 @@ class ReportesController extends Controller
 
     public function votantesPorDirigente($idDirigente)
     {
-        
         // Solo dirigente del sistema del usuario
         $dirigente = Dirigente::with(['punteros.votantes'])
             ->whereHas('equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
             })
             ->findOrFail($idDirigente);
+
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
 
         // Configuración general
@@ -98,12 +98,13 @@ class ReportesController extends Controller
             $pdf->SetFont('helvetica', 'B', 8);
             $pdf->SetFillColor(180, 180, 180);
 
+            // ✅ NUEVA CABECERA: N° como primera columna
+            $pdf->Cell(12, 8, 'N°', 1, 0, 'C', true);
             $pdf->Cell(22, 8, 'Cédula', 1, 0, 'C', true);
             $pdf->Cell(48, 8, 'Nombre', 1, 0, 'C', true);
             $pdf->Cell(25, 8, 'Ciudad', 1, 0, 'C', true);
             $pdf->Cell(55, 8, 'Escuela', 1, 0, 'C', true);
-            $pdf->Cell(15, 8, 'Mesa', 1, 0, 'C', true);
-            $pdf->Cell(15, 8, 'Orden', 1, 1, 'C', true);
+            $pdf->Cell(15, 8, 'Mesa', 1, 1, 'C', true);
 
             $pdf->SetFont('helvetica', '', 7.5);
             $fill = false;
@@ -111,6 +112,9 @@ class ReportesController extends Controller
             if ($puntero->votantes->isEmpty()) {
                 $pdf->Cell(180, 8, 'No existen votantes para este puntero', 1, 1, 'C');
             } else {
+                // 🔁 Contador que empieza en 1 por cada puntero
+                $numero = 1;
+
                 foreach ($puntero->votantes as $votante) {
                     $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
 
@@ -120,22 +124,27 @@ class ReportesController extends Controller
                     $escuela = $votante->escuela ?? '';
 
                     $minHeight = 7;
-                    $hNombre  = $pdf->getStringHeight(48, $nombre);
-                    $hCiudad  = $pdf->getStringHeight(25, $ciudad);
-                    $hEscuela = $pdf->getStringHeight(55, $escuela);
-                    $rowHeight = max($minHeight, $hNombre, $hCiudad, $hEscuela);
+                    $hNumero   = $pdf->getStringHeight(12, (string)$numero);
+                    $hCedula   = $pdf->getStringHeight(22, $cedula);
+                    $hNombre   = $pdf->getStringHeight(48, $nombre);
+                    $hCiudad   = $pdf->getStringHeight(25, $ciudad);
+                    $hEscuela  = $pdf->getStringHeight(55, $escuela);
+                    $rowHeight = max($minHeight, $hNumero, $hCedula, $hNombre, $hCiudad, $hEscuela);
 
+                    // ✅ N° (enumerado)
+                    $pdf->MultiCell(12, $rowHeight, $numero, 1, 'C', true, 0);
                     $pdf->MultiCell(22, $rowHeight, $cedula, 1, 'C', true, 0);
                     $pdf->MultiCell(48, $rowHeight, $nombre, 1, 'L', true, 0);
                     $pdf->MultiCell(25, $rowHeight, $ciudad, 1, 'L', true, 0);
                     $pdf->MultiCell(55, $rowHeight, $escuela, 1, 'L', true, 0);
-                    $pdf->MultiCell(15, $rowHeight, $votante->mesa, 1, 'C', true, 0);
-                    $pdf->MultiCell(15, $rowHeight, $votante->orden, 1, 'C', true, 1);
+                    $pdf->MultiCell(15, $rowHeight, $votante->mesa, 1, 'C', true, 1);
 
+                    $numero++;
                     $fill = !$fill;
                 }
             }
         }
+
         $pdf->Output('reporte_votantes_por_dirigente.pdf', 'I');
         exit;
     }
