@@ -35,6 +35,7 @@
                         <th>Nombre</th>
                         <th>Teléfono</th>
                         <th>Función</th>
+                        <th>Mesa</th>
                         <th>Equipo</th>
                         <th>Cédula Proponente</th>
                         <th>Proponente</th>
@@ -50,10 +51,21 @@
                             <td>{{ $miembro->nombre }}</td>
                             <td>{{ $miembro->telefono }}</td>
                             <td>
-                                @if($miembro->funcion == 'Titular')
+                                @if ($miembro->funcion == 'Titular')
                                     <span class="badge badge-success">{{ $miembro->funcion }}</span>
                                 @else
                                     <span class="badge badge-warning">{{ $miembro->funcion }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($miembro->mesa)
+                                    <span class="badge badge-success">
+                                        {{ $miembro->mesa }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-danger">
+                                        Sin Asignar
+                                    </span>
                                 @endif
                             </td>
                             <td>{{ $miembro->equipo->descripcion ?? '' }}</td>
@@ -61,7 +73,8 @@
                             <td>{{ $miembro->nombreproponente ?? '-' }}</td>
                             <td>{{ $miembro->telefonoproponente ?? '-' }}</td>
                             <td>
-                                <button class="btn btn-primary btn-sm" onclick="editarMiembro({{ $miembro->id }})" title="Editar">
+                                <button class="btn btn-primary btn-sm" onclick="editarMiembro({{ $miembro->id }})"
+                                    title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-danger btn-sm" onclick="confirmarBorrado(this)"
@@ -89,7 +102,7 @@
                 @csrf
                 <input type="hidden" name="_method" id="methodField" value="POST">
                 <input type="hidden" name="id" id="miembroId">
-                
+
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title" id="modalTitle">Agregar Miembro de Mesa</h5>
@@ -104,7 +117,8 @@
                                 <div class="form-group">
                                     <label for="cedula">Cédula <span class="text-danger">*</span></label>
                                     <input type="text" name="cedula" id="cedula" class="form-control" required>
-                                    <small class="text-muted">Ingrese la cédula y automáticamente se buscarán los datos</small>
+                                    <small class="text-muted">Ingrese la cédula y automáticamente se buscarán los
+                                        datos</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -116,7 +130,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="nombre">Nombre <span class="text-danger">*</span></label>
                                     <input type="text" name="nombre" id="nombre" class="form-control" required>
@@ -131,16 +145,38 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="mesa">Mesa</label>
+
+                                    <select name="mesa" id="mesa" class="form-control" >
+
+                                        <option value="">Sin asignar</option>
+
+                                        @if ($localInterna)
+
+                                            @for ($i = 1; $i <= $localInterna->cantmesa; $i++)
+                                                <option value="{{ $i }}">
+                                                    Mesa {{ $i }}
+                                                </option>
+                                            @endfor
+
+                                        @endif
+
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <hr class="my-3">
-                        
+
                         <div class="row">
                             <div class="col-12">
                                 <h6 class="text-info">
                                     <i class="fas fa-user-friends"></i> Datos del Proponente (Opcional)
                                 </h6>
-                                <small class="text-muted">Complete estos campos si el miembro tiene un proponente asociado</small>
+                                <small class="text-muted">Complete estos campos si el miembro tiene un proponente
+                                    asociado</small>
                             </div>
                         </div>
 
@@ -148,13 +184,15 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="cedulaproponente">Cédula del Proponente</label>
-                                    <input type="text" name="cedulaproponente" id="cedulaproponente" class="form-control">
+                                    <input type="text" name="cedulaproponente" id="cedulaproponente"
+                                        class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="telefonoproponente">Teléfono del Proponente</label>
-                                    <input type="text" name="telefonoproponente" id="telefonoproponente" class="form-control">
+                                    <input type="text" name="telefonoproponente" id="telefonoproponente"
+                                        class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -163,7 +201,8 @@
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="nombreproponente">Nombre del Proponente</label>
-                                    <input type="text" name="nombreproponente" id="nombreproponente" class="form-control">
+                                    <input type="text" name="nombreproponente" id="nombreproponente"
+                                        class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -192,16 +231,20 @@
             border-color: #28a745 !important;
             box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
         }
+
         .modal-lg {
             max-width: 800px;
         }
+
         .badge {
             padding: 5px 10px;
             font-size: 12px;
         }
+
         .bg-primary {
             background-color: #007bff !important;
         }
+
         hr {
             border-top: 2px solid #e9ecef;
         }
@@ -240,7 +283,7 @@
 
             // Mostrar loading
             $('#cedula').addClass('border-info');
-            
+
             $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
                 if (response.encontrado) {
                     $('#nombre').val(response.data.nombre);
@@ -255,7 +298,7 @@
                         $('#telefono').removeClass('border-success');
                         $('#cedula').removeClass('border-info');
                     }, 1500);
-                    
+
                     // Mostrar notificación de éxito
                     toastr.success('Datos del dirigente cargados correctamente');
                 } else {
@@ -277,7 +320,7 @@
 
             // Mostrar loading
             $('#cedulaproponente').addClass('border-info');
-            
+
             $.get("{{ url('dirigente/buscar-por-cedula') }}/" + cedula, function(response) {
                 if (response.encontrado) {
                     $('#nombreproponente').val(response.data.nombre);
@@ -292,7 +335,7 @@
                         $('#telefonoproponente').removeClass('border-success');
                         $('#cedulaproponente').removeClass('border-info');
                     }, 1500);
-                    
+
                     toastr.success('Datos del proponente cargados correctamente');
                 } else {
                     $('#nombreproponente').val('');
@@ -332,10 +375,15 @@
         });
 
         function editarMiembro(id) {
-            $.get("{{ url('miembros-de-mesa') }}/" + id, function(miembro) {
+            $.get("{{ url('miembros-de-mesa') }}/" + id, function(res) {
+
+                let miembro = res.miembro;
+                let cantmesa = res.cantmesa;
+
                 $('#modalTitle').text('Editar Miembro de Mesa');
                 $('#formMiembro').attr('action', "{{ url('miembros-de-mesa') }}/" + id);
                 $('#methodField').val('PUT');
+
                 $('#miembroId').val(miembro.id);
                 $('#idequipo').val(miembro.idequipo);
                 $('#cedula').val(miembro.cedula);
@@ -345,8 +393,30 @@
                 $('#cedulaproponente').val(miembro.cedulaproponente || '');
                 $('#nombreproponente').val(miembro.nombreproponente || '');
                 $('#telefonoproponente').val(miembro.telefonoproponente || '');
-                
+
+                /*
+                |--------------------------------------------------------------------------
+                | RECONSTRUIR SELECT DE MESAS
+                |--------------------------------------------------------------------------
+                */
+                let mesaSelect = $('#mesa');
+                mesaSelect.empty();
+
+                mesaSelect.append(`<option value="">Sin asignar</option>`);
+
+                for (let i = 1; i <= cantmesa; i++) {
+
+                    let selected = (miembro.mesa == i) ? 'selected' : '';
+
+                    mesaSelect.append(`
+                <option value="${i}" ${selected}>
+                    Mesa ${i}
+                </option>
+            `);
+                }
+
                 $('#modalMiembro').modal('show');
+
             }).fail(function() {
                 Swal.fire({
                     icon: 'error',
@@ -385,7 +455,7 @@
         }
 
         // Limpiar modal al cerrar
-        $('#modalMiembro').on('hidden.bs.modal', function () {
+        $('#modalMiembro').on('hidden.bs.modal', function() {
             $('#formMiembro')[0].reset();
             $('#modalTitle').text('Agregar Miembro de Mesa');
             $('#formMiembro').attr('action', "{{ route('miembros-de-mesa.store') }}");
@@ -424,7 +494,8 @@
                             $('#idequipo').val(equipoSeleccionado);
                             $('#formMiembro')[0].reset();
                             $('#modalTitle').text('Agregar Miembro de Mesa');
-                            $('#formMiembro').attr('action', "{{ route('miembros-de-mesa.store') }}");
+                            $('#formMiembro').attr('action',
+                                "{{ route('miembros-de-mesa.store') }}");
                             $('#methodField').val('POST');
                             $('#modalMiembro').modal('show');
                             $('#cedula').trigger('focus');
@@ -451,11 +522,16 @@
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                 },
-                order: [[1, 'asc']],
+                order: [
+                    [1, 'asc']
+                ],
                 pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]]
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, "Todos"]
+                ]
             });
-            
+
             @if (session()->has('abrirModalMiembro'))
                 bloqueaFiltro = true;
 

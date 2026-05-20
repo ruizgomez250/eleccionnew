@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CiudadElectoral;
 use App\Models\MiembroDeMesa;
 use App\Models\Equipo;
+use App\Models\LocalInterna;
+use App\Models\Sistema;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +48,36 @@ class MiembroDeMesaController extends Controller
 
         $equipos = Equipo::where('sist', $sistemaUsuario)->get();
 
+        $localInterna = null;
+
+        /*
+    |--------------------------------------------------------------------------
+    | SI EXISTE EQUIPO
+    |--------------------------------------------------------------------------
+    */
+        if ($equipoId) {
+
+            $equipo = Equipo::find($equipoId);
+
+            if ($equipo) {
+
+                $sistema = Sistema::find($equipo->sist);
+
+                if ($sistema) {
+
+                    $ciudadElectoral = CiudadElectoral::find($sistema->id_ciudad_electoral);
+
+                    if ($ciudadElectoral) {
+
+                        $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
+                            ->where('departamento_nombre', $ciudadElectoral->departamento)
+                            ->where('local_interna', $equipo->descripcion)
+                            ->first();
+                    }
+                }
+            }
+        }
+
         $miembros = MiembroDeMesa::with('equipo')
             ->whereHas('equipo', function ($q) use ($sistemaUsuario) {
                 $q->where('sist', $sistemaUsuario);
@@ -56,7 +89,8 @@ class MiembroDeMesaController extends Controller
         return view('miembros_de_mesa.create', compact(
             'equipos',
             'equipoId',
-            'miembros'
+            'miembros',
+            'localInterna'
         ));
     }
 
@@ -78,7 +112,7 @@ class MiembroDeMesaController extends Controller
         try {
             // Preparar los datos para crear
             $data = $request->all();
-            
+
             // Si los campos del proponente están vacíos, establecerlos como null
             // Esto evita guardar strings vacíos en la base de datos
             if (empty($data['cedulaproponente'])) {
@@ -90,7 +124,7 @@ class MiembroDeMesaController extends Controller
             if (empty($data['telefonoproponente'])) {
                 $data['telefonoproponente'] = null;
             }
-            
+
             MiembroDeMesa::create($data);
 
             return redirect()
@@ -98,7 +132,6 @@ class MiembroDeMesaController extends Controller
                 ->with('successAlert', 'Miembro de mesa agregado correctamente')
                 ->with('abrirModalMiembro', true)
                 ->with('equipoId', $request->idequipo);
-                
         } catch (QueryException $e) {
             // Verificar si es un error de duplicado
             if ($e->errorInfo[1] == 1062) { // Código de error MySQL para duplicado
@@ -118,7 +151,6 @@ class MiembroDeMesaController extends Controller
                 ->with('abrirModalMiembro', true)
                 ->with('equipoId', $request->idequipo)
                 ->withInput();
-                
         } catch (\Exception $e) {
             // Capturar cualquier otro error
             Log::error('Error inesperado: ' . $e->getMessage());
@@ -151,22 +183,21 @@ class MiembroDeMesaController extends Controller
 
         try {
             $miembro = MiembroDeMesa::findOrFail($id);
-            
+
             // Preparar los datos para actualizar
             $data = $request->all();
-            
+
             // Si los campos del proponente están vacíos, establecerlos como null
             $data['cedulaproponente'] = empty($data['cedulaproponente']) ? null : $data['cedulaproponente'];
             $data['nombreproponente'] = empty($data['nombreproponente']) ? null : $data['nombreproponente'];
             $data['telefonoproponente'] = empty($data['telefonoproponente']) ? null : $data['telefonoproponente'];
-            
+
             $miembro->update($data);
 
             return redirect()
                 ->back()
                 ->with('successAlert', 'Miembro de mesa actualizado correctamente')
                 ->with('equipoId', $request->idequipo);
-                
         } catch (QueryException $e) {
             if ($e->errorInfo[1] == 1062) {
                 return redirect()
@@ -175,14 +206,13 @@ class MiembroDeMesaController extends Controller
                     ->with('equipoId', $request->idequipo)
                     ->withInput();
             }
-            
+
             Log::error('Error al actualizar miembro de mesa: ' . $e->getMessage());
             return redirect()
                 ->back()
                 ->with('errorAlert', 'Ocurrió un error al intentar actualizar el miembro de mesa.')
                 ->with('equipoId', $request->idequipo)
                 ->withInput();
-                
         } catch (\Exception $e) {
             Log::error('Error inesperado al actualizar: ' . $e->getMessage());
             return redirect()
@@ -199,16 +229,54 @@ class MiembroDeMesaController extends Controller
     public function show($id)
     {
         try {
+
             $miembro = MiembroDeMesa::with('equipo')->findOrFail($id);
-            
-            if (request()->ajax()) {
-                return response()->json($miembro);
+
+            $localInterna = null;
+
+            /*
+        |--------------------------------------------------------------------------
+        | OBTENER LOCAL INTERNA SEGÚN EL EQUIPO DEL MIEMBRO
+        |--------------------------------------------------------------------------
+        */
+            if ($miembro->equipo) {
+
+                $equipo = $miembro->equipo;
+
+                $sistema = Sistema::find($equipo->sist);
+
+                if ($sistema) {
+
+                    $ciudadElectoral = CiudadElectoral::find($sistema->id_ciudad_electoral);
+
+                    if ($ciudadElectoral) {
+
+                        $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
+                            ->where('departamento_nombre', $ciudadElectoral->departamento)
+                            ->where('local_interna', $equipo->descripcion)
+                            ->first();
+                    }
+                }
             }
-            
-            return view('miembros_de_mesa.show', compact('miembro'));
-            
+
+            /*
+        |--------------------------------------------------------------------------
+        | AJAX RESPONSE
+        |--------------------------------------------------------------------------
+        */
+            if (request()->ajax()) {
+
+                return response()->json([
+                    'miembro' => $miembro,
+                    'cantmesa' => $localInterna ? $localInterna->cantmesa : 0
+                ]);
+            }
+
+            return view('miembros_de_mesa.show', compact('miembro', 'localInterna'));
         } catch (\Exception $e) {
+
             Log::error('Error al mostrar miembro: ' . $e->getMessage());
+
             return redirect()
                 ->back()
                 ->with('errorAlert', 'No se encontró el miembro de mesa.');
@@ -223,14 +291,13 @@ class MiembroDeMesaController extends Controller
 
             return redirect()->back()
                 ->with('successAlert', 'Miembro eliminado correctamente.');
-                
         } catch (\Exception $e) {
             Log::error('Error al eliminar miembro: ' . $e->getMessage());
             return redirect()->back()
                 ->with('errorAlert', 'Error al eliminar: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Método adicional para filtrar miembros por equipo
      */
@@ -241,9 +308,8 @@ class MiembroDeMesaController extends Controller
                 ->orderBy('funcion')
                 ->orderBy('nombre')
                 ->get();
-                
+
             return response()->json($miembros);
-            
         } catch (\Exception $e) {
             Log::error('Error al obtener miembros por equipo: ' . $e->getMessage());
             return response()->json(['error' => 'Error al cargar los miembros'], 500);
