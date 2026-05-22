@@ -309,7 +309,7 @@ return [
         [
             'text'       => 'Árbol de Candidaturas',
             'icon'       => 'fas fa-sitemap',  // Cambié a fa-sitemap que es más apropiado para un árbol
-            'icon_color' => 'primary',            
+            'icon_color' => 'primary',
             'can'        => 'Arbol',
             'url'        => '/arbol',    // Usando el nombre de la ruta en lugar de la URL directa
         ],
@@ -349,7 +349,7 @@ return [
             'classes'    => 'custom-icon-box custom-icon-box-dark',
             'content'    => '<i class="fas fa-user-friends"></i>',
             'can'        => 'Reportes',
-            'submenu'        => [
+            'submenu'    => [
                 [
                     'text' => 'Votantes por Dirigente',
                     'url'  => '/punterosyvotantespordirigente',
@@ -362,10 +362,14 @@ return [
                     'text' => 'Todos los Vehiculos',
                     'url'  => '/vehiculosporsistema',
                 ],
-                
+                'separator' => true, // Línea separadora
+                [
+                    'text'      => 'Votantes Duplicados',
+                    'url'       => '/reportes/votantes-duplicados',
+                    'icon'      => 'fas fa-clone',
+                    'icon_color' => 'danger',
+                ],
             ],
-
-
         ],
         [
             'text'       => 'Vehiculo',

@@ -11,6 +11,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilesController;
 use App\Http\Controllers\PunteroController;
+use App\Http\Controllers\VotantesDuplicadosController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\SistemaController;
@@ -223,4 +224,15 @@ Route::middleware('auth')->group(function () {
         ->name('vehiculo.store.from.puntero');
     // Ruta para desvincular vehículo de un puntero
     Route::delete('/vehiculo/{vehiculoId}/puntero/{punteroId}', [VehiculoController::class, 'desvincularPuntero']);
+    // Reporte de votantes duplicados
+
+    // Reporte de votantes duplicados
+    Route::get('reportes/votantes-duplicados', [VotantesDuplicadosController::class, 'index'])
+        ->name('reportes.votantes.duplicados');
+
+    Route::get('reportes/votantes-duplicados/detalle', [VotantesDuplicadosController::class, 'detalleVotante'])
+        ->name('reportes.votantes.duplicados.detalle');
+
+    Route::get('reportes/votantes-duplicados/exportar', [VotantesDuplicadosController::class, 'exportarExcel'])
+        ->name('reportes.votantes.duplicados.exportar');
 });
