@@ -16,148 +16,140 @@ class VotantesDuplicadosController extends Controller
     public function index(Request $request)
     {
         // Obtener el sistema del usuario logueado
-        $sistemaId = Auth::user()->sistema;
+        $sistemaUsuario = Auth::user()->sistema;
         
-        // ============================================================
-        // CORRECCIÓN: Obtener equipos que pertenecen al sistema
-        // El campo 'sist' está en la tabla 'equipo', no en 'dirigente'
-        // ============================================================
-        $equiposDelSistema = Equipo::where('sist', $sistemaId)->pluck('id')->toArray();
+        // Obtener TODOS los votantes de TODOS los sistemas
+        $todosLosPunteros = Puntero::with(['dirigente', 'dirigente.equipo'])->get();
+        $todosLosPunterosIds = $todosLosPunteros->pluck('id')->toArray();
         
-        // Si no hay equipos en este sistema, retornar vacío
-        if (empty($equiposDelSistema)) {
+        if (empty($todosLosPunterosIds)) {
             return $this->vistaVacia();
         }
         
-        // Obtener los dirigentes que pertenecen a esos equipos
-        $dirigentesDelSistema = Dirigente::whereIn('id_equipo', $equiposDelSistema)->pluck('id')->toArray();
-        
-        if (empty($dirigentesDelSistema)) {
-            return $this->vistaVacia();
-        }
-        
-        // Obtener los punteros que pertenecen a esos dirigentes
-        $punterosDelSistema = Puntero::whereIn('id_dirigente', $dirigentesDelSistema)->pluck('id')->toArray();
-        
-        if (empty($punterosDelSistema)) {
-            return $this->vistaVacia();
-        }
-        
-        // Obtener todos los votantes cuyos punteros están en el sistema
-        $votantesDelSistema = Votante::whereIn('idpuntero', $punterosDelSistema)
-            ->with(['puntero', 'puntero.dirigente', 'puntero.equipo'])
+        // Obtener TODOS los votantes con sus relaciones
+        $todosLosVotantes = Votante::whereIn('idpuntero', $todosLosPunterosIds)
+            ->with(['puntero', 'puntero.dirigente', 'puntero.dirigente.equipo'])
             ->get();
         
-        if ($votantesDelSistema->isEmpty()) {
+        if ($todosLosVotantes->isEmpty()) {
             return $this->vistaVacia();
         }
         
-        // 1. VOTANTES DUPLICADOS POR CÉDULA
-        $votantesDuplicados = $votantesDelSistema->groupBy('cedula')
-            ->filter(function($grupo) {
-                return $grupo->count() > 1;
-            })
-            ->flatten();
+        // Agrupar por cédula
+        $agrupadosPorCedula = $todosLosVotantes->groupBy('cedula');
         
-        // 2. VOTANTES DUPLICADOS POR PUNTERO
-        $votantesConMultiplesPunteros = $votantesDelSistema->groupBy('cedula')
-            ->filter(function($grupo) {
-                $punterosUnicos = $grupo->pluck('idpuntero')->unique()->count();
-                return $punterosUnicos > 1;
-            })
-            ->flatten();
+        // Filtrar SOLO las cédulas que tienen duplicados que involucran al sistema del usuario
+        $cedulasConDuplicadosRelevantes = [];
         
-        // 3. VOTANTES DUPLICADOS POR DIRIGENTE
-        $votantesDuplicadosPorDirigente = $votantesDelSistema->groupBy('cedula')
-            ->filter(function($grupo) {
-                $dirigentesUnicos = collect();
-                foreach ($grupo as $votante) {
-                    if ($votante->puntero && $votante->puntero->dirigente) {
-                        $dirigentesUnicos->push($votante->puntero->dirigente->id);
-                    }
+        foreach ($agrupadosPorCedula as $cedula => $registros) {
+            // Verificar si esta cédula tiene registros en el sistema del usuario
+            $tieneRegistroEnSistemaUsuario = false;
+            $sistemasInvolucrados = [];
+            
+            foreach ($registros as $votante) {
+                $sistemaId = $this->getSistemaIdFromVotante($votante);
+                $sistemasInvolucrados[] = $sistemaId;
+                
+                if ($sistemaId == $sistemaUsuario) {
+                    $tieneRegistroEnSistemaUsuario = true;
                 }
-                $dirigentesUnicos = $dirigentesUnicos->unique();
-                return $dirigentesUnicos->count() > 1;
-            })
-            ->flatten();
+            }
+            
+            // Solo incluir si:
+            // 1. Tiene al menos un registro en el sistema del usuario
+            // 2. Y tiene más de 1 registro en TOTAL (está duplicado en algún lado)
+            if ($tieneRegistroEnSistemaUsuario && $registros->count() > 1) {
+                $cedulasConDuplicadosRelevantes[$cedula] = $registros;
+            }
+        }
         
-        // ESTADÍSTICAS GENERALES
-        $totalVotantesSistema = $votantesDelSistema->count();
-        $totalCedulasUnicas = $votantesDelSistema->unique('cedula')->count();
-        $totalDuplicadosCedula = $votantesDuplicados->unique('cedula')->count();
-        $totalDuplicadosPuntero = $votantesConMultiplesPunteros->unique('cedula')->count();
-        $totalDuplicadosDirigente = $votantesDuplicadosPorDirigente->unique('cedula')->count();
-        $totalVotantesEnDuplicados = $votantesDuplicados->unique('cedula')->count();
+        // Construir el array de resultados (una sola fila por cédula)
+        $resultados = [];
+        
+        foreach ($cedulasConDuplicadosRelevantes as $cedula => $registros) {
+            $primerRegistro = $registros->first();
+            
+            // Contar duplicados por tipo
+            $totalRegistros = $registros->count();
+            
+            // Duplicados por PUNTERO (contar punteros únicos diferentes)
+            $punterosUnicos = $registros->pluck('idpuntero')->unique();
+            $totalPunteros = $punterosUnicos->count();
+            $duplicadoPorPuntero = $totalPunteros > 1;
+            
+            // Duplicados por DIRIGENTE (contar dirigentes únicos diferentes)
+            $dirigentesUnicos = collect();
+            foreach ($registros as $votante) {
+                if ($votante->puntero && $votante->puntero->dirigente) {
+                    $dirigentesUnicos->push($votante->puntero->dirigente->id);
+                }
+            }
+            $dirigentesUnicos = $dirigentesUnicos->unique();
+            $totalDirigentes = $dirigentesUnicos->count();
+            $duplicadoPorDirigente = $totalDirigentes > 1;
+            
+            // Obtener información del sistema del usuario (para mostrar)
+            $registroEnSistemaUsuario = $registros->first(function($v) use ($sistemaUsuario) {
+                return $this->getSistemaIdFromVotante($v) == $sistemaUsuario;
+            });
+            
+            $resultados[] = (object)[
+                'cedula' => $cedula,
+                'nombre' => $primerRegistro->nombre,
+                'direccion' => $primerRegistro->direccion,
+                'mesa' => $primerRegistro->mesa,
+                'orden' => $primerRegistro->orden,
+                'partido' => $primerRegistro->partido,
+                'puntero' => $registroEnSistemaUsuario->puntero->nombre ?? 'N/A',
+                'dirigente' => $registroEnSistemaUsuario->puntero->dirigente->nombre ?? 'N/A',
+                'equipo' => $registroEnSistemaUsuario->puntero->equipo->descripcion ?? 'N/A',
+                'total_registros' => $totalRegistros,
+                'duplicado_por_puntero' => $duplicadoPorPuntero,
+                'duplicado_por_dirigente' => $duplicadoPorDirigente,
+                'total_punteros' => $totalPunteros,
+                'total_dirigentes' => $totalDirigentes,
+                'sistemas_involucrados' => collect($sistemasInvolucrados)->unique()->values()->toArray()
+            ];
+        }
+        
+        // Estadísticas
+        $totalCedulasDuplicadas = count($resultados);
+        $totalConDuplicadoPuntero = collect($resultados)->where('duplicado_por_puntero', true)->count();
+        $totalConDuplicadoDirigente = collect($resultados)->where('duplicado_por_dirigente', true)->count();
         
         return view('reportes.votantes_duplicados', compact(
-            'votantesDuplicados',
-            'votantesConMultiplesPunteros',
-            'votantesDuplicadosPorDirigente',
-            'totalVotantesSistema',
-            'totalCedulasUnicas',
-            'totalDuplicadosCedula',
-            'totalDuplicadosPuntero',
-            'totalDuplicadosDirigente',
-            'totalVotantesEnDuplicados'
+            'resultados',
+            'totalCedulasDuplicadas',
+            'totalConDuplicadoPuntero',
+            'totalConDuplicadoDirigente',
+            'sistemaUsuario'
         ));
     }
     
     /**
-     * Método para retornar vista vacía cuando no hay datos
+     * Obtener el ID del sistema a partir de un votante
+     * Votante -> Puntero -> Dirigente -> Equipo -> sist
      */
+    private function getSistemaIdFromVotante($votante)
+    {
+        try {
+            if ($votante && $votante->puntero && $votante->puntero->dirigente && $votante->puntero->dirigente->equipo) {
+                return $votante->puntero->dirigente->equipo->sist;
+            }
+        } catch (\Exception $e) {
+            return null;
+        }
+        return null;
+    }
+    
     private function vistaVacia()
     {
         return view('reportes.votantes_duplicados', [
-            'votantesDuplicados' => collect(),
-            'votantesConMultiplesPunteros' => collect(),
-            'votantesDuplicadosPorDirigente' => collect(),
-            'totalVotantesSistema' => 0,
-            'totalCedulasUnicas' => 0,
-            'totalDuplicadosCedula' => 0,
-            'totalDuplicadosPuntero' => 0,
-            'totalDuplicadosDirigente' => 0,
-            'totalVotantesEnDuplicados' => 0
+            'resultados' => collect(),
+            'totalCedulasDuplicadas' => 0,
+            'totalConDuplicadoPuntero' => 0,
+            'totalConDuplicadoDirigente' => 0,
+            'sistemaUsuario' => Auth::user()->sistema
         ]);
-    }
-    
-    /**
-     * Método para depuración - ver la jerarquía de datos
-     */
-    public function debug(Request $request)
-    {
-        $sistemaId = Auth::user()->sistema;
-        
-        $debug = [];
-        
-        // Equipos del sistema
-        $equipos = Equipo::where('sist', $sistemaId)->get();
-        $debug['equipos'] = $equipos;
-        $debug['total_equipos'] = $equipos->count();
-        
-        // Dirigentes de esos equipos
-        $equiposIds = $equipos->pluck('id')->toArray();
-        $dirigentes = Dirigente::whereIn('id_equipo', $equiposIds)->get();
-        $debug['dirigentes'] = $dirigentes;
-        $debug['total_dirigentes'] = $dirigentes->count();
-        
-        // Punteros de esos dirigentes
-        $dirigentesIds = $dirigentes->pluck('id')->toArray();
-        $punteros = Puntero::whereIn('id_dirigente', $dirigentesIds)->get();
-        $debug['punteros'] = $punteros;
-        $debug['total_punteros'] = $punteros->count();
-        
-        // Votantes de esos punteros
-        $punterosIds = $punteros->pluck('id')->toArray();
-        $votantes = Votante::whereIn('idpuntero', $punterosIds)->get();
-        $debug['votantes'] = $votantes;
-        $debug['total_votantes'] = $votantes->count();
-        
-        // Duplicados
-        $debug['cedulas_duplicadas'] = $votantes->groupBy('cedula')
-            ->filter(fn($g) => $g->count() > 1)
-            ->map(fn($g) => $g->count())
-            ->toArray();
-        
-        return response()->json($debug);
     }
 }
