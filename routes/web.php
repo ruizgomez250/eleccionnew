@@ -235,4 +235,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('reportes/votantes-duplicados/exportar', [VotantesDuplicadosController::class, 'exportarExcel'])
         ->name('reportes.votantes.duplicados.exportar');
+    // Dentro del grupo Route::middleware('auth')->group(), busca donde están las rutas de punteros y agrega:
+
+    // Rutas AJAX para editar puntero
+    Route::get('/puntero/{id}/editar-ajax', [PunteroController::class, 'editAjax'])->name('puntero.editar.ajax');
+    Route::put('/puntero/{id}', [PunteroController::class, 'updateAjax'])->name('puntero.update.ajax');
 });

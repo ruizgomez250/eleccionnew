@@ -150,6 +150,15 @@ class VotanteController extends Controller
             $idPuntero = $request->idpuntero;
 
             /* ===========================
+           VERIFICAR QUE EXISTA EN PADRÓN
+        ============================ */
+            $existeEnPadron = PrePadron::where('cedula', $cedula)->exists();
+
+            if (!$existeEnPadron) {
+                throw new \Exception("La cédula {$cedula} no existe en el padrón electoral.");
+            }
+
+            /* ===========================
            OBTENER PUNTERO Y SISTEMA
         ============================ */
             $puntero = Puntero::with('dirigente.equipo')->find($idPuntero);
@@ -296,6 +305,16 @@ class VotanteController extends Controller
 
             $cedula = $request->cedula;
             $idPuntero = $request->idpuntero;
+
+            /* =========================== VERIFICAR QUE EXISTA EN PADRÓN ============================ */
+            $existeEnPadron = \App\Models\PrePadron::where('cedula', $cedula)->exists();
+
+            if (!$existeEnPadron) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: la cédula {$cedula} no existe en el padrón electoral."
+                ], 422);
+            }
 
             /* =========================== OBTENER PUNTERO Y SISTEMA ============================ */
             $puntero = Puntero::with('dirigente.equipo')->find($idPuntero);

@@ -143,6 +143,12 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
+                                {{-- Botón para editar puntero --}}
+                                <button class="btn btn-warning" title="Editar puntero"
+                                    onclick="abrirModalEditarPuntero({{ $p->id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+
                                 {{-- Botón para crear vehículo --}}
                                 <button class="btn btn-info btn-icon-with-count"
                                     onclick="abrirModalCrearVehiculo({{ $p->id }}, '{{ addslashes($p->nombre) }}')"
@@ -166,6 +172,81 @@
         </table>
     </div>
 </div>
+
+{{-- MODAL DE EDICIÓN DE PUNTERO --}}
+<div class="modal fade" id="modalEditarPuntero" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Editar Puntero
+                </h5>
+                <button type="button" class="close" onclick="cerrarModalEditarPuntero()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarPuntero">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="id" id="edit_puntero_id">
+                    
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label>Cédula</label>
+                            <input type="text" name="cedula" id="edit_puntero_cedula" class="form-control" required>
+                            <small class="text-danger" id="edit-error-cedula"></small>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Nombre</label>
+                            <input type="text" name="nombre" id="edit_puntero_nombre" class="form-control" required>
+                            <small class="text-danger" id="edit-error-nombre"></small>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label>Teléfono</label>
+                            <input type="text" name="telefono" id="edit_puntero_telefono" class="form-control">
+                            <small class="text-danger" id="edit-error-telefono"></small>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Barrio</label>
+                            <input type="text" name="barrio" id="edit_puntero_barrio" class="form-control">
+                            <small class="text-danger" id="edit-error-barrio"></small>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label>Dirigente</label>
+                            <select name="id_dirigente" id="edit_puntero_id_dirigente" class="form-control" required>
+                                <option value="">Seleccione un dirigente</option>
+                                @foreach ($dirigentes as $dir)
+                                    <option value="{{ $dir->id }}">{{ $dir->nombre }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-danger" id="edit-error-id_dirigente"></small>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Equipo</label>
+                            <select name="id_equipo" id="edit_puntero_id_equipo" class="form-control" required>
+                                <option value="">Seleccione un equipo</option>
+                                @foreach ($equipos as $eq)
+                                    <option value="{{ $eq->id }}">{{ $eq->descripcion }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-danger" id="edit-error-id_equipo"></small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalEditarPuntero()">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnActualizarPuntero">
+                    <i class="fas fa-save"></i> Actualizar Puntero
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL DE BÚSQUEDA DE EQUIPOS PARA PUNTEROS --}}
 <div class="modal fade" id="modalEquiposPunteros" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -208,6 +289,7 @@
         </div>
     </div>
 </div>
+
 {{-- MODAL DE BÚSQUEDA DE PERSONAS DEL PADRÓN PARA PUNTEROS --}}
 <div class="modal fade" id="modalBuscarPersonaPadronPuntero" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -266,6 +348,7 @@
         </div>
     </div>
 </div>
+
 {{-- MODAL DE BÚSQUEDA DE DIRIGENTES PARA PUNTEROS --}}
 <div class="modal fade" id="modalDirigentesPunteros" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -290,16 +373,17 @@
                         </thead>
                         <tbody>
                             @foreach ($dirigentes as $dir)
-                                <td>{{ $dir->id }}</td>
-                                <td>{{ $dir->nombre }}</td>
-                                <td>{{ $dir->cedula }}</td>
-                                <td>{{ $dir->equipo->descripcion ?? '' }}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-success btn-sm"
-                                        onclick="seleccionarDirigentePunteros({{ $dir->id }}, '{{ addslashes($dir->nombre) }}')">
-                                        <i class="fas fa-check"></i> Seleccionar
-                                    </button>
-                                </td>
+                                <tr>
+                                    <td>{{ $dir->id }}</td>
+                                    <td>{{ $dir->nombre }}</td>
+                                    <td>{{ $dir->cedula }}</td>
+                                    <td>{{ $dir->equipo->descripcion ?? '' }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-success btn-sm"
+                                            onclick="seleccionarDirigentePunteros({{ $dir->id }}, '{{ addslashes($dir->nombre) }}')">
+                                            <i class="fas fa-check"></i> Seleccionar
+                                        </button>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -315,44 +399,6 @@
 
 <script>
     $(document).ready(function() {
-        // Inicializar Select2 para equipos
-        // if ($('#equipo_punteros').length) {
-        //     $('#equipo_punteros').select2({
-        //         width: '100%',
-        //         dropdownParent: $('#modalPunterosLista'),
-        //         allowClear: true,
-        //         minimumResultsForSearch: 1,
-        //         placeholder: 'Selecciona un equipo...',
-        //         language: {
-        //             noResults: function() {
-        //                 return "No se encontraron resultados";
-        //             },
-        //             searching: function() {
-        //                 return "Buscando...";
-        //             }
-        //         }
-        //     });
-        // }
-
-        // Inicializar Select2 para dirigentes
-        // if ($('#dirigente_punteros').length) {
-        //     $('#dirigente_punteros').select2({
-        //         width: '100%',
-        //         dropdownParent: $('#modalPunterosLista'),
-        //         allowClear: true,
-        //         minimumResultsForSearch: 1,
-        //         placeholder: 'Selecciona un dirigente...',
-        //         language: {
-        //             noResults: function() {
-        //                 return "No se encontraron resultados";
-        //             },
-        //             searching: function() {
-        //                 return "Buscando...";
-        //             }
-        //         }
-        //     });
-        // }
-
         // Inicializar DataTable
         if ($.fn.DataTable && $('#punteros-lista-table').length) {
             $('#punteros-lista-table').DataTable({
@@ -419,6 +465,24 @@
         // Guardar puntero
         $('#btnGuardarPunteroLista').on('click', function() {
             guardarPunteroListaAjax();
+        });
+
+        // Actualizar puntero
+        $('#btnActualizarPuntero').on('click', function() {
+            actualizarPunteroAjax();
+        });
+
+        // Buscar datos al escribir cédula en el modal editar
+        $('#edit_puntero_cedula').on('blur', function() {
+            buscarPunteroPorCedulaEdit();
+        });
+
+        $('#edit_puntero_cedula').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                buscarPunteroPorCedulaEdit();
+                $('#edit_puntero_nombre').focus();
+            }
         });
 
         // Cuando se cambie el equipo, actualizar el hidden
@@ -527,6 +591,23 @@
                 $('#puntero_nombre_lista').val('');
                 $('#puntero_telefono_lista').val('');
                 $('#puntero_barrio_lista').val('');
+            }
+        });
+    }
+
+    function cerrarModalEditarPuntero() {
+        $('#modalEditarPuntero').modal('hide');
+    }
+
+    function buscarPunteroPorCedulaEdit() {
+        let cedula = $('#edit_puntero_cedula').val().trim();
+        if (cedula.length < 3) return;
+
+        $.get("{{ url('dirigente/buscar-por-cedulap') }}/" + cedula, function(response) {
+            if (response.encontrado) {
+                $('#edit_puntero_nombre').val(response.data.nombre ?? '');
+                $('#edit_puntero_telefono').val(response.data.telefono ?? '');
+                $('#edit_puntero_barrio').val(response.data.direccion ?? '');
             }
         });
     }
@@ -916,5 +997,162 @@
 
         // Enfocar el siguiente campo
         $('#puntero_nombre_lista').focus();
+    }
+
+    // ==========================================
+    // FUNCIONES PARA EDITAR PUNTERO
+    // ==========================================
+    function abrirModalEditarPuntero(punteroId) {
+        // Limpiar errores previos
+        $('#formEditarPuntero .text-danger').text('');
+        $('#formEditarPuntero .is-invalid').removeClass('is-invalid');
+        
+        // Mostrar loading en el modal
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo datos del puntero',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        $.ajax({
+            url: "{{ url('puntero') }}/" + punteroId + "/editar-ajax",
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                Swal.close();
+                
+                if (response.success) {
+                    let puntero = response.data;
+                    
+                    // Llenar el formulario de edición
+                    $('#edit_puntero_id').val(puntero.id);
+                    $('#edit_puntero_cedula').val(puntero.cedula);
+                    $('#edit_puntero_nombre').val(puntero.nombre);
+                    $('#edit_puntero_telefono').val(puntero.telefono);
+                    $('#edit_puntero_barrio').val(puntero.barrio);
+                    $('#edit_puntero_id_dirigente').val(puntero.id_dirigente);
+                    $('#edit_puntero_id_equipo').val(puntero.id_equipo);
+                    
+                    // Abrir el modal
+                    $('#modalEditarPuntero').modal('show');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'No se pudo cargar la información del puntero'
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar los datos del puntero'
+                });
+                console.error('Error:', xhr);
+            }
+        });
+    }
+
+    function actualizarPunteroAjax() {
+        let btnActualizar = $('#btnActualizarPuntero');
+        let punteroId = $('#edit_puntero_id').val();
+        
+        btnActualizar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Actualizando...');
+        
+        // Limpiar errores anteriores
+        $('#formEditarPuntero .text-danger').text('');
+        $('#formEditarPuntero .is-invalid').removeClass('is-invalid');
+        
+        let formData = {
+            cedula: $('#edit_puntero_cedula').val(),
+            nombre: $('#edit_puntero_nombre').val(),
+            telefono: $('#edit_puntero_telefono').val(),
+            barrio: $('#edit_puntero_barrio').val(),
+            id_dirigente: $('#edit_puntero_id_dirigente').val(),
+            id_equipo: $('#edit_puntero_id_equipo').val(),
+            _token: '{{ csrf_token() }}',
+            _method: 'PUT'
+        };
+        
+        // Validaciones básicas
+        if (!formData.cedula) {
+            $('#edit-error-cedula').text('La cédula es requerida');
+            $('#edit_puntero_cedula').addClass('is-invalid');
+            btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
+            return;
+        }
+        
+        if (!formData.nombre) {
+            $('#edit-error-nombre').text('El nombre es requerido');
+            $('#edit_puntero_nombre').addClass('is-invalid');
+            btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
+            return;
+        }
+        
+        if (!formData.id_dirigente) {
+            $('#edit-error-id_dirigente').text('Debe seleccionar un dirigente');
+            $('#edit_puntero_id_dirigente').addClass('is-invalid');
+            btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
+            return;
+        }
+        
+        if (!formData.id_equipo) {
+            $('#edit-error-id_equipo').text('Debe seleccionar un equipo');
+            $('#edit_puntero_id_equipo').addClass('is-invalid');
+            btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
+            return;
+        }
+        
+        $.ajax({
+            url: "{{ url('puntero') }}/" + punteroId,
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Actualizado',
+                    text: response.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                // Cerrar modal
+                $('#modalEditarPuntero').modal('hide');
+                
+                // Recargar la lista
+                filtrarPunterosGeneral();
+                
+                btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
+            },
+            error: function(xhr) {
+                btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
+                
+                if (xhr.status === 422 && xhr.responseJSON.errors) {
+                    // Mostrar errores de validación
+                    $.each(xhr.responseJSON.errors, function(key, value) {
+                        $(`#edit-error-${key}`).text(value[0]);
+                        $(`#edit_puntero_${key}`).addClass('is-invalid');
+                    });
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de validación',
+                        text: 'Por favor verifica los campos marcados'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || 'Error al actualizar el puntero'
+                    });
+                }
+            }
+        });
     }
 </script>

@@ -695,4 +695,129 @@ class PunteroController extends Controller
             ], 500);
         }
     }
+    /**
+     * Obtener datos del puntero para edición vía AJAX
+     */
+    public function editAjax($id)
+    {
+        try {
+            $puntero = Puntero::with(['dirigente', 'equipo'])->find($id);
+
+            if (!$puntero) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Puntero no encontrado'
+                ], 404);
+            }
+
+            // Verificar que pertenezca al sistema del usuario
+            if ($puntero->equipo->sist != Auth::user()->sistema) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tiene permiso para editar este puntero'
+                ], 403);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $puntero->id,
+                    'cedula' => $puntero->cedula,
+                    'nombre' => $puntero->nombre,
+                    'telefono' => $puntero->telefono,
+                    'barrio' => $puntero->barrio,
+                    'id_dirigente' => $puntero->id_dirigente,
+                    'id_equipo' => $puntero->id_equipo
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error en editAjax: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cargar los datos del puntero'
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar puntero vía AJAX
+     */
+    public function updateAjax(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            // Validar datos
+            $validated = $request->validate([
+                'cedula' => 'required|string|max:20',
+                'nombre' => 'required|string|max:255',
+                'telefono' => 'nullable|string|max:20',
+                'barrio' => 'nullable|string|max:255',
+                'id_dirigente' => 'required|exists:dirigente,id',
+                'id_equipo' => 'required|exists:equipo,id',
+            ]);
+
+            // Buscar el puntero
+            $puntero = Puntero::find($id);
+
+            if (!$puntero) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Puntero no encontrado'
+                ], 404);
+            }
+
+            // Verificar que pertenezca al sistema del usuario
+            if ($puntero->equipo->sist != Auth::user()->sistema) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tiene permiso para editar este puntero'
+                ], 403);
+            }
+
+            // Verificar que la cédula no exista en otro puntero (excepto el actual)
+            $cedulaExistente = Puntero::where('cedula', $request->cedula)
+                ->where('id', '!=', $id)
+                ->whereHas('dirigente.equipo', function ($q) {
+                    $q->where('sist', Auth::user()->sistema);
+                })->first();
+
+            if ($cedulaExistente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: la cédula {$request->cedula} ya está registrada en el sistema bajo el puntero '{$cedulaExistente->nombre}'."
+                ], 422);
+            }
+
+            // Actualizar el puntero
+            $puntero->update($validated);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Puntero actualizado correctamente',
+                'data' => $puntero->fresh(['dirigente', 'equipo'])
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error en updateAjax: ' . $e->getMessage(), [
+                'puntero_id' => $id,
+                'data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el puntero: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
