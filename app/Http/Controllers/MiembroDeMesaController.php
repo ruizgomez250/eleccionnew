@@ -299,6 +299,44 @@ class MiembroDeMesaController extends Controller
     }
 
     /**
+     * Método para obtener la cantidad de mesas de un equipo (AJAX)
+     */
+    public function getCantmesaByEquipo($equipoId)
+    {
+        try {
+            $equipo = Equipo::find($equipoId);
+
+            if (!$equipo) {
+                return response()->json(['cantmesa' => 0]);
+            }
+
+            $sistema = Sistema::find($equipo->sist);
+
+            if (!$sistema) {
+                return response()->json(['cantmesa' => 0]);
+            }
+
+            $ciudadElectoral = CiudadElectoral::find($sistema->id_ciudad_electoral);
+
+            if (!$ciudadElectoral) {
+                return response()->json(['cantmesa' => 0]);
+            }
+
+            $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
+                ->where('departamento_nombre', $ciudadElectoral->departamento)
+                ->where('local_interna', $equipo->descripcion)
+                ->first();
+
+            return response()->json([
+                'cantmesa' => $localInterna ? (int) $localInterna->cantmesa : 0
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener cantmesa: ' . $e->getMessage());
+            return response()->json(['cantmesa' => 0], 500);
+        }
+    }
+
+    /**
      * Método adicional para filtrar miembros por equipo
      */
     public function getByEquipo($equipoId)

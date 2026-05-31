@@ -20,9 +20,20 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VehiculoPunteroController;
 use App\Http\Controllers\VotanteController;
+use App\Http\Controllers\VotosController;
+
+// Ruta para cargar votos (la que necesita tu link)
+Route::get('/cargarvotos/{cedula_encriptada}', [VotosController::class, 'cargarVotos'])->name('cargar.votos');
 
 
-
+Route::prefix('votos')->name('votos.')->group(function () {
+    Route::get('/cargar/{cedula_encriptada}', [VotosController::class, 'cargarVotos'])->name('cargar');
+    Route::post('/buscar-por-cedula', [VotosController::class, 'buscarPorCedula'])->name('buscar.cedula');
+    Route::post('/buscar-por-mesa-orden', [VotosController::class, 'buscarPorMesaYOrden'])->name('buscar.mesaorden');
+    Route::post('/guardar', [VotosController::class, 'guardarVoto'])->name('guardar');
+    Route::get('/estadisticas/{miembro_id}', [VotosController::class, 'estadisticasMesa'])->name('estadisticas');
+    Route::delete('/eliminar/{id}', [VotosController::class, 'eliminarVoto'])->name('eliminar');
+});
 
 
 
@@ -165,6 +176,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('miembros-de-mesa', [MiembroDeMesaController::class, 'store'])
         ->name('miembros-de-mesa.store');
+
+    // Ruta AJAX para obtener cantmesa por equipo
+    Route::get('miembros-de-mesa/cantmesa/{equipoId}', [MiembroDeMesaController::class, 'getCantmesaByEquipo'])
+        ->name('miembros-de-mesa.cantmesa');
 
     // Ruta para mostrar un miembro específico (para editar)
     Route::get('miembros-de-mesa/{id}', [MiembroDeMesaController::class, 'show'])

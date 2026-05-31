@@ -73,6 +73,11 @@
                             <td>{{ $miembro->nombreproponente ?? '-' }}</td>
                             <td>{{ $miembro->telefonoproponente ?? '-' }}</td>
                             <td>
+                                <button class="btn btn-info btn-sm"
+                                    onclick="copiarRutaVotos('{{ base64_encode($miembro->cedula) }}')"
+                                    title="Copiar ruta para cargar votos">
+                                    <i class="fas fa-link"></i> 
+                                </button>
                                 <button class="btn btn-primary btn-sm" onclick="editarMiembro({{ $miembro->id }})"
                                     title="Editar">
                                     <i class="fas fa-edit"></i>
@@ -149,7 +154,7 @@
                                 <div class="form-group">
                                     <label for="mesa">Mesa</label>
 
-                                    <select name="mesa" id="mesa" class="form-control" >
+                                    <select name="mesa" id="mesa" class="form-control">
 
                                         <option value="">Sin asignar</option>
 
@@ -253,6 +258,25 @@
 
 @push('js')
     <script>
+        function copiarRutaVotos(cedulaCodificada) {
+            // Obtener la URL base del sitio
+            const urlBase = '{{ asset("") }}';
+            const rutaActual = window.location.pathname;
+
+            // Construir la URL completa
+            const urlCompleta = urlBase + 'cargarvotos/' + cedulaCodificada;
+
+            // Copiar al portapapeles
+            navigator.clipboard.writeText(urlCompleta).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Ruta copiada!',
+                    text: 'URL: ' + urlCompleta,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            });
+        }
         let bloqueaFiltro = false;
         const successAlert = @json(session('successAlert'));
         const errorAlert = @json(session('errorAlert'));
@@ -373,6 +397,20 @@
                 $('#nombreproponente').focus();
             }
         });
+
+        function cargarMesas(equipoId, selectedMesa) {
+            $.get("{{ url('miembros-de-mesa/cantmesa') }}/" + equipoId, function(res) {
+                let mesaSelect = $('#mesa');
+                mesaSelect.empty();
+                mesaSelect.append(`<option value="">Sin asignar</option>`);
+                for (let i = 1; i <= res.cantmesa; i++) {
+                    let selected = (selectedMesa == i) ? 'selected' : '';
+                    mesaSelect.append(`<option value="${i}" ${selected}>Mesa ${i}</option>`);
+                }
+            }).fail(function() {
+                toastr.error('Error al cargar las mesas del equipo');
+            });
+        }
 
         function editarMiembro(id) {
             $.get("{{ url('miembros-de-mesa') }}/" + id, function(res) {
@@ -497,6 +535,7 @@
                             $('#formMiembro').attr('action',
                                 "{{ route('miembros-de-mesa.store') }}");
                             $('#methodField').val('POST');
+                            cargarMesas(equipoSeleccionado);
                             $('#modalMiembro').modal('show');
                             $('#cedula').trigger('focus');
                         }
@@ -538,8 +577,10 @@
                 $('#formMiembro')[0].reset();
 
                 @if (session()->has('equipoId'))
-                    $('#idequipo').val('{{ session('equipoId') }}');
-                    $('#equipo_id').val('{{ session('equipoId') }}').trigger('change.select2');
+                    let equipoReabrir = '{{ session('equipoId') }}';
+                    $('#idequipo').val(equipoReabrir);
+                    $('#equipo_id').val(equipoReabrir).trigger('change.select2');
+                    cargarMesas(equipoReabrir);
                 @endif
 
                 $('#modalMiembro')
