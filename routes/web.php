@@ -255,4 +255,18 @@ Route::middleware('auth')->group(function () {
     // Rutas AJAX para editar puntero
     Route::get('/puntero/{id}/editar-ajax', [PunteroController::class, 'editAjax'])->name('puntero.editar.ajax');
     Route::put('/puntero/{id}', [PunteroController::class, 'updateAjax'])->name('puntero.update.ajax');
+    // routes/web.php
+Route::get('/manual/carga-votos', function () {
+    $path = public_path('manuales/manual_carga_votos.png');
+    
+    if (!file_exists($path)) {
+        // Imagen por defecto o mensaje
+        return response()->json(['error' => 'Manual no disponible'], 404);
+    }
+    
+    return response()->file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=86400'
+    ]);
+})->name('manual.carga');
 });

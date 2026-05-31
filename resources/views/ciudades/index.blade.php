@@ -534,6 +534,7 @@
         // FUNCIONES GENERALES Y DE DISTRITOS
         // =============================================
         $(document).ready(function() {
+            mostrarBadgeNuevoManual();
             // === VOTANTES ===
             $('#formAgregarVotante').on('submit', function(e) {
                 e.preventDefault();
@@ -709,6 +710,74 @@
                 });
             });
         });
+
+        function mostrarBadgeNuevoManual() {
+            const yaVio = localStorage.getItem('manual_notification_seen');
+
+            if (!yaVio || yaVio) {
+                // Agregar badge en la barra de título o en un lugar visible
+                const badgeHTML = `
+            <div id="newManualBadge" 
+                 style="display: inline-block; margin-left: 15px; cursor: pointer;"
+                 onclick="abrirManualPNG(); document.getElementById('newManualBadge').style.display='none'; localStorage.setItem('manual_notification_seen', 'true');">
+                <span style="background: #ff4757; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; animation: pulse 1.5s infinite;">
+                    <i class="fas fa-star"></i> ¡NUEVO! Se puede cargar los votos en tiempo real para compararlo con tus votantes
+                </span>
+            </div>
+        `;
+
+                // Agregar al final del content_header
+                $('.content-header h1').first().after(badgeHTML);
+
+                // Agregar animación CSS
+                $('head').append(`
+            <style>
+                @keyframes pulse {
+                    0% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.05); opacity: 0.9; background: #ff6b81; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+            </style>
+        `);
+            }
+        }
+
+        function abrirManualPNG() {
+            // Abrir el manual en una ventana modal (recomendado)
+            Swal.fire({
+                title: '📘 MANUAL DE CARGA DE VOTOS',
+                html: `
+            <div style="max-height: 70vh; overflow-y: auto; padding: 10px;">
+                <img src="{{ asset('manuales/manual_carga_votos.png') }}" 
+                     alt="Manual de carga de votos"
+                     style="width: 100%; height: auto; border-radius: 8px; cursor: pointer;"
+                     onclick="window.open('{{ asset('manuales/manual_carga_votos.png') }}', '_blank')">
+                <p class="text-muted mt-3 small">
+                    <i class="fas fa-info-circle"></i> 
+                    Haz clic en la imagen para verla en tamaño completo
+                </p>
+            </div>
+        `,
+                width: '90%',
+                maxWidth: '900px',
+                showConfirmButton: true,
+                confirmButtonText: '<i class="fas fa-check"></i> Entendido',
+                showCancelButton: true,
+                cancelButtonText: 'Descargar',
+                cancelButtonColor: '#28a745',
+                preConfirm: () => {
+                    localStorage.setItem('visto_manual_nuevo', 'true');
+                }
+            }).then((result) => {
+                if (result.dismiss === Swal.DismissReason.cancel) {
+                    // Descargar manual
+                    const link = document.createElement('a');
+                    link.href = '{{ asset('manuales/manual_carga_votos.png') }}';
+                    link.download = 'manual_carga_votos.png';
+                    link.click();
+                }
+            });
+        }
 
         function cargarSistemasManual(ciudadId, distritoNombre) {
             let modalBody = document.getElementById('modalSistemasBody');
@@ -1306,7 +1375,8 @@
                                         text: '<i class="fas fa-copy"></i> Copiar',
                                         exportOptions: {
                                             columns: [0, 1, 2, 3, 4,
-                                                5] // 6 columnas (0-5)
+                                                5
+                                            ] // 6 columnas (0-5)
                                         }
                                     },
                                     {
@@ -1350,11 +1420,11 @@
                                             let body = doc.content[1].table.body;
                                             for (let i = 1; i < body.length; i++) {
                                                 body[i][0].alignment =
-                                                'center'; // #
+                                                    'center'; // #
                                                 body[i][4].alignment =
-                                                'center'; // Mesa
+                                                    'center'; // Mesa
                                                 body[i][5].alignment =
-                                                'center'; // Orden
+                                                    'center'; // Orden
                                             }
 
                                             // Agregar título con nombre del puntero
@@ -1389,21 +1459,21 @@
                                                 'text-align', 'center');
                                             $(win.document.body).find('h1').text(
                                                 `Votantes del Puntero: ${nombrePuntero}`
-                                                );
+                                            );
 
                                             // Centrar columnas numéricas
                                             $(win.document.body).find(
                                                 'td:nth-child(1), td:nth-child(5), td:nth-child(6)'
-                                                ).css('text-align', 'center');
+                                            ).css('text-align', 'center');
                                             $(win.document.body).find(
                                                 'th:nth-child(1), th:nth-child(5), th:nth-child(6)'
-                                                ).css('text-align', 'center');
+                                            ).css('text-align', 'center');
 
                                             // Agregar fecha
                                             let fecha = new Date();
                                             $(win.document.body).append(
                                                 `<p style="text-align:center; margin-top:20px;">Fecha de impresión: ${fecha.toLocaleString()}</p>`
-                                                );
+                                            );
                                         }
                                     }
                                 ],
