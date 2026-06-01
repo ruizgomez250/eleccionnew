@@ -44,6 +44,7 @@ class VotosController extends Controller
                 'votosCargadosLista'
             ));
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Error en cargarVotos: ' . $e->getMessage());
             return view('cargar-votos-error', ['error' => 'No se puede abrir la página. El enlace no es válido o ha expirado.']);
         }
