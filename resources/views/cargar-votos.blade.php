@@ -529,6 +529,12 @@
                 ];
 
                 votosDataTable.row.add(nuevaFila).draw();
+
+                // Asignar id al tr para que eliminarVoto pueda encontrarlo
+                let nodes = votosDataTable.rows().nodes();
+                let lastNode = nodes[nodes.length - 1];
+                $(lastNode).attr('id', 'voto-row-' + voto.id);
+
                 reordenarNumeros();
             }
 
