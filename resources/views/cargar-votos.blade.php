@@ -40,68 +40,50 @@
                 </div>
             </div>
 
-            <!-- BÚSQUEDA POR CÉDULA (siempre visible) -->
+            <!-- BÚSQUEDA COMBINADA: Cédula (izquierda) + Mesa/Orden (derecha) -->
             <div class="card">
                 <div class="card-header py-2 bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="fas fa-id-card"></i> Buscar por Cédula
+                        <i class="fas fa-search"></i> Buscar Votante
                     </h5>
                 </div>
                 <div class="card-body py-3">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-12 mb-2 mb-md-0">
+                            <label class="small mb-1"><i class="fas fa-id-card"></i> Por Cédula</label>
                             <div class="input-group input-group-sm">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-id-card"></i>
-                                    </span>
-                                </div>
                                 <input type="text" class="form-control" id="buscarCedula"
                                     placeholder="Ingrese número de cédula">
                                 <div class="input-group-append">
                                     <button class="btn btn-primary" type="button" id="btnBuscarCedula">
-                                        <i class="fas fa-search"></i> Buscar
+                                        <i class="fas fa-search"></i>
                                     </button>
                                     <button class="btn btn-secondary" type="button" id="btnLimpiarCedula">
-                                        <i class="fas fa-eraser"></i> Limpiar
+                                        <i class="fas fa-eraser"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BÚSQUEDA POR MESA Y ORDEN (siempre visible) -->
-            <div class="card">
-                <div class="card-header py-2 bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-table"></i> Buscar por Mesa y Orden
-                    </h5>
-                </div>
-                <div class="card-body py-3">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <select class="form-control form-control-sm" id="mesaSelect">
-                                <option value="">Seleccione mesa</option>
-                                @for ($i = 1; $i <= $cantidadMesas; $i++)
-                                    <option value="{{ $i }}">Mesa {{ $i }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" class="form-control form-control-sm" id="ordenInput"
-                                placeholder="Número de orden">
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary btn-sm btn-block" type="button" id="btnBuscarMesaOrden">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-secondary btn-sm btn-block" type="button" id="btnLimpiarMesaOrden">
-                                <i class="fas fa-eraser"></i> Limpiar
-                            </button>
+                        <div class="col-md-6 col-12">
+                            <label class="small mb-1"><i class="fas fa-table"></i> Por Mesa y Orden</label>
+                            <div class="input-group input-group-sm">
+                                <select class="form-control" id="mesaSelect" style="flex: 0 0 110px;">
+                                    <option value="">Mesa</option>
+                                    @for ($i = 1; $i <= $cantidadMesas; $i++)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                    @endfor
+                                </select>
+                                <input type="number" class="form-control" id="ordenInput"
+                                    placeholder="Orden">
+                                <div class="input-group-append">
+                                    <button class="btn btn-info" type="button" id="btnBuscarMesaOrden">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" type="button" id="btnLimpiarMesaOrden">
+                                        <i class="fas fa-eraser"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -537,11 +519,11 @@
                 let nuevaFila = [
                     rowCount,
                     voto.cedula,
-                    voto.nombres + ' ' + voto.apellidos,
+                    (voto.nombres || '') + ' ' + (voto.apellidos || ''),
                     voto.localvotacion,
                     voto.distrito,
-                    voto.mesa,
-                    new Date().toLocaleDateString('es-ES') + ' ' + new Date().toLocaleTimeString('es-ES'),
+                    voto.mesa || '',
+                    voto.created_at || (new Date().toLocaleDateString('es-ES') + ' ' + new Date().toLocaleTimeString('es-ES')),
                     '<button class="btn btn-danger btn-sm" onclick="eliminarVoto(' + voto.id +
                     ')"><i class="fas fa-trash"></i></button>'
                 ];
@@ -601,8 +583,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Opción 1: Usar URL directamente (RECOMENDADA)
-                    const url = '/eleccionnew/public/votos/eliminar/' + id;
+                    const url = '{{ route("votos.eliminar", "") }}/' + id;
 
                     $.ajax({
                         url: url,

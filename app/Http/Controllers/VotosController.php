@@ -162,6 +162,18 @@ class VotosController extends Controller
                 'mesa' => 'required|integer'
             ]);
 
+            // Verificar si ya existe un voto con la misma cédula para este miembro
+            $existe = Voto::where('cedula', $request->cedula)
+                ->where('idmiembrodemesa', $request->idmiembrodemesa)
+                ->exists();
+
+            if ($existe) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este votante ya registró su voto anteriormente. No se permiten duplicados.'
+                ]);
+            }
+
             DB::beginTransaction();
 
             // Crear el voto
@@ -181,7 +193,17 @@ class VotosController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Voto registrado exitosamente',
-                'total_votos' => $totalVotos
+                'total_votos' => $totalVotos,
+                'voto' => [
+                    'id' => $voto->id,
+                    'cedula' => $voto->cedula,
+                    'nombres' => $voto->nombres,
+                    'apellidos' => $voto->apellidos,
+                    'localvotacion' => $voto->localvotacion,
+                    'distrito' => $voto->distrito,
+                    'mesa' => $request->mesa,
+                    'created_at' => $voto->created_at->format('d/m/Y H:i')
+                ]
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
