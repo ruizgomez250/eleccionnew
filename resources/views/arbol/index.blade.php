@@ -40,6 +40,9 @@
                 <i class="fas fa-sitemap"></i> Estructura Jerárquica por Distrito
             </h3>
             <div class="card-tools">
+                <a href="{{ route('reportes.duplicados.entre.sistemas') }}" class="btn btn-sm btn-warning text-dark mr-2" title="Ver duplicados entre sistemas">
+                    <i class="fas fa-clone"></i> Duplicados entre Sistemas
+                </a>
                 <button type="button" class="btn btn-tool text-white" data-card-widget="collapse">
                     <i class="fas fa-minus"></i>
                 </button>

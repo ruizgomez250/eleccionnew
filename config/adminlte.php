@@ -359,15 +359,25 @@ return [
                     'url'  => '/porlocal',
                 ],
                 [
+                    'text' => 'Votantes vs Carga de Votos',
+                    'url'  => '/reportes/carga-votos',
+                ],
+                [
                     'text' => 'Todos los Vehiculos',
                     'url'  => '/vehiculosporsistema',
                 ],
                 'separator' => true, // Línea separadora
                 [
-                    'text'      => 'Votantes Duplicados',
+                    'text'      => 'Duplicados con otros Candidatos',
                     'url'       => '/reportes/votantes-duplicados',
                     'icon'      => 'fas fa-clone',
                     'icon_color' => 'danger',
+                ],
+                [
+                    'text'      => 'Duplicados internos',
+                    'url'       => '/reportes/votantes-duplicados-interno',
+                    'icon'      => 'fas fa-copy',
+                    'icon_color' => 'warning',
                 ],
             ],
         ],

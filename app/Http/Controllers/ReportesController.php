@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Dirigente;
 use App\Models\Equipo;
+use App\Models\MiembroDeMesa;
 use App\Models\Puntero;
 use App\Models\Sistema;
 use App\Models\Vehiculo;
@@ -325,6 +326,122 @@ class ReportesController extends Controller
         return response()->json($data);
     }
     // En ReportesController.php, agrega este método
+    public function cargaVotos()
+    {
+        $miembros = MiembroDeMesa::with('equipo')
+            ->whereHas('equipo', function ($q) {
+                $q->where('sist', Auth::user()->sistema);
+            })
+            ->orderBy('nombre')
+            ->get();
+
+        return view('reportes.cargavotos-loading', compact('miembros'));
+    }
+
+    public function getCargaVotosData(Request $request)
+    {
+        try {
+            $miembroId = $request->input('miembro_id');
+            $sistemaId = Auth::user()->sistema;
+
+            $votosSub = DB::table('votos')
+                ->select('cedula')
+                ->whereIn('id', function ($query) use ($miembroId) {
+                    $query->select(DB::raw('MIN(id)'))
+                        ->from('votos')
+                        ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
+                        ->groupBy('cedula');
+                });
+
+            $punters = DB::table('puntero as p')
+                ->join('dirigente as d', 'p.id_dirigente', '=', 'd.id')
+                ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
+                ->leftJoin('votante as vt', 'vt.idpuntero', '=', 'p.id')
+                ->leftJoinSub($votosSub, 'v', function ($join) {
+                    $join->on(DB::raw('vt.cedula COLLATE utf8mb4_unicode_ci'), '=', DB::raw('v.cedula COLLATE utf8mb4_unicode_ci'));
+                })
+                ->where('e.sist', $sistemaId)
+                ->select(
+                    'd.nombre as dirigente_nombre',
+                    'p.id as puntero_id',
+                    'p.nombre as puntero_nombre',
+                    DB::raw('COUNT(DISTINCT vt.id) as total_votantes'),
+                    DB::raw('COUNT(DISTINCT CASE WHEN v.cedula IS NOT NULL THEN vt.id END) as votaron')
+                )
+                ->groupBy('d.nombre', 'p.id', 'p.nombre')
+                ->orderBy('d.nombre')
+                ->orderBy('p.nombre')
+                ->get();
+
+            $totalGeneral = DB::table('votos')
+                ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'html' => view('reportes.cargavotos-content', compact(
+                    'punters',
+                    'totalGeneral'
+                ))->render()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error en getCargaVotosData: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el reporte: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getCargaVotosDetalle(Request $request)
+    {
+        try {
+            $punteroId = $request->input('puntero_id');
+            $tipo = $request->input('tipo'); // 'votaron' o 'no_votaron'
+            $miembroId = $request->input('miembro_id');
+
+            $votosSub = DB::table('votos')
+                ->select('cedula')
+                ->whereIn('id', function ($query) use ($miembroId) {
+                    $query->select(DB::raw('MIN(id)'))
+                        ->from('votos')
+                        ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
+                        ->groupBy('cedula');
+                });
+
+            $query = DB::table('votante as vt')
+                ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
+                ->leftJoinSub($votosSub, 'v', function ($join) {
+                    $join->on(DB::raw('vt.cedula COLLATE utf8mb4_unicode_ci'), '=', DB::raw('v.cedula COLLATE utf8mb4_unicode_ci'));
+                })
+                ->where('vt.idpuntero', $punteroId)
+                ->select('vt.cedula', 'vt.nombre', 'vt.mesa', 'vt.escuela', 'vt.ciudad');
+
+            if ($tipo === 'votaron') {
+                $query->whereNotNull('v.cedula');
+            } else {
+                $query->whereNull('v.cedula');
+            }
+
+            $votantes = $query->orderBy('vt.nombre')->get();
+
+            $titulo = $tipo === 'votaron' ? 'Votaron' : 'No Votaron';
+
+            $html = view('reportes.cargavotos-detalle', compact('votantes', 'titulo', 'punteroId'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error en getCargaVotosDetalle: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cargar detalle: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getDetalleEquipo(Request $request)
     {
         try {

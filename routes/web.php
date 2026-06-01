@@ -12,6 +12,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilesController;
 use App\Http\Controllers\PunteroController;
 use App\Http\Controllers\VotantesDuplicadosController;
+use App\Http\Controllers\DuplicadosEntreSistemasController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\SistemaController;
@@ -78,7 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('dirigente', [DirigenteController::class, 'index'])->name('dirigente.index'); // Datatable
     Route::get('dirigente/create', [DirigenteController::class, 'create'])->name('dirigente.create'); // Form Agregar
     Route::post('dirigente/store', [DirigenteController::class, 'store'])->name('dirigente.store'); // Guardar
-    Route::get('dirigente/{dirigente}/punteros', [DirigenteController::class, 'punteros'])->name('dirigente.punteros');
+    Route::get('dirigente/{dirigente}/punteros/json', [DirigenteController::class, 'punteros'])->name('dirigente.punteros');
     Route::delete('/dirigente/{id}', [DirigenteController::class, 'destroy'])
         ->name('dirigente.destroy');
     Route::get('puntero/createp/{equipo?}', [PunteroController::class, 'createWithDirigente'])
@@ -136,6 +137,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/porlocal', [ReportesController::class, 'porlocal'])->name('informe.porlocal');
     Route::get('/porlocal-data', [ReportesController::class, 'getPorlocalData'])->name('informe.porlocal.data');
     Route::get('/porlocal-detalle', [ReportesController::class, 'getDetalleEquipo'])->name('informe.porlocal.detalle');
+    Route::get('/reportes/carga-votos', [ReportesController::class, 'cargaVotos'])->name('reportes.carga-votos');
+    Route::get('/reportes/carga-votos-data', [ReportesController::class, 'getCargaVotosData'])->name('reportes.carga-votos.data');
+    Route::get('/reportes/carga-votos-detalle', [ReportesController::class, 'getCargaVotosDetalle'])->name('reportes.carga-votos.detalle');
     Route::resource('vehiculo', VehiculoController::class);
     Route::get('/vehiculos/contrato/{vehiculo}', [VehiculoController::class, 'generarContratoPDF'])
         ->name('vehiculo.contrato');
@@ -251,6 +255,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('reportes/votantes-duplicados/exportar', [VotantesDuplicadosController::class, 'exportarExcel'])
         ->name('reportes.votantes.duplicados.exportar');
+
+    Route::get('reportes/duplicados-entre-sistemas', [DuplicadosEntreSistemasController::class, 'index'])
+        ->name('reportes.duplicados.entre.sistemas');
+
+    Route::get('reportes/votantes-duplicados-interno', [VotantesDuplicadosController::class, 'indexInterno'])
+        ->name('reportes.votantes.duplicados.interno');
     // Dentro del grupo Route::middleware('auth')->group(), busca donde están las rutas de punteros y agrega:
 
     // Rutas AJAX para editar puntero

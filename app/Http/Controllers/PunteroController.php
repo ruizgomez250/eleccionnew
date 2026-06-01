@@ -537,18 +537,9 @@ class PunteroController extends Controller
             })->get();
 
             // Valores seleccionados (si vienen por request)
-            $equipoSeleccionado = $dirigente->id_equipo;
+            $equipoSeleccionado = null;
             $dirigenteSeleccionado = $dirigenteId;
             $dirigenteId = $dirigenteId;
-
-            // Aplicar filtros si vienen
-            if ($equipoSeleccionado) {
-                $punteros = $punteros->where('id_equipo', $equipoSeleccionado);
-            }
-
-            if ($dirigenteSeleccionado) {
-                $punteros = $punteros->where('id_dirigente', $dirigenteSeleccionado);
-            }
 
             if (request()->ajax()) {
                 return view('ciudades.partials.lista_punteros', compact(

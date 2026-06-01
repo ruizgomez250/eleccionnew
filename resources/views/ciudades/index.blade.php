@@ -1417,7 +1417,7 @@
                                         orientation: 'portrait',
                                         pageSize: 'A4',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6]
+                                            columns: [0, 1, 2, 3, 4, 5]
                                         },
                                         title: `Votantes del Puntero: ${nombrePuntero}`,
                                         filename: function() {
@@ -1429,7 +1429,7 @@
                                             doc.styles.tableHeader.fillColor =
                                                 '#4CAF50';
                                             doc.styles.tableHeader.color = 'white';
-                                            // 6 columnas: #, Cédula, Nombre, Escuela, Mesa, Orden
+                                            // Columnas: #, Cédula, Nombre, Escuela, Mesa, Orden
                                             doc.content[1].table.widths = ['8%',
                                                 '15%', '32%', '20%', '12%',
                                                 '13%'
@@ -1680,7 +1680,7 @@
         function cargarPunteros(dirigenteId) {
             let tbody = $('#punteros-table tbody');
             tbody.html('<tr><td colspan="6" class="text-center">Cargando punteros...</td></tr>');
-            let url = "{{ url('dirigente') }}/" + dirigenteId + "/punteros?t=" + new Date().getTime();
+            let url = "{{ url('dirigente') }}/" + dirigenteId + "/punteros/json?t=" + new Date().getTime();
             $.get(url, function(data) {
                 tbody.empty();
                 if (data.length === 0) {
