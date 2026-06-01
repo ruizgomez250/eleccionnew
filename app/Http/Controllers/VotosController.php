@@ -22,7 +22,7 @@ class VotosController extends Controller
     {
         try {
             $cedula = base64_decode(strtr($cedula_encriptada, '-_', '+/'));
-
+            dd($cedula);
             if ($cedula === false) {
                 return view('cargar-votos-error', ['error' => 'No se puede abrir la página. El enlace no es válido.']);
             }
