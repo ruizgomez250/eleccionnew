@@ -22,9 +22,9 @@ class VotosController extends Controller
     {
         try {
             $cedula = base64_decode(strtr($cedula_encriptada, '-_', '+/'));
-            // if ($cedula === false) {
-            //     return view('cargar-votos-error', ['error' => 'No se puede abrir la página. El enlace no es válido.']);
-            // }
+            if ($cedula === false) {
+                return view('cargar-votos-error', ['error' => 'No se puede abrir la página. El enlace no es válido.']);
+            }
             // dd('paso');
             $miembro = MiembroDeMesa::where('cedula', $cedula)->with('equipo')->firstOrFail();
             $equipo = $miembro->equipo;
