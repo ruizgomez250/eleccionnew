@@ -74,7 +74,7 @@
                             <td>{{ $miembro->telefonoproponente ?? '-' }}</td>
                             <td>
                                 <button class="btn btn-info btn-sm"
-                                    onclick="copiarRutaVotos('{{ base64_encode($miembro->cedula) }}')"
+                                    onclick="copiarRutaVotos('{{ rtrim(strtr(base64_encode($miembro->cedula), '+/', '-_'), '=') }}')"
                                     title="Copiar ruta para cargar votos">
                                     <i class="fas fa-link"></i> 
                                 </button>

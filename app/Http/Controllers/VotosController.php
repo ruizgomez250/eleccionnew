@@ -21,7 +21,7 @@ class VotosController extends Controller
     public function cargarVotos($cedula_encriptada)
     {
         try {
-            $cedula = base64_decode($cedula_encriptada);
+            $cedula = base64_decode(strtr($cedula_encriptada, '-_', '+/'));
 
             if ($cedula === false) {
                 return view('cargar-votos-error', ['error' => 'No se puede abrir la página. El enlace no es válido.']);
