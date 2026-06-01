@@ -259,8 +259,14 @@ Route::middleware('auth')->group(function () {
     Route::get('reportes/duplicados-entre-sistemas', [DuplicadosEntreSistemasController::class, 'index'])
         ->name('reportes.duplicados.entre.sistemas');
 
+    Route::get('reportes/duplicados-entre-sistemas/pdf', [DuplicadosEntreSistemasController::class, 'exportarPDF'])
+        ->name('reportes.duplicados.entre.sistemas.pdf');
+
     Route::get('reportes/votantes-duplicados-interno', [VotantesDuplicadosController::class, 'indexInterno'])
         ->name('reportes.votantes.duplicados.interno');
+
+    Route::get('reportes/votantes-duplicados-interno/pdf', [VotantesDuplicadosController::class, 'exportarPDFInterno'])
+        ->name('reportes.votantes.duplicados.interno.pdf');
     // Dentro del grupo Route::middleware('auth')->group(), busca donde están las rutas de punteros y agrega:
 
     // Rutas AJAX para editar puntero

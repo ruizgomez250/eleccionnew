@@ -11,6 +11,7 @@ use App\Models\Sistema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use TCPDF;
 
 class VotantesDuplicadosController extends Controller
 {
@@ -190,7 +191,7 @@ class VotantesDuplicadosController extends Controller
         }
 
         $votantes = Votante::whereIn('idpuntero', $idsPunteros)
-            ->with(['puntero', 'puntero.dirigente'])
+            ->with(['puntero.dirigente', 'puntero.equipo'])
             ->get();
 
         if ($votantes->isEmpty()) {
@@ -225,7 +226,11 @@ class VotantesDuplicadosController extends Controller
             foreach ($registros as $v) {
                 if ($v->puntero && !in_array($v->puntero->id, $seenP)) {
                     $seenP[] = $v->puntero->id;
-                    $pInfo[] = ['nombre' => $v->puntero->nombre];
+                    $pInfo[] = [
+                        'nombre' => $v->puntero->nombre,
+                        'dirigente' => $v->puntero->dirigente->nombre ?? 'N/A',
+                        'equipo' => $v->puntero->equipo->descripcion ?? ($v->puntero->dirigente->equipo->descripcion ?? 'N/A'),
+                    ];
                 }
             }
 
@@ -270,6 +275,148 @@ class VotantesDuplicadosController extends Controller
             'totalDuplicadoSimple',
             'sistemaUsuario'
         ));
+    }
+
+    public function exportarPDFInterno(Request $request)
+    {
+        $sistemaUsuario = Auth::user()->sistema;
+
+        $punterosDelSistema = Puntero::whereHas('dirigente.equipo', function ($q) use ($sistemaUsuario) {
+                $q->where('sist', $sistemaUsuario);
+            })
+            ->with(['dirigente', 'dirigente.equipo'])
+            ->get();
+
+        $idsPunteros = $punterosDelSistema->pluck('id')->toArray();
+        $votantes = collect();
+        $resultados = [];
+
+        if (!empty($idsPunteros)) {
+            $votantes = Votante::whereIn('idpuntero', $idsPunteros)
+                ->with(['puntero.dirigente', 'puntero.equipo'])
+                ->get();
+
+            $agrupados = $votantes->groupBy('cedula')->filter(fn($regs) => $regs->count() > 1);
+
+            foreach ($agrupados as $cedula => $registros) {
+                $primero = $registros->first();
+
+                $punterosUnicos = $registros->pluck('idpuntero')->unique();
+                $totalPunteros = $punterosUnicos->count();
+                $dupPuntero = $totalPunteros > 1;
+
+                $dirigentesUnicos = collect();
+                foreach ($registros as $v) {
+                    if ($v->puntero && $v->puntero->dirigente) {
+                        $dirigentesUnicos->push($v->puntero->dirigente->id);
+                    }
+                }
+                $dirigentesUnicos = $dirigentesUnicos->unique();
+                $totalDirigentes = $dirigentesUnicos->count();
+                $dupDirigente = $totalDirigentes > 1;
+                $duplicadoSimple = !$dupPuntero && !$dupDirigente;
+
+                $pInfo = [];
+                $seenP = [];
+                foreach ($registros as $v) {
+                    if ($v->puntero && !in_array($v->puntero->id, $seenP)) {
+                        $seenP[] = $v->puntero->id;
+                        $pInfo[] = [
+                            'nombre' => $v->puntero->nombre,
+                            'dirigente' => $v->puntero->dirigente->nombre ?? 'N/A',
+                            'equipo' => $v->puntero->equipo->descripcion ?? ($v->puntero->dirigente->equipo->descripcion ?? 'N/A'),
+                        ];
+                    }
+                }
+
+                $dInfo = [];
+                $seenD = [];
+                foreach ($registros as $v) {
+                    if ($v->puntero && $v->puntero->dirigente && !in_array($v->puntero->dirigente->id, $seenD)) {
+                        $seenD[] = $v->puntero->dirigente->id;
+                        $dInfo[] = ['nombre' => $v->puntero->dirigente->nombre];
+                    }
+                }
+
+                $resultados[] = [
+                    'cedula' => $cedula,
+                    'nombre' => $primero->nombre,
+                    'direccion' => $primero->direccion,
+                    'mesa' => $primero->mesa,
+                    'orden' => $primero->orden,
+                    'puntero' => $primero->puntero->nombre ?? 'N/A',
+                    'dirigente' => $primero->puntero->dirigente->nombre ?? 'N/A',
+                    'total_registros' => $registros->count(),
+                    'duplicado_simple' => $duplicadoSimple,
+                    'duplicado_por_puntero' => $dupPuntero,
+                    'duplicado_por_dirigente' => $dupDirigente,
+                    'total_punteros' => $totalPunteros,
+                    'total_dirigentes' => $totalDirigentes,
+                    'punteros_info' => $pInfo,
+                    'dirigentes_info' => $dInfo,
+                ];
+            }
+        }
+
+        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('Sistema Elecciones');
+        $pdf->SetAuthor('Sistema Elecciones');
+        $pdf->SetTitle('Duplicados dentro del mismo Sistema');
+        $pdf->SetMargins(5, 12, 5);
+        $pdf->SetAutoPageBreak(true, 10);
+
+        if (!empty($resultados)) {
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->Cell(0, 6, 'DUPLICADOS DENTRO DEL MISMO SISTEMA', 0, 1, 'C');
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->Cell(0, 5, 'Sistema ID: ' . $sistemaUsuario, 0, 1, 'C');
+            $pdf->Ln(2);
+            $pdf->SetFont('helvetica', 'B', 9);
+            $totalSimple = collect($resultados)->where('duplicado_simple', true)->count();
+            $totalPunt = collect($resultados)->where('duplicado_por_puntero', true)->count();
+            $totalDir = collect($resultados)->where('duplicado_por_dirigente', true)->count();
+            $pdf->Cell(0, 5, 'Totales: ' . count($resultados) . ' cedulas | Votante x2: ' . $totalSimple . ' | Puntero x2: ' . $totalPunt . ' | Dirigente x2: ' . $totalDir, 0, 1, 'L');
+            $pdf->Ln(1);
+
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->SetFillColor(180, 180, 180);
+            $pdf->Cell(20, 6, 'Cedula', 1, 0, 'C', true);
+            $pdf->Cell(38, 6, 'Nombre', 1, 0, 'C', true);
+            $pdf->Cell(12, 6, 'Regs', 1, 0, 'C', true);
+            $pdf->Cell(140, 6, 'Puntero / Dirigente / Equipo', 1, 1, 'C', true);
+
+            $pdf->SetFont('helvetica', '', 6.5);
+            $fill = false;
+            foreach ($resultados as $item) {
+                $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
+                $fill = !$fill;
+
+                $detalleStr = '';
+                foreach ($item['punteros_info'] as $p) {
+                    $detalleStr .= $p['nombre'];
+                    $detalleStr .= ' -> Dirigente: ' . ($p['dirigente'] ?? 'N/A');
+                    $detalleStr .= ' / Equipo: ' . ($p['equipo'] ?? 'N/A');
+                    $detalleStr .= ' | ';
+                }
+                $detalleStr = rtrim($detalleStr, ' | ');
+
+                $hDet = $pdf->getStringHeight(140, $detalleStr);
+                $rowH = max(6, $hDet);
+
+                $pdf->Cell(20, $rowH, $item['cedula'], 1, 0, 'C', true);
+                $pdf->Cell(38, $rowH, substr($item['nombre'] ?? '', 0, 28), 1, 0, 'L', true);
+                $pdf->Cell(12, $rowH, $item['total_registros'], 1, 0, 'C', true);
+                $pdf->MultiCell(140, $rowH, $detalleStr, 1, 'L', true, 1);
+            }
+        } else {
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', '', 12);
+            $pdf->Cell(0, 10, 'No hay votantes duplicados dentro de mi sistema', 0, 1, 'C');
+        }
+
+        $pdf->Output('duplicados_interno.pdf', 'I');
+        exit;
     }
 
     private function vistaVacia()

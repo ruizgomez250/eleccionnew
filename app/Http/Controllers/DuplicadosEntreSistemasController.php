@@ -10,6 +10,7 @@ use App\Models\Sistema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use TCPDF;
 
 class DuplicadosEntreSistemasController extends Controller
 {
@@ -122,7 +123,10 @@ class DuplicadosEntreSistemasController extends Controller
                         $punterosInfo[] = [
                             'nombre' => $v->puntero->nombre,
                             'cedula' => $v->puntero->cedula,
-                            'sistema' => $sistemasMap[$pid] ?? 'Sistema #'.$pid
+                            'sistema' => $sistemasMap[$pid] ?? 'Sistema #'.$pid,
+                            'sistema_id' => $pid,
+                            'dirigente' => $v->puntero->dirigente->nombre ?? 'N/A',
+                            'equipo' => $v->puntero->equipo->descripcion ?? ($v->puntero->dirigente->equipo->descripcion ?? 'N/A'),
                         ];
                     }
                     if ($v->puntero && $v->puntero->dirigente && !in_array($v->puntero->dirigente->id, $seenD)) {
@@ -280,5 +284,194 @@ class DuplicadosEntreSistemasController extends Controller
         }
 
         return $resultados;
+    }
+
+    public function exportarPDF(Request $request)
+    {
+        $sistemaUsuario = Auth::user()->sistema;
+        $sistemasMap = Sistema::pluck('nombre', 'id')->toArray();
+        $nombreSistema = $sistemasMap[$sistemaUsuario] ?? 'Sistema #'.$sistemaUsuario;
+
+        $votantesDuplicados = $this->getVotantesDuplicados($sistemaUsuario, $sistemasMap);
+        $punterosDuplicados = $this->getPunterosDuplicados($sistemaUsuario, $sistemasMap);
+        $dirigentesDuplicados = $this->getDirigentesDuplicados($sistemaUsuario, $sistemasMap);
+
+        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('Sistema Elecciones');
+        $pdf->SetAuthor('Sistema Elecciones');
+        $pdf->SetTitle('Reporte de Duplicados entre Sistemas');
+        $pdf->SetMargins(5, 12, 5);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->SetFont('helvetica', '', 7);
+
+        // ---- VOTANTES ----
+        if (!empty($votantesDuplicados)) {
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->Cell(0, 6, 'REPORTE DE DUPLICADOS ENTRE SISTEMAS', 0, 1, 'C');
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->Cell(0, 5, 'Sistema: ' . $nombreSistema, 0, 1, 'C');
+            $pdf->Ln(2);
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->Cell(0, 6, 'VOTANTES DUPLICADOS (' . count($votantesDuplicados) . ')', 0, 1, 'L');
+            $pdf->Ln(1);
+
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->SetFillColor(180, 180, 180);
+            $pdf->Cell(22, 6, 'Cedula', 1, 0, 'C', true);
+            $pdf->Cell(38, 6, 'Nombre', 1, 0, 'C', true);
+            $pdf->Cell(10, 6, 'Regs', 1, 0, 'C', true);
+            $pdf->Cell(55, 6, 'Sistemas donde esta duplicado', 1, 0, 'C', true);
+            $pdf->Cell(115, 6, 'Puntero / Dirigente / Equipo', 1, 1, 'C', true);
+
+            $pdf->SetFont('helvetica', '', 6.5);
+            $fill = false;
+            foreach ($votantesDuplicados as $item) {
+                $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
+                $fill = !$fill;
+
+                $sistemasStr = '';
+                foreach ($item['sistemas_info'] as $s) {
+                    if ($s['id'] == $sistemaUsuario) {
+                        $sistemasStr .= 'duplicado (' . $s['nombre'] . '), ';
+                    } else {
+                        $sistemasStr .= 'otro candidato, ';
+                    }
+                }
+                $sistemasStr = rtrim($sistemasStr, ', ');
+
+                $detalleStr = '';
+                foreach ($item['punteros_info'] as $p) {
+                    $tag = isset($p['sistema_id']) && $p['sistema_id'] == $sistemaUsuario ? 'duplicado' : 'otro candidato';
+                    $detalleStr .= $p['nombre'] . ' (' . $tag . ')';
+                    $detalleStr .= ' -> Dirigente: ' . ($p['dirigente'] ?? 'N/A');
+                    $detalleStr .= ' / Equipo: ' . ($p['equipo'] ?? 'N/A');
+                    $detalleStr .= ' | ';
+                }
+                $detalleStr = rtrim($detalleStr, ' | ');
+
+                $hSis = $pdf->getStringHeight(55, $sistemasStr);
+                $hDet = $pdf->getStringHeight(115, $detalleStr);
+                $rowH = max(6, $hSis, $hDet);
+
+                $pdf->Cell(22, $rowH, $item['cedula'], 1, 0, 'C', true);
+                $pdf->Cell(38, $rowH, substr($item['nombre'] ?? '', 0, 28), 1, 0, 'L', true);
+                $pdf->Cell(10, $rowH, $item['total_registros'], 1, 0, 'C', true);
+                $pdf->MultiCell(55, $rowH, $sistemasStr, 1, 'L', true, 0);
+                $pdf->MultiCell(115, $rowH, $detalleStr, 1, 'L', true, 1);
+            }
+        }
+
+        // ---- PUNTEROS ----
+        if (!empty($punterosDuplicados)) {
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->Cell(0, 6, 'REPORTE DE DUPLICADOS ENTRE SISTEMAS', 0, 1, 'C');
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->Cell(0, 5, 'Sistema: ' . $nombreSistema, 0, 1, 'C');
+            $pdf->Ln(2);
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->Cell(0, 6, 'PUNTEROS DUPLICADOS (' . count($punterosDuplicados) . ')', 0, 1, 'L');
+            $pdf->Ln(1);
+
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->SetFillColor(180, 180, 180);
+            $pdf->Cell(22, 6, 'Cedula', 1, 0, 'C', true);
+            $pdf->Cell(40, 6, 'Nombre', 1, 0, 'C', true);
+            $pdf->Cell(12, 6, 'Regs', 1, 0, 'C', true);
+            $pdf->Cell(60, 6, 'Sistemas donde esta duplicado', 1, 0, 'C', true);
+            $pdf->Cell(50, 6, 'Dirigentes involucrados', 1, 1, 'C', true);
+
+            $pdf->SetFont('helvetica', '', 6.5);
+            $fill = false;
+            foreach ($punterosDuplicados as $item) {
+                $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
+                $fill = !$fill;
+
+                $sistemasStr = '';
+                foreach ($item['sistemas_info'] as $s) {
+                    if ($s['id'] == $sistemaUsuario) {
+                        $sistemasStr .= 'duplicado (' . $s['nombre'] . '), ';
+                    } else {
+                        $sistemasStr .= 'otro candidato, ';
+                    }
+                }
+                $sistemasStr = rtrim($sistemasStr, ', ');
+
+                $dirigentesStr = '';
+                foreach ($item['dirigentes_info'] as $d) {
+                    $dirigentesStr .= $d['nombre'] . (isset($d['sistema_id']) && $d['sistema_id'] == $sistemaUsuario ? ' (duplicado)' : ' (otro candidato)') . ', ';
+                }
+                $dirigentesStr = rtrim($dirigentesStr, ', ');
+
+                $hSis = $pdf->getStringHeight(60, $sistemasStr);
+                $hDir = $pdf->getStringHeight(50, $dirigentesStr);
+                $rowH = max(6, $hSis, $hDir);
+
+                $pdf->Cell(22, $rowH, $item['cedula'], 1, 0, 'C', true);
+                $pdf->Cell(40, $rowH, substr($item['nombre'] ?? '', 0, 30), 1, 0, 'L', true);
+                $pdf->Cell(12, $rowH, $item['total_registros'], 1, 0, 'C', true);
+                $x = $pdf->GetX();
+                $pdf->MultiCell(60, $rowH, $sistemasStr, 1, 'L', true, 0);
+                $pdf->MultiCell(50, $rowH, $dirigentesStr, 1, 'L', true, 1);
+            }
+        }
+
+        // ---- DIRIGENTES ----
+        if (!empty($dirigentesDuplicados)) {
+            $pdf->AddPage();
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->Cell(0, 6, 'REPORTE DE DUPLICADOS ENTRE SISTEMAS', 0, 1, 'C');
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->Cell(0, 5, 'Sistema: ' . $nombreSistema, 0, 1, 'C');
+            $pdf->Ln(2);
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->Cell(0, 6, 'DIRIGENTES DUPLICADOS (' . count($dirigentesDuplicados) . ')', 0, 1, 'L');
+            $pdf->Ln(1);
+
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->SetFillColor(180, 180, 180);
+            $pdf->Cell(22, 6, 'Cedula', 1, 0, 'C', true);
+            $pdf->Cell(40, 6, 'Nombre', 1, 0, 'C', true);
+            $pdf->Cell(12, 6, 'Regs', 1, 0, 'C', true);
+            $pdf->Cell(60, 6, 'Sistemas donde esta duplicado', 1, 0, 'C', true);
+            $pdf->Cell(60, 6, 'Equipos involucrados', 1, 1, 'C', true);
+
+            $pdf->SetFont('helvetica', '', 6.5);
+            $fill = false;
+            foreach ($dirigentesDuplicados as $item) {
+                $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
+                $fill = !$fill;
+
+                $sistemasStr = '';
+                foreach ($item['sistemas_info'] as $s) {
+                    if ($s['id'] == $sistemaUsuario) {
+                        $sistemasStr .= 'duplicado (' . $s['nombre'] . '), ';
+                    } else {
+                        $sistemasStr .= 'otro candidato, ';
+                    }
+                }
+                $sistemasStr = rtrim($sistemasStr, ', ');
+
+                $equiposStr = '';
+                foreach ($item['equipos_info'] as $e) {
+                    $equiposStr .= $e['nombre'] . ' (' . $e['sistema'] . '), ';
+                }
+                $equiposStr = rtrim($equiposStr, ', ');
+
+                $hSis = $pdf->getStringHeight(60, $sistemasStr);
+                $hEq = $pdf->getStringHeight(60, $equiposStr);
+                $rowH = max(6, $hSis, $hEq);
+
+                $pdf->Cell(22, $rowH, $item['cedula'], 1, 0, 'C', true);
+                $pdf->Cell(40, $rowH, substr($item['nombre'] ?? '', 0, 30), 1, 0, 'L', true);
+                $pdf->Cell(12, $rowH, $item['total_registros'], 1, 0, 'C', true);
+                $pdf->MultiCell(60, $rowH, $sistemasStr, 1, 'L', true, 0);
+                $pdf->MultiCell(60, $rowH, $equiposStr, 1, 'L', true, 1);
+            }
+        }
+
+        $pdf->Output('reporte_duplicados_entre_sistemas.pdf', 'I');
+        exit;
     }
 }

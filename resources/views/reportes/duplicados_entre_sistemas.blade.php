@@ -8,6 +8,9 @@
             <i class="fas fa-clone"></i> Reporte de Duplicados entre Sistemas
         </h4>
         <div>
+            <a href="{{ route('reportes.duplicados.entre.sistemas.pdf') }}" class="btn btn-danger btn-sm" target="_blank">
+                <i class="fas fa-file-pdf"></i> Exportar PDF
+            </a>
             <a href="{{ route('arbol') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i> Volver al Árbol
             </a>

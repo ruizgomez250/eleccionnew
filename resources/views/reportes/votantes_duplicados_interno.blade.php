@@ -8,7 +8,10 @@
             <i class="fas fa-clone"></i> Duplicados dentro del mismo Sistema
         </h4>
         <div>
-            <span class="badge badge-primary">
+            <a href="{{ route('reportes.votantes.duplicados.interno.pdf') }}" class="btn btn-danger btn-sm" target="_blank">
+                <i class="fas fa-file-pdf"></i> Exportar PDF
+            </a>
+            <span class="badge badge-primary ml-2">
                 <i class="fas fa-building"></i> Mi Sistema ID: {{ $sistemaUsuario ?? Auth::user()->sistema }}
             </span>
         </div>
