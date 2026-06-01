@@ -232,6 +232,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/equipo/{equipo}/punteros', [PunteroController::class, 'porEquipo'])->name('equipo.punteros');
     // Agrega esta línea junto a las otras rutas AJAX de votdantes
     Route::post('/votante/store-ajax', [VotanteController::class, 'storeAjax'])->name('votante.store.ajax');
+    Route::put('/votante/{id}/observacion', [VotanteController::class, 'updateObservacion'])->name('votante.updateObservacion');
     // Ruta para crear vehículo desde el modal del puntero
 
     Route::get('/puntero/{id}/vehiculos', [PunteroController::class, 'getVehiculos']);

@@ -206,6 +206,7 @@ class VotanteController extends Controller
                 'escuela'       => $request->escuela,
                 'ciudad'        => $request->ciudad,
                 'departamento'  => $request->departamento,
+                'observacion'   => $request->observacion,
             ]);
 
             DB::commit();
@@ -277,6 +278,30 @@ class VotanteController extends Controller
             ], 500);
         }
     }
+    public function updateObservacion(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'observacion' => 'nullable|string|max:500',
+            ]);
+
+            $votante = Votante::findOrFail($id);
+            $votante->observacion = $request->observacion;
+            $votante->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Observación actualizada correctamente',
+                'observacion' => $votante->observacion
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar la observación: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function storeAjax(Request $request)
     {
         try {
@@ -345,6 +370,7 @@ class VotanteController extends Controller
                 'escuela' => $request->escuela,
                 'ciudad' => $request->ciudad,
                 'departamento' => $request->departamento,
+                'observacion' => $request->observacion,
             ]);
 
             DB::commit();
@@ -382,7 +408,8 @@ class VotanteController extends Controller
                     'escuela' => $votante->escuela,
                     'mesa' => $votante->mesa,
                     'orden' => $votante->orden,
-                    'tipo_votante' => $votante->tipo_votante
+                    'tipo_votante' => $votante->tipo_votante,
+                    'observacion' => $votante->observacion
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {

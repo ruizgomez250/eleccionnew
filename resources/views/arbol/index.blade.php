@@ -435,6 +435,11 @@
                                     placeholder="Departamento" readonly>
                             </div>
                         </div>
+                        <div class="row mb-2">
+                            <div class="col-md-12">
+                                <textarea name="observacion" id="votante_observacion" class="form-control" placeholder="Observación (opcional)" rows="2" maxlength="500"></textarea>
+                            </div>
+                        </div>
 
                         {{-- 👇 BOTONES ORGANIZADOS EN UNA FILA --}}
                         <div class="row mt-3">
@@ -1545,6 +1550,7 @@
                                         <th>Cédula</th>
                                         <th>Nombre</th>
                                         <th>Tipo Votante</th>
+                                        <th>Observación</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -1553,15 +1559,23 @@
 
                     if (data.length === 0) {
                         html +=
-                            `<tr><td colspan="5" class="text-center">No hay votantes registrados</td></tr>`;
+                            `<tr><td colspan="6" class="text-center">No hay votantes registrados</td></tr>`;
                     } else {
                         data.forEach((v, i) => {
+                            let obs = v.observacion || '';
                             html += `
                                 <tr>
                                     <td>${i + 1}</td>
                                     <td>${v.cedula}</td>
                                     <td>${v.nombre || ''}</td>
                                     <td><span class="badge badge-info">${v.tipo_votante || ''}</span></td>
+                                    <td style="max-width:200px;">
+                                        <span id="obs_text_${v.id}" style="word-break:break-word;display:${obs ? 'inline' : 'none'};">${obs}</span>
+                                        <span id="obs_empty_${v.id}" class="text-muted" style="display:${obs ? 'none' : 'inline'};">—</span>
+                                        <button class="btn btn-sm btn-link p-0 ml-1" onclick="editarObservacion(${v.id})" title="Editar observación">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    </td>
                                     <td>
                                         <button class="btn btn-danger btn-sm" onclick="eliminarVotante(${v.id}, '${nombrePuntero}')">
                                             <i class="fas fa-trash"></i>
@@ -1589,6 +1603,75 @@
                         </div>
                     `);
                 });
+            };
+
+            window.editarObservacion = function(id) {
+                let currentObs = $('#obs_text_' + id).text();
+                $('#modalVotantes').modal('hide');
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'Editar Observación',
+                        input: 'textarea',
+                        inputValue: currentObs && currentObs !== '—' ? currentObs : '',
+                        inputAttributes: {
+                            maxlength: 500,
+                            rows: 3
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: 'Guardar',
+                        cancelButtonText: 'Cancelar',
+                        didOpen: () => {
+                            setTimeout(() => {
+                                const input = Swal.getInput();
+                                if (input) input.focus();
+                            }, 100);
+                        }
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            let nuevaObs = result.value || '';
+                            $.ajax({
+                                url: "{{ url('votante') }}/" + id + "/observacion",
+                                type: 'PUT',
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    observacion: nuevaObs
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        if (nuevaObs) {
+                                            $('#obs_text_' + id).text(nuevaObs).show();
+                                            $('#obs_empty_' + id).hide();
+                                        } else {
+                                            $('#obs_text_' + id).hide();
+                                            $('#obs_empty_' + id).show();
+                                        }
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Observación actualizada',
+                                            timer: 1200,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            let pid = $('#votante_id_puntero').val();
+                                            let n = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
+                                            if (pid) window.cargarVotantes(pid, n);
+                                        });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: xhr.responseJSON?.message || 'No se pudo actualizar la observación'
+                                    });
+                                }
+                            });
+                        } else {
+                            let pid = $('#votante_id_puntero').val();
+                            let n = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
+                            if (pid) window.cargarVotantes(pid, n);
+                        }
+                    });
+                }, 300);
             };
 
             window.eliminarVotante = function(id, nombrePuntero) {
@@ -1733,6 +1816,11 @@
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                             },
                             pageLength: 10,
+                            columnDefs: [{
+                                targets: [5],
+                                orderable: false,
+                                searchable: false
+                            }],
                             destroy: true
                         });
                     } catch (e) {
@@ -1777,6 +1865,7 @@
                 $('#escuela').val('');
                 $('#ciudad').val('');
                 $('#departamento').val('');
+                $('#votante_observacion').val('');
                 $('#tipo_votante').val('seguro');
             }
         });

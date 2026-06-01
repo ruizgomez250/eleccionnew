@@ -479,6 +479,11 @@
                                     placeholder="Departamento" readonly>
                             </div>
                         </div>
+                        <div class="row mb-2">
+                            <div class="col-md-12">
+                                <textarea name="observacion" id="votante_observacion" class="form-control" placeholder="Observación (opcional)" rows="2" maxlength="500"></textarea>
+                            </div>
+                        </div>
                         <div class="row mt-3">
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-primary">
@@ -585,7 +590,7 @@
             });
 
             function limpiarFormularioVotante() {
-                $('#votante_cedula, #votante_nombre, #direccion, #mesa, #orden, #partido, #escuela, #ciudad, #departamento')
+                $('#votante_cedula, #votante_nombre, #direccion, #mesa, #orden, #partido, #escuela, #ciudad, #departamento, #votante_observacion')
                     .val('');
                 $('#tipo_votante').val('seguro');
                 $('#votante_cedula').removeClass('is-invalid');
@@ -1324,6 +1329,7 @@
                                 <th>Escuela</th>
                                 <th>Mesa</th>
                                 <th>Orden</th>
+                                <th>Observación</th>
                                 <th style="width:10%">Acciones</th>
                             </tr>
                         </thead>
@@ -1333,7 +1339,7 @@
                     if (data.length === 0) {
                         contenido += `
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             <i class="fas fa-info-circle fa-2x mb-2"></i>
                             <p>No hay votantes registrados para este puntero</p>
                         </td>
@@ -1341,6 +1347,7 @@
                 `;
                     } else {
                         data.forEach((v, i) => {
+                            let obs = v.observacion || '';
                             contenido += `
                         <tr>
                             <td>${i+1}</td>
@@ -1349,6 +1356,13 @@
                             <td>${v.escuela || ''}</td>
                             <td class="text-center">${v.mesa || ''}</td>
                             <td class="text-center">${v.orden || ''}</td>
+                            <td class="text-center" style="max-width:200px;">
+                                <span id="obs_text_${v.id}" style="word-break:break-word;display:${obs ? 'inline' : 'none'};">${obs}</span>
+                                <span id="obs_empty_${v.id}" class="text-muted" style="display:${obs ? 'none' : 'inline'};">—</span>
+                                <button class="btn btn-sm btn-link p-0 ml-1" onclick="editarObservacion(${v.id})" title="Editar observación">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                            </td>
                             <td class="text-center">
                                 <button class="btn btn-danger btn-sm" onclick="eliminarVotante(${v.id}, '${nombrePuntero}')" title="Eliminar votante">
                                     <i class="fas fa-trash"></i>
@@ -1380,8 +1394,8 @@
                                         text: '<i class="fas fa-copy"></i> Copiar',
                                         exportOptions: {
                                             columns: [0, 1, 2, 3, 4,
-                                                5
-                                            ] // 6 columnas (0-5)
+                                                5, 6
+                                            ]
                                         }
                                     },
                                     {
@@ -1389,7 +1403,7 @@
                                         className: 'btn btn-success btn-sm',
                                         text: '<i class="fas fa-file-excel"></i> Excel',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5] // 6 columnas
+                                            columns: [0, 1, 2, 3, 4, 5, 6]
                                         },
                                         title: `Votantes_${nombrePuntero.replace(/\s/g, '_')}`,
                                         filename: function() {
@@ -1403,7 +1417,7 @@
                                         orientation: 'portrait',
                                         pageSize: 'A4',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5] // 6 columnas
+                                            columns: [0, 1, 2, 3, 4, 5, 6]
                                         },
                                         title: `Votantes del Puntero: ${nombrePuntero}`,
                                         filename: function() {
@@ -1455,7 +1469,7 @@
                                         className: 'btn btn-info btn-sm',
                                         text: '<i class="fas fa-print"></i> Imprimir',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5] // 6 columnas
+                                            columns: [0, 1, 2, 3, 4, 5, 6]
                                         },
                                         customize: function(win) {
                                             $(win.document.body).find('table')
@@ -1512,6 +1526,11 @@
                                     }, // Orden
                                     {
                                         targets: [6],
+                                        orderable: true,
+                                        searchable: true
+                                    }, // Observación
+                                    {
+                                        targets: [7],
                                         orderable: false,
                                         searchable: false
                                     } // Acciones
@@ -1534,6 +1553,75 @@
                     );
                 }
             });
+        };
+
+        window.editarObservacion = function(id) {
+            let currentObs = $('#obs_text_' + id).text();
+            $('#modalVotantes').modal('hide');
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Editar Observación',
+                    input: 'textarea',
+                    inputValue: currentObs && currentObs !== '—' ? currentObs : '',
+                    inputAttributes: {
+                        maxlength: 500,
+                        rows: 3
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    didOpen: () => {
+                        setTimeout(() => {
+                            const input = Swal.getInput();
+                            if (input) input.focus();
+                        }, 100);
+                    }
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        let nuevaObs = result.value || '';
+                        $.ajax({
+                            url: "{{ url('votante') }}/" + id + "/observacion",
+                            type: 'PUT',
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                observacion: nuevaObs
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    if (nuevaObs) {
+                                        $('#obs_text_' + id).text(nuevaObs).show();
+                                        $('#obs_empty_' + id).hide();
+                                    } else {
+                                        $('#obs_text_' + id).hide();
+                                        $('#obs_empty_' + id).show();
+                                    }
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Observación actualizada',
+                                        timer: 1200,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        let pid = $('#votante_id_puntero').val();
+                                        let n = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
+                                        if (pid) window.cargarVotantes(pid, n);
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: xhr.responseJSON?.message || 'No se pudo actualizar la observación'
+                                });
+                            }
+                        });
+                    } else {
+                        let pid = $('#votante_id_puntero').val();
+                        let n = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
+                        if (pid) window.cargarVotantes(pid, n);
+                    }
+                });
+            }, 300);
         };
 
         window.eliminarVotante = function(id, nombre) {

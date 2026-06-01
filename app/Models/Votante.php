@@ -25,6 +25,7 @@ class Votante extends Model
         'escuela',
         'ciudad',
         'departamento',
+        'observacion',
     ];
 
     /**
@@ -65,7 +66,8 @@ class Votante extends Model
         'escuela',
         'ciudad',
         'id',
-        'departamento'
+        'departamento',
+        'observacion'
             ]);
     }
     
