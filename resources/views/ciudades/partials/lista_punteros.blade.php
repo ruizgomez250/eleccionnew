@@ -657,8 +657,13 @@
                 $('#formAgregarPunteroLista')[0].reset();
                 $('#puntero_cedula_lista').focus();
 
-                // Recargar la lista
+                // Recargar la lista de punteros
                 filtrarPunterosGeneral();
+
+                // Recargar la lista de dirigentes si está visible (actualiza contadores)
+                if (typeof window.filtrarDirigentes === 'function') {
+                    window.filtrarDirigentes();
+                }
 
                 btnGuardar.prop('disabled', false).html('<i class="fas fa-save"></i> Guardar');
             },
@@ -794,6 +799,9 @@
                             });
 
                             filtrarPunterosGeneral();
+                            if (typeof window.filtrarDirigentes === 'function') {
+                                window.filtrarDirigentes();
+                            }
                         }
                     },
                     error: function(xhr) {

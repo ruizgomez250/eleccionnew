@@ -370,6 +370,15 @@
                         if (response.success) {
                             mostrarDatosVotante(response.data);
                             $('#resultadoBusqueda').show();
+                            if (response.message) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Aviso',
+                                    text: response.message,
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                });
+                            }
                         } else {
                             Swal.fire('No encontrado', response.message, 'warning');
                         }

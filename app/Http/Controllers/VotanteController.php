@@ -170,8 +170,8 @@ class VotanteController extends Controller
             $sistemaActual = $puntero->dirigente->equipo->sist;
 
             /* ===========================
-           BLOQUEAR MISMO SISTEMA
-        ============================ */
+            DETECTAR MISMO SISTEMA (SOLO AVISO)
+         ============================ */
             $votanteMismoSistema = Votante::with(['puntero.dirigente'])
                 ->where('cedula', $cedula)
                 ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
@@ -179,26 +179,9 @@ class VotanteController extends Controller
                 })
                 ->first();
 
-
-            if ($votanteMismoSistema) {
-
-                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
-                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
-
-                return redirect()->back()
-                    ->with(
-                        'errorAlert',
-                        "Error: esta cédula ya está registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}»."
-                    )
-                    ->with('abrirModalVotante', true)
-                    ->with('punteroId', $idPuntero)
-                    ->with('punteroNombre', $puntero->nombre);
-            }
-
-
             /* ===========================
-           BUSCAR EN OTRO SISTEMA (AVISO)
-        ============================ */
+            BUSCAR EN OTRO SISTEMA (AVISO)
+         ============================ */
             $votanteOtroSistema = Votante::where('cedula', $cedula)
                 ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
                     $q->where('sist', '!=', $sistemaActual);
@@ -207,8 +190,8 @@ class VotanteController extends Controller
                 ->first();
 
             /* ===========================
-           CREAR VOTANTE
-        ============================ */
+            CREAR VOTANTE
+         ============================ */
             Votante::create([
                 'cedula'        => $cedula,
                 'nombre'        => $request->nombre,
@@ -228,14 +211,18 @@ class VotanteController extends Controller
             DB::commit();
 
             /* ===========================
-           MENSAJE FINAL
-        ============================ */
+            MENSAJE FINAL
+         ============================ */
             $mensaje = 'Votante agregado correctamente.';
 
-            if ($votanteOtroSistema) {
+            if ($votanteMismoSistema) {
+                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
+                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
+                $mensaje = "Atención: esta cédula ya estaba registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}». Se ha guardado igualmente.";
+            } elseif ($votanteOtroSistema) {
                 $mensaje = "Atención: esta cédula ya existe en otro sistema (" .
                     $votanteOtroSistema->puntero->dirigente->equipo->descripcion .
-                    ").";
+                    "). Se ha guardado igualmente.";
             }
 
             return redirect()->back()
@@ -328,23 +315,12 @@ class VotanteController extends Controller
 
             $sistemaActual = $puntero->dirigente->equipo->sist;
 
-            /* =========================== BLOQUEAR MISMO SISTEMA ============================ */
+            /* =========================== DETECTAR MISMO SISTEMA (SOLO AVISO) ============================ */
             $votanteMismoSistema = Votante::with(['puntero.dirigente'])
                 ->where('cedula', $cedula)
                 ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
                     $q->where('sist', $sistemaActual);
                 })->first();
-
-            if ($votanteMismoSistema) {
-                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
-                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
-
-                return response()->json([
-                    'success' => false,
-                    'message' => "Error: esta cédula ya está registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}».",
-                    'code' => 'DUPLICADO_MISMO_SISTEMA'
-                ], 422);
-            }
 
             /* =========================== BUSCAR EN OTRO SISTEMA (AVISO) ============================ */
             $votanteOtroSistema = Votante::where('cedula', $cedula)
@@ -377,7 +353,12 @@ class VotanteController extends Controller
             $mensaje = 'Votante agregado correctamente.';
             $tipoAlerta = 'success';
 
-            if ($votanteOtroSistema) {
+            if ($votanteMismoSistema) {
+                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
+                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
+                $mensaje = "Atención: esta cédula ya estaba registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}». Se ha guardado igualmente.";
+                $tipoAlerta = 'warning';
+            } elseif ($votanteOtroSistema) {
                 $mensaje = "Atención: esta cédula ya existe en otro sistema (" .
                     $votanteOtroSistema->puntero->dirigente->equipo->descripcion .
                     "). Se ha registrado igualmente en este sistema.";

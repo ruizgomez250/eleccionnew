@@ -553,17 +553,22 @@
                     },
                     success: function(response) {
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
+                            icon: response.tipo_alerta || 'success',
+                            title: response.tipo_alerta === 'warning' ? 'Aviso' : 'Éxito',
                             text: response.message,
-                            timer: 1500,
+                            timer: 3000,
                             showConfirmButton: false
                         });
                         limpiarFormularioVotante();
+                        // Recargar votantes del puntero
                         setTimeout(() => {
                             let punteroId = $('#votante_id_puntero').val();
                             window.cargarVotantes(punteroId, nombrePuntero);
                         }, 100);
+                        // Recargar lista de punteros si está visible (actualiza contadores)
+                        if (typeof window.filtrarPunterosGeneral === 'function') {
+                            window.filtrarPunterosGeneral();
+                        }
                     },
                     error: function(xhr) {
                         Swal.fire({

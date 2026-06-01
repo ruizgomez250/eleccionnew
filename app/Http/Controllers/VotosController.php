@@ -69,20 +69,16 @@ class VotosController extends Controller
                 ]);
             }
 
-            // Verificar si ya votó
+            // Verificar si ya votó (solo como advertencia, no bloquea)
             $yaVoto = Voto::where('cedula', $votante->cedula)
                 ->where('idmiembrodemesa', $request->miembro_id)
                 ->exists();
 
-            if ($yaVoto) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Este votante ya registró su voto anteriormente'
-                ]);
-            }
+            $message = $yaVoto ? 'Este votante ya registró su voto anteriormente' : null;
 
             return response()->json([
                 'success' => true,
+                'message' => $message,
                 'data' => [
                     'cedula' => $votante->cedula,
                     'nombres' => $votante->nombre ?? '',
@@ -123,20 +119,16 @@ class VotosController extends Controller
                 ]);
             }
 
-            // Verificar si ya votó
+            // Verificar si ya votó (solo como advertencia, no bloquea)
             $yaVoto = Voto::where('cedula', $votante->cedula)
                 ->where('idmiembrodemesa', $request->miembro_id)
                 ->exists();
 
-            if ($yaVoto) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Este votante ya registró su voto anteriormente'
-                ]);
-            }
+            $message = $yaVoto ? 'Este votante ya registró su voto anteriormente' : null;
 
             return response()->json([
                 'success' => true,
+                'message' => $message,
                 'data' => [
                     'cedula' => $votante->cedula,
                     'nombres' => $votante->nombre ?? '',
@@ -171,18 +163,6 @@ class VotosController extends Controller
             ]);
 
             DB::beginTransaction();
-
-            // Verificar si ya existe
-            $existe = Voto::where('cedula', $request->cedula)
-                ->where('idmiembrodemesa', $request->idmiembrodemesa)
-                ->exists();
-
-            if ($existe) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Este votante ya registró su voto'
-                ]);
-            }
 
             // Crear el voto
             $voto = Voto::create([
