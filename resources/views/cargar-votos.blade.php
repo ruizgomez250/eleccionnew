@@ -589,7 +589,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const url = '{{ route("votos.eliminar", "") }}/' + id;
+                    const url = '{{ url("votos/eliminar") }}/' + id;
 
                     $.ajax({
                         url: url,
