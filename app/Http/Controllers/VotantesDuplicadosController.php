@@ -102,7 +102,8 @@ class VotantesDuplicadosController extends Controller
                     $pid = $this->getSistemaIdFromVotante($v);
                     $punterosInfo[] = [
                         'nombre' => $v->puntero->nombre,
-                        'sistema' => $sistemasMap[$pid] ?? 'Sistema #'.$pid
+                        'sistema' => $sistemasMap[$pid] ?? 'Sistema #'.$pid,
+                        'sistema_id' => $pid,
                     ];
                 }
             }
@@ -115,7 +116,8 @@ class VotantesDuplicadosController extends Controller
                     $did = $this->getSistemaIdFromVotante($v);
                     $dirigentesInfo[] = [
                         'nombre' => $v->puntero->dirigente->nombre,
-                        'sistema' => $sistemasMap[$did] ?? 'Sistema #'.$did
+                        'sistema' => $sistemasMap[$did] ?? 'Sistema #'.$did,
+                        'sistema_id' => $did,
                     ];
                 }
             }

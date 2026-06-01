@@ -122,7 +122,11 @@
                                           title="Candidaturas ({{ $item->total_registros }} veces)"
                                           data-content="
                                               @foreach($item->sistemas_info as $s)
-                                                 - {{ $s['nombre'] }}<br>
+                                                 @if(($sistemaUsuario ?? Auth::user()->sistema) == $s['id'])
+                                                    - <strong>duplicado</strong> ({{ $s['nombre'] }})<br>
+                                                 @else
+                                                    - otro candidato<br>
+                                                 @endif
                                               @endforeach">
                                         <i class="fas fa-clone"></i> x{{ $item->total_registros }}
                                     </span>
@@ -133,7 +137,11 @@
                                               title="Mismo puntero"
                                               data-content="
                                                   @foreach($item->punteros_info as $p)
-                                                     - {{ $p['nombre'] }} <small class='text-muted'>({{ $p['sistema'] }})</small><br>
+                                                     @if(($sistemaUsuario ?? Auth::user()->sistema) == ($p['sistema_id'] ?? null))
+                                                        - {{ $p['nombre'] }} <small class='text-muted'>(duplicado)</small><br>
+                                                     @else
+                                                        - {{ $p['nombre'] }} <small class='text-muted'>(otro candidato)</small><br>
+                                                     @endif
                                                   @endforeach">
                                             <i class="fas fa-user-check"></i> Votante x{{ $item->total_registros }}
                                         </span>
@@ -145,7 +153,11 @@
                                               title="Punteros ({{ $item->total_punteros }} diferentes)"
                                               data-content="
                                                   @foreach($item->punteros_info as $p)
-                                                     - {{ $p['nombre'] }} <small class='text-muted'>({{ $p['sistema'] }})</small><br>
+                                                     @if(($sistemaUsuario ?? Auth::user()->sistema) == ($p['sistema_id'] ?? null))
+                                                        - {{ $p['nombre'] }} <small class='text-muted'>(duplicado)</small><br>
+                                                     @else
+                                                        - {{ $p['nombre'] }} <small class='text-muted'>(otro candidato)</small><br>
+                                                     @endif
                                                   @endforeach">
                                             <i class="fas fa-user-tie"></i> Puntero x{{ $item->total_punteros }}
                                         </span>
@@ -157,7 +169,11 @@
                                               title="Dirigentes ({{ $item->total_dirigentes }} diferentes)"
                                               data-content="
                                                   @foreach($item->dirigentes_info as $d)
-                                                     - {{ $d['nombre'] }} <small class='text-muted'>({{ $d['sistema'] }})</small><br>
+                                                     @if(($sistemaUsuario ?? Auth::user()->sistema) == ($d['sistema_id'] ?? null))
+                                                        - {{ $d['nombre'] }} <small class='text-muted'>(duplicado)</small><br>
+                                                     @else
+                                                        - {{ $d['nombre'] }} <small class='text-muted'>(otro candidato)</small><br>
+                                                     @endif
                                                   @endforeach">
                                             <i class="fas fa-user-tag"></i> Dirigente x{{ $item->total_dirigentes }}
                                         </span>
