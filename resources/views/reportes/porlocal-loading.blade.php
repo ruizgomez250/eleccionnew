@@ -72,14 +72,12 @@
                 }
                 
                 // Cambiar mensajes según el progreso
-                if (progress < 20) {
-                    $('#loadingMessage').text('Consultando equipos...');
-                } else if (progress < 40) {
-                    $('#loadingMessage').text('Cargando dirigentes y punteros...');
+                if (progress < 30) {
+                    $('#loadingMessage').text('Consultando votantes...');
                 } else if (progress < 60) {
-                    $('#loadingMessage').text('Procesando votantes...');
+                    $('#loadingMessage').text('Agrupando por escuela...');
                 } else if (progress < 80) {
-                    $('#loadingMessage').text('Cargando vehículos...');
+                    $('#loadingMessage').text('Procesando resultados...');
                 } else {
                     $('#loadingMessage').text('Preparando reporte...');
                 }
@@ -142,7 +140,7 @@
         }
         
         function initializeDataTable() {
-            let table = $('#equipos-table').DataTable({
+            let table = $('#escuelas-table').DataTable({
                 dom: "<'row'<'col-md-6'f><'col-md-6 text-right'B>>" +
                      "<'row'<'col-sm-12'tr>>" +
                      "<'row'<'col-sm-5'i><'col-sm-7'p>>",
@@ -151,14 +149,14 @@
                         extend: 'excelHtml5',
                         text: '<i class="fas fa-file-excel"></i> Excel',
                         className: 'btn btn-success',
-                        title: 'Reporte por Local de Votación',
-                        filename: 'reporte_locales_{{ date("Y-m-d_H-i-s") }}'
+                        title: 'Reporte por Escuela',
+                        filename: 'reporte_escuelas_{{ date("Y-m-d_H-i-s") }}'
                     },
                     {
                         extend: 'pdfHtml5',
                         text: '<i class="fas fa-file-pdf"></i> PDF',
                         className: 'btn btn-danger',
-                        title: 'Reporte por Local de Votación',
+                        title: 'Reporte por Escuela',
                         orientation: 'landscape',
                         pageSize: 'A4'
                     },
@@ -180,11 +178,10 @@
         function initializeModalEvents() {
             // Evento para los botones de ver detalle
             $(document).on('click', '.btn-ver-detalle', function() {
-                let equipoId = $(this).data('id');
-                let equipoNombre = $(this).data('nombre');
+                let escuelaNombre = $(this).data('nombre');
                 
                 // Actualizar título del modal
-                $('#modalLocalNombre').text(equipoNombre);
+                $('#modalLocalNombre').text(escuelaNombre);
                 
                 // Mostrar modal
                 $('#detalleModal').modal('show');
@@ -193,7 +190,7 @@
                 $.ajax({
                     url: '{{ route("informe.porlocal.detalle") }}',
                     type: 'GET',
-                    data: { id: equipoId },
+                    data: { escuela: escuelaNombre },
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
@@ -207,11 +204,15 @@
                             `);
                         }
                     },
-                    error: function() {
+                    error: function(xhr) {
+                        let msg = 'Error al cargar los detalles de la escuela';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
                         $('#modalBodyContent').html(`
                             <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                Error al cargar los detalles del local
+                                ${msg}
                             </div>
                         `);
                     }
