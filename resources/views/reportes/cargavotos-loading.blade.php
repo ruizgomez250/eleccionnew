@@ -26,6 +26,9 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> Generar
                 </button>
+                <button type="button" class="btn btn-success ml-1" id="btnRefresh">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
             </form>
         </div>
     </div>
@@ -92,22 +95,7 @@
                         $('#loadingMessage').text('¡Reporte listo!');
                         setTimeout(function() {
                             $('#loadingContainer').fadeOut(500);
-                            $('#reporteContent').html(response.html).fadeIn(500, function() {
-                                $('#tabla-punteros').DataTable({
-                                    dom: "<'row'<'col-md-6'f><'col-md-6 text-right'B>>" +
-                                         "<'row'<'col-sm-12'tr>>" +
-                                         "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                                    buttons: [
-                                        { extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success', title: 'Reporte_Punteros_{{ date("Y-m-d_H-i-s") }}' },
-                                        { extend: 'pdfHtml5', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn btn-danger', title: 'Reporte por Puntero', orientation: 'landscape', pageSize: 'A4' },
-                                        { extend: 'print', text: '<i class="fas fa-print"></i> Imprimir', className: 'btn btn-secondary' }
-                                    ],
-                                    responsive: true,
-                                    pageLength: 25,
-                                    language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
-                                    order: [[0, 'asc']]
-                                });
-                            });
+                            $('#reporteContent').html(response.html).fadeIn(500);
                         }, 500);
                     } else {
                         handleError(response.message, interval);
@@ -175,6 +163,12 @@
         $('#filterForm').on('submit', function(e) {
             e.preventDefault();
             loadReport($('#miembro_id').val());
+        });
+
+        $('#btnRefresh').on('click', function() {
+            if ($('#reporteContent').is(':visible')) {
+                loadReport($('#miembro_id').val());
+            }
         });
 
         loadReport('');
