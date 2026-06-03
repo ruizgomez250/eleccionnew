@@ -8,17 +8,51 @@
             <i class="fas fa-clone"></i> Duplicados dentro del mismo Sistema
         </h4>
         <div>
-            <a href="{{ route('reportes.votantes.duplicados.interno.pdf') }}" class="btn btn-danger btn-sm" target="_blank">
+            <a href="{{ route('reportes.votantes.duplicados.interno.pdf', request()->only(['sistema_id', 'ciudad_id'])) }}" class="btn btn-danger btn-sm" target="_blank">
                 <i class="fas fa-file-pdf"></i> Exportar PDF
             </a>
             <span class="badge badge-primary ml-2">
-                <i class="fas fa-building"></i> Mi Sistema ID: {{ $sistemaUsuario ?? Auth::user()->sistema }}
+                <i class="fas fa-building"></i> {{ !empty($esUsuarioPrivilegiado) && $esUsuarioPrivilegiado && !empty($sistemaConsulta) && $sistemaConsulta != $sistemaUsuario ? 'Sistema ID: ' . $sistemaConsulta : 'Mi Sistema ID: ' . ($sistemaUsuario ?? Auth::user()->sistema) }}
             </span>
         </div>
     </div>
     <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
         <i class="fas fa-sitemap"></i> Jerarquía: <strong>Votante</strong> → <strong>Puntero</strong> → <strong>Dirigente</strong>
     </p>
+
+    @if(!empty($esUsuarioPrivilegiado) && $esUsuarioPrivilegiado)
+    <div class="card mt-3">
+        <div class="card-body py-2">
+            <form method="GET" action="{{ route('reportes.votantes.duplicados.interno') }}" class="form-inline">
+                <div class="form-group mr-3">
+                    <label for="ciudad_id" class="mr-2"><i class="fas fa-city"></i> Distrito:</label>
+                    <select name="ciudad_id" id="ciudad_id" class="form-control form-control-sm select2" style="min-width: 220px;">
+                        <option value="">-- Todos los distritos --</option>
+                        @foreach($ciudades as $ciudad)
+                            <option value="{{ $ciudad->id }}" {{ request('ciudad_id') == $ciudad->id ? 'selected' : '' }}>
+                                {{ $ciudad->descripcion }} {{ $ciudad->departamento ? '- ' . $ciudad->departamento : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label for="sistema_id" class="mr-2"><i class="fas fa-building"></i> Candidato:</label>
+                    <select name="sistema_id" id="sistema_id" class="form-control form-control-sm select2" style="min-width: 270px;">
+                        <option value="todos" {{ request('sistema_id') == 'todos' ? 'selected' : '' }}>-- Todos los candidatos --</option>
+                        @foreach($sistemas as $sistema)
+                            <option value="{{ $sistema->id }}" {{ request('sistema_id') == $sistema->id ? 'selected' : '' }}
+                                data-ciudad="{{ $sistema->id_ciudad_electoral }}">
+                                {{ $sistema->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filtrar</button>
+                <a href="{{ route('reportes.votantes.duplicados.interno') }}" class="btn btn-secondary btn-sm ml-1"><i class="fas fa-undo"></i> Limpiar</a>
+            </form>
+        </div>
+    </div>
+    @endif
 @stop
 
 @section('content')
@@ -186,6 +220,21 @@
             container: 'body',
             boundary: 'viewport'
         });
+
+        function filtrarSistemasPorCiudad() {
+            var ciudadId = $('#ciudad_id').val();
+            $('#sistema_id option').each(function() {
+                var ciudad = $(this).data('ciudad');
+                if (!ciudadId || ciudad == ciudadId) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        $('#ciudad_id').change(filtrarSistemasPorCiudad);
+        filtrarSistemasPorCiudad();
     });
 </script>
 @endpush

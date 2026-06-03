@@ -7,6 +7,7 @@ use App\Models\Puntero;
 use App\Models\Dirigente;
 use App\Models\Equipo;
 use App\Models\Sistema;
+use App\Models\CiudadElectoral;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,18 +18,38 @@ class DuplicadosEntreSistemasController extends Controller
     public function index(Request $request)
     {
         $sistemaUsuario = Auth::user()->sistema;
+        $userId = Auth::id();
+        $esUsuarioPrivilegiado = in_array($userId, [1, 4]);
         $sistemasMap = Sistema::pluck('nombre', 'id')->toArray();
 
-        $votantesDuplicados = $this->getVotantesDuplicados($sistemaUsuario, $sistemasMap);
-        $punterosDuplicados = $this->getPunterosDuplicados($sistemaUsuario, $sistemasMap);
-        $dirigentesDuplicados = $this->getDirigentesDuplicados($sistemaUsuario, $sistemasMap);
+        $sistemaConsulta = $sistemaUsuario;
+
+        if ($esUsuarioPrivilegiado) {
+            $sistemaSeleccionado = $request->input('sistema_id');
+            if ($sistemaSeleccionado && $sistemaSeleccionado !== 'todos') {
+                $sistemaConsulta = $sistemaSeleccionado;
+            }
+        }
+
+        $votantesDuplicados = $this->getVotantesDuplicados($sistemaConsulta, $sistemasMap);
+        $punterosDuplicados = $this->getPunterosDuplicados($sistemaConsulta, $sistemasMap);
+        $dirigentesDuplicados = $this->getDirigentesDuplicados($sistemaConsulta, $sistemasMap);
+
+        $ciudadIds = Sistema::whereNotNull('id_ciudad_electoral')->distinct()->pluck('id_ciudad_electoral');
+        $ciudades = CiudadElectoral::whereIn('id', $ciudadIds)->orderBy('descripcion')->get();
+        $sistemas = Sistema::with('ciudad')->orderBy('nombre')->get();
 
         return view('reportes.duplicados_entre_sistemas', compact(
             'votantesDuplicados',
             'punterosDuplicados',
             'dirigentesDuplicados',
             'sistemaUsuario',
-            'sistemasMap'
+            'sistemasMap',
+            'userId',
+            'esUsuarioPrivilegiado',
+            'sistemaConsulta',
+            'ciudades',
+            'sistemas'
         ));
     }
 

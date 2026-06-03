@@ -368,7 +368,7 @@ return [
                 ],
                 'separator' => true, // Línea separadora
                 [
-                    'text'      => 'Duplicados con otros Candidatos',
+                    'text'      => 'Duplicados entre Candidatos',
                     'url'       => '/reportes/votantes-duplicados',
                     'icon'      => 'fas fa-clone',
                     'icon_color' => 'danger',
