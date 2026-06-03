@@ -139,6 +139,7 @@ class VotantesDuplicadosController extends Controller
                     $pid = $this->getSistemaIdFromVotante($v);
                     $punterosInfo[] = [
                         'nombre' => $v->puntero->nombre,
+                        'dirigente' => $v->puntero->dirigente->nombre ?? 'N/A',
                         'sistema' => $sistemasMap[$pid] ?? 'Sistema #'.$pid,
                         'sistema_id' => $pid,
                     ];

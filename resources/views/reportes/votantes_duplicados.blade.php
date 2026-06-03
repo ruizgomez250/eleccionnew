@@ -160,6 +160,9 @@
                                     <th>Dirigente (mi sistema)</th>
                                     <th>Equipo</th>
                                     <th>Duplicados</th>
+                                    @if($esUsuarioPrivilegiado)
+                                        <th>Otro Sistema</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -246,12 +249,23 @@
                                                           @endforeach">
                                                     <i class="fas fa-user-tag"></i> Dirigente x{{ $item->total_dirigentes }}
                                                 </span>
-                                            @endif
+                                             @endif
                                          </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center text-success">
+                                         @if($esUsuarioPrivilegiado)
+                                         <td>
+                                             @foreach($item->punteros_info as $p)
+                                                 @if(($p['sistema_id'] ?? null) != $sistemaConsulta)
+                                                     <span class="badge badge-secondary d-inline-block mb-1" style="font-size:0.8rem;white-space:normal;text-align:left;">
+                                                         {{ $p['sistema'] }} -> {{ $p['dirigente'] }} -> {{ $p['nombre'] }}
+                                                     </span><br>
+                                                 @endif
+                                             @endforeach
+                                         </td>
+                                         @endif
+                                     </tr>
+                                 @empty
+                                     <tr>
+                                         <td colspan="{{ $esUsuarioPrivilegiado ? 9 : 8 }}" class="text-center text-success">
                                             <i class="fas fa-check-circle"></i> No hay votantes duplicados que involucren a mi sistema
                                         </td>
                                     </tr>
