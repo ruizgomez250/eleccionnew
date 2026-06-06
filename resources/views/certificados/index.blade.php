@@ -451,16 +451,16 @@
                                                     </thead>
                                                     <tbody>
                                                         @foreach ($ordenadoPorBancas as $p)
-                                                            @php
-                                                                $candidatos = $rc['partidos'][$p['partido_id']]['candidatos'] ?? collect();
-                                                                $bancasAsignadas = $p['bancas'];
-                                                                $idxCand = 0;
-                                                            @endphp
-                                                            @foreach ($candidatos as $cand)
                                                                 @php
-                                                                    $esElecto = $idxCand < $bancasAsignadas && $bancasAsignadas > 0;
-                                                                    $idxCand++;
+                                                                    $candidatos = $rc['partidos'][$p['partido_id']]['candidatos'] ?? collect();
+                                                                    $bancasAsignadas = $p['bancas'];
+                                                                    $idxCand = 0;
                                                                 @endphp
+                                                                @foreach ($candidatos as $cand)
+                                                                    @php
+                                                                        $esElecto = $idxCand < $bancasAsignadas && $bancasAsignadas > 0;
+                                                                        $idxCand++;
+                                                                    @endphp
                                                                 <tr class="{{ $esElecto ? 'table-success' : '' }}">
                                                                     <td class="text-center">{{ $rc['partidos'][$p['partido_id']]['partido']->numero_lista ?? '-' }}</td>
                                                                     <td>{{ $p['sigla'] }}</td>

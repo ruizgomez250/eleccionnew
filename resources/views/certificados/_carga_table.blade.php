@@ -10,7 +10,7 @@
     </div>
     <div class="card-body p-0">
         <form id="formCargaResultados">
-            @csrf
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="mesa_id" value="{{ $mesa->id }}">
             <input type="hidden" name="cargo" value="{{ $cargo }}">
 
@@ -85,10 +85,15 @@
             var $btn = $(this);
             $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
+            var token = $('meta[name="csrf-token"]').attr('content');
+
             $.ajax({
                 url: '{{ route("certificados.guardar") }}',
                 type: 'POST',
                 data: $('#formCargaResultados').serialize(),
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
                 success: function(resp) {
                     Swal.fire({
                         icon: 'success',
@@ -101,10 +106,20 @@
                     });
                 },
                 error: function(xhr) {
+                    var msg = 'Error al guardar';
+                    if (xhr.responseJSON) {
+                        msg = xhr.responseJSON.message || (xhr.responseJSON.errors ? Object.values(xhr.responseJSON.errors).flat().join(', ') : msg);
+                    } else if (xhr.status === 419) {
+                        msg = 'La sesión ha expirado. Recargue la página.';
+                    } else if (xhr.status === 0) {
+                        msg = 'Error de conexión. Verifique su red.';
+                    } else {
+                        msg = 'Error ' + xhr.status + ': ' + (xhr.statusText || 'Error desconocido');
+                    }
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: xhr.responseJSON?.message || 'Error al guardar'
+                        title: 'Error (' + xhr.status + ')',
+                        text: msg
                     });
                 },
                 complete: function() {

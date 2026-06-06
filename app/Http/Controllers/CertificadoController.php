@@ -97,6 +97,12 @@ class CertificadoController extends Controller
             ->get()
             ->groupBy('cargo');
 
+        $todosCandidatos = Candidato::whereIn('cargo', $cargos)
+            ->orderBy('numero_orden')
+            ->get()
+            ->groupBy('cargo')
+            ->map(fn($items) => $items->groupBy('partido_id'));
+
         foreach ($cargos as $cargo) {
             $dhontData = $dhont[$cargo] ?? [];
             $partidosReporte = [];
@@ -104,9 +110,22 @@ class CertificadoController extends Controller
             $votosPartido = $votosPorPartidoYCargo->get($cargo, collect());
 
             foreach ($votosPartido as $vp) {
-                $candidatos = $prefCargo->get($vp->partido_id, collect())
-                    ->sortByDesc('total_votos')
-                    ->values();
+                $candidatos = collect();
+                $todosCandPartido = $todosCandidatos[$cargo][$vp->partido_id] ?? collect();
+                $prefPartido = $prefCargo->get($vp->partido_id, collect());
+
+                foreach ($todosCandPartido as $cand) {
+                    $votoData = $prefPartido->firstWhere('candidato_id', $cand->id);
+                    $item = new \stdClass();
+                    $item->total_votos = $votoData ? (int)$votoData->total_votos : 0;
+                    $item->candidato = $cand;
+                    $candidatos->push($item);
+                }
+
+                $candidatos = $candidatos->sortBy([
+                    ['total_votos', 'desc'],
+                    ['candidato.numero_orden', 'asc'],
+                ])->values();
 
                 $partidosReporte[$vp->partido_id] = [
                     'partido' => $vp->partido,
@@ -378,6 +397,12 @@ class CertificadoController extends Controller
             ->get()
             ->groupBy('cargo');
 
+        $todosCandidatos = Candidato::whereIn('cargo', $cargos)
+            ->orderBy('numero_orden')
+            ->get()
+            ->groupBy('cargo')
+            ->map(fn($items) => $items->groupBy('partido_id'));
+
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator('Sistema Elecciones');
         $pdf->SetAuthor('Sistema Elecciones');
@@ -445,9 +470,23 @@ class CertificadoController extends Controller
             $electosPorLista = collect();
             foreach ($ordenadoPorBancas as $p) {
                 if ($p['bancas'] > 0) {
-                    $candidatosLista = $prefCargo->get($p['partido_id'], collect())
-                        ->sortByDesc('total_votos')
-                        ->values();
+                    $todosCandPartido = ($todosCandidatos[$c][$p['partido_id']] ?? collect());
+                    $prefPartido = $prefCargo->get($p['partido_id'], collect());
+                    $candidatosLista = collect();
+
+                    foreach ($todosCandPartido as $cand) {
+                        $votoData = $prefPartido->firstWhere('candidato_id', $cand->id);
+                        $item = new \stdClass();
+                        $item->total_votos = $votoData ? (int)$votoData->total_votos : 0;
+                        $item->candidato = $cand;
+                        $candidatosLista->push($item);
+                    }
+
+                    $candidatosLista = $candidatosLista->sortBy([
+                        ['total_votos', 'desc'],
+                        ['candidato.numero_orden', 'asc'],
+                    ])->values();
+
                     $electos = $candidatosLista->take($p['bancas'])->values()->map(function($cand, $idx) use ($p) {
                         $cand->cociente_dhont = $p['votos'] / ($idx + 1);
                         $cand->sigla_partido = $p['sigla'];
@@ -488,7 +527,21 @@ class CertificadoController extends Controller
                 $ganador = $ordenadoPorBancas->firstWhere('bancas', '>', 0);
                 if ($ganador) {
                     $partidoGanador = $data->firstWhere('partido_id', $ganador['partido_id']);
-                    $primerCandidato = $prefCargo->get($ganador['partido_id'], collect())->first();
+                    $todosCandPartido = ($todosCandidatos[$c][$ganador['partido_id']] ?? collect());
+                    $prefPartido = $prefCargo->get($ganador['partido_id'], collect());
+                    $candidatosLista = collect();
+                    foreach ($todosCandPartido as $cand) {
+                        $votoData = $prefPartido->firstWhere('candidato_id', $cand->id);
+                        $item = new \stdClass();
+                        $item->total_votos = $votoData ? (int)$votoData->total_votos : 0;
+                        $item->candidato = $cand;
+                        $candidatosLista->push($item);
+                    }
+                    $candidatosLista = $candidatosLista->sortBy([
+                        ['total_votos', 'desc'],
+                        ['candidato.numero_orden', 'asc'],
+                    ])->values();
+                    $primerCandidato = $candidatosLista->first();
 
                     $pdf->SetFont('helvetica', 'B', 10);
                     $pdf->Cell(0, 7, 'GANADOR:', 0, 1, 'L');
@@ -519,9 +572,20 @@ class CertificadoController extends Controller
             $pdf->SetFont('helvetica', '', 7);
             $pdf->SetTextColor(0, 0, 0);
             foreach ($ordenadoPorBancas as $p) {
-                $candidatos = $prefCargo->get($p['partido_id'], collect())
-                    ->sortByDesc('total_votos')
-                    ->values();
+                $todosCandPartido = ($todosCandidatos[$c][$p['partido_id']] ?? collect());
+                $prefPartido = $prefCargo->get($p['partido_id'], collect());
+                $candidatos = collect();
+                foreach ($todosCandPartido as $cand) {
+                    $votoData = $prefPartido->firstWhere('candidato_id', $cand->id);
+                    $item = new \stdClass();
+                    $item->total_votos = $votoData ? (int)$votoData->total_votos : 0;
+                    $item->candidato = $cand;
+                    $candidatos->push($item);
+                }
+                $candidatos = $candidatos->sortBy([
+                    ['total_votos', 'desc'],
+                    ['candidato.numero_orden', 'asc'],
+                ])->values();
                 $bancasAsignadas = $p['bancas'];
                 foreach ($candidatos as $idxCand => $cand) {
                     $esElecto = $idxCand < $bancasAsignadas && $bancasAsignadas > 0;
