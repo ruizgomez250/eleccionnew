@@ -543,6 +543,18 @@
             // === VOTANTES ===
             $('#formAgregarVotante').on('submit', function(e) {
                 e.preventDefault();
+                if (window.buscandoVotante) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Búsqueda en curso',
+                        text: 'Espera a que termine la búsqueda del votante antes de guardar',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                    return;
+                }
                 let formData = $(this).serialize();
                 let submitBtn = $(this).find('button[type="submit"]');
                 let nombrePuntero = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '')
@@ -1251,7 +1263,9 @@
                 }
                 return;
             }
+            window.buscandoVotante = true;
             $('#votante_nombre').val('Buscando...');
+            $('#formAgregarVotante button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Buscando...');
             $.get("{{ url('votante/buscar-por-cedula') }}/" + cedula, function(response) {
                 if (!response.encontrado) {
                     limpiarCamposVotante();
@@ -1293,6 +1307,9 @@
                     timer: 2000,
                     showConfirmButton: false
                 });
+            }).always(function() {
+                window.buscandoVotante = false;
+                $('#formAgregarVotante button[type="submit"]').prop('disabled', false).html('<i class="fas fa-save"></i> Guardar Votante');
             });
         }
 
