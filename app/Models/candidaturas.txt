@@ -1,0 +1,231 @@
+listas participantes al cargo de directorio nacional
+lista 1 coherencia liberal cl 
+opcion 1 Olga paredes
+opcion 2 fabian marti
+opcion 3 Celsa amada acosta lugo
+opcion 4  diego lopez
+opcion 5 alma Segovia
+opcion 6 dr gustavo guggiari
+opcion 7 dra jessica vergara
+opcion 8  taguide picanerai etacore
+opcion 9 carina cañete torres
+opcion 10 alba ozuna
+opcion 11 armando sosa traverzzi
+opcion 12 carmen mendoza
+opcion 13 Nery peña
+opcion 14 abog. Mirta rios chiuzano
+opcion 15 martin gonzalez osorio
+opcion 16 Johana cuenca
+opcion 17 diego bazan
+opcion 18 lic. Alicia benitez
+opcion 19 sin candidato
+opcion 20 jessica lopez 
+opción 21 dr guido cuevas almando
+opción 22 Natalia belen aguilar
+opción 23 mgtr. victor sosa traverzzi
+opción 24 lic. angelica escurra
+opción 25 prof. danny cabrera
+opción 26 eloisa Ibarra oviedo
+opción 27 jesus maria Cardozo baudry
+opción 28 Gladys Mabel acosta franco
+opción 29 abog. juan chamorro
+opción 30 Jorge ariel riveros garcia
+lista 3 nuevo liberalismo unidad para la victoria nluplv
+opcion 1 Javier pereira
+opcion 2 agustin saguier
+opcion 3 sonia fleitas
+opcion 4 papu rios
+opcion 5 horacio carisimo
+opcion 6 dalia estigarribia
+opcion 7 ariel villagra
+opcion 8 diego riveros
+opcion 9 horacio ortiz
+opcion 10 rodrigo blanco amarilla
+opcion 11 oscar gonzalez drakeford
+opcion 12 gustavo cano
+opcion 13 pedro gonzalez ramirez
+opcion 14 Fabiola Galeano chamorro
+opcion 15 Osvaldo gomez ojeda
+opcion 16 holder kennedy
+opcion 17 waldino monte da oca
+opcion 18 juliana boccia amarilla
+opcion 19 regina rios
+opcion 20  silvio peña
+opción 21 sonia medina
+opción 22 miguel martinez nuñez
+opción 23 Daniel rojas lopez
+opción 24 Daniel pereira
+opción 25 oscar rotela
+opción 26 david llano
+opción 27 dra nilsa sanchez v
+opción 28 fabio almada duarte
+opción 29 pedro Ricardo arias
+opción 30 david gonzalez
+lista 9 frente radical fr
+opcion 1 líder amarilla
+opcion 2 vidala franco
+opcion 3 diosnel aguilera
+opcion 4 alba talavera
+opcion 5 celso Maldonado duarte
+opcion 6 maria lorena Segovia azucas
+opcion 7 Lilian zayas
+opcion 8 Luis a Wagner 
+opcion 9 Mirna estela rios ojeda
+opcion 10 neri olmedo rolon
+opcion 11 sergio ortega
+opcion 12 juan ramon cohene acuña
+opcion 13 Yanina duarte
+opcion 14 ancho ramirez
+opcion 15 Rossana rojas
+opcion 16 regina barrios
+opcion 17 ailsa yambay
+opcion 18 gustavo Arturo ojeda
+opcion 19 victor jose risso medina
+opcion 20  Carlos nuñez
+opción 21 líder fabian almada
+opción 22 rosa Daniela acosta denis
+opción 23 felix arrua
+opción 24 Carlos Alberto cantero aquino
+opción 25 jazmin girala
+opción 26 benita jara cañiza
+opción 27 Juanma benitez
+opción 28 alba invernizzi
+opción 29 Robert bento
+opción 30 maricel ortega
+lista 13 cambio para el cambio cpc
+opcion 1 pedro regalado riveros 
+opcion 2 oscar guanes
+opcion 3 algredo sebastian jaeggli valdes
+opcion 4 cesar ruben cristaldo avalos
+opcion 5 adahia Saray Echague zaracho
+opcion 6 naoki shirozawa shirosawa
+opcion 7 miguel angel guillen gomez
+opcion 8 ruben nicolas rojas adorno
+opcion 9 rodrigo arza de sousa
+opcion 10 teresa marina aranda de hidalgo
+opcion 11 Blas Roberto cabañas
+opcion 12 Jorge Daniel ferreira
+opcion 13 Walter iban Echague figueredo
+opcion 14 valentin Galeano osorio
+opcion 15 licula vazquez miranda
+opcion 16 david Emilio hidalgo aranda
+opcion 17 Gerardo dario causarano caceres
+opcion 18 algredo Manuel rojas dos santos
+opcion 19 juan Antonio ramirez dittrich
+opcion 20  mercedes gonzalez zelaya
+opción 21 Jorge iban arias fretes
+opción 22 NO TIENE CANDIDATO
+opción 23 celso gustavo gamarra pacua
+opción 24 celso iban garicox vera
+opción 25 maracentaiglesias arza
+opción 26 felix mendez vergara
+opción 27 Osmar david Ocampos peralta
+opción 28 isabelino cañete viñales
+opción 29 jose david vazquez
+opción 30 patricia giselli vera de gonzalez
+lista 21 siglo 21 s21
+opcion 1 eugenio dure gimenez 
+opcion 2 derlis Antonio Valdez ponillux
+opcion 3 muguel sabino fernandez
+opcion 4 dario ovando gonzalez
+opcion 5 ramon Manuel guerrero caballero
+opcion 6 wilma carlita becvort de nuñez
+opcion 7 Hugo narciso ruiz diaz rivas
+opcion 8 freddy ferreira
+opcion 9  alfredo domingo dominguez davalos
+opcion 10 Antonia del pilar rodriguez vera
+opcion 11 Amancio ruiz diaz rivas
+opcion 12 hipolito Felipe rodriguez paniagua
+opcion 13 juan jose flores esquivel
+opcion 14 oscar ramon martinez
+opcion 15 dora anicia Ovelar velazquez
+opcion 16 francisco castro ocampo
+opcion 17 jose adrian martinez delgado
+opcion 18 benjamin Manuel benitez ruiz diaz
+opcion 19 albino Ocampos andino
+opcion 20 rosa estela escobar ocampos
+opción 21 juan dominciano cardozo
+opción 22 david Fernando ruiz diaz silva
+opción 23 cayo cantero ortiz
+opción 24 juan bautista miranda
+opción 25 Karina gissel lopez escobar
+opción 26 cesar Ojeda cañete
+opción 27 delio ramon ruiz diaz
+opción 28 marcos Emilio molinas
+opción 29 Dionicio Sanabria esteche
+opción 30 francisca ruiz diaz barrios
+lista 25 oñondivepa mlo
+opcion 1  ariel perfecto Fonseca legal
+opcion 2 Luis Alberto Rivarola paredes
+opcion 3 Mario cristaldo amaro
+opcion 4 rose margaret Brandt duarte
+opcion 5 gustavo flecha
+opcion 6 marco aguilera figueroa
+opcion 7 Johanna osmilda cubas paniagua
+opcion 8 Carlos Antonio zarate
+opcion 9  ilda Fonseca legal
+opcion 10 ruth Alcira sosa burgos
+opcion 11 ruben dario medina candia
+opcion 12 crshtian villalba arce
+opcion 13 francisco Antonio silvero venialvos
+opcion 14 ruben dario rojas garay
+opcion 15 basilio chamorro garcete
+opcion 16 cesar silvio nuñez farias
+opcion 17 liz rocio Estigarribia denis
+opcion 18 esteban Aguilar aguilera
+opcion 19 cesar Ojeda cañete
+opcion 20 viviana concepción espinoza quintana
+opción 21 gloria leonida martinez silva
+opción 22 Mirtha soledad alemán gonzalez
+opción 23 cesar mendoza acosta
+opción 24 roque acosta machuca
+opción 25 lidia Beatriz Godoy quintana
+opción 26 ever quintana lezcano
+opción 27 yicela romina Ovelar noe
+opción 28 fidel Antonio salinas mereles
+opción 29 maria Guadalupe ramirez peralta
+opción 30 luana Mabel torres quintana
+lista 100 dialogo azul da
+opcion 1  dra. nuria isnardi
+opcion 2 hector cespedes flores
+opcion 3 blanca lila mignarro
+opcion 4 roque godoy
+opcion 5 andres rojas
+opcion 6 Octavio shatp
+opcion 7 Basilisa vazquez
+opcion 8 cesar ferreira
+opcion 9  julio villalba
+opcion 10 dario cabral
+opcion 11 eutilio riveros
+opcion 12 edu gimenez
+opcion 13 eva de witte
+opcion 14 Daniel villordo
+opcion 15 pedro a chih lin
+opcion 16 stella rolon
+opcion 17 sannie ibarrola
+opcion 18 keke julio
+opcion 19 delio saldirvar
+opcion 20 fidel leon
+opción 21 naty fretes
+opción 22 snfo benitez
+opción 23 dani baez
+opción 24 adejaime pavei
+opción 25 Vicente denis
+opción 26 laly parra
+opción 27 tapi enciso
+opción 28 wilma bareiro
+opción 29 Mirna Ortiz de goldner
+opción 30 felix ibañez 
+listas participantes al cargo de directorio departamental
+lista 3 nuevo liberalismo unidad para la victoria nluplv
+opcion 1  freddy franco
+opcion 2 santi aguilera
+opcion 3 sergio estigarribia
+lista 9 frente radical fr
+opcion 1  Billy vaezken
+opcion 2 Laura amarilla
+opcion 3 Fernando Javier garcia florentin
+lista 100 dialogo azul da
+opcion 1  lorenzo mendieta
+opcion 2 silvano britez
+opcion 3 Carlos zelaya

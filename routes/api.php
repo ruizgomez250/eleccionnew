@@ -3,8 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PrePadronController;
-
-Route::get('/prepadron/{cedula}', [PrePadronController::class, 'buscarPorCedula']);
+use App\Http\Controllers\Api\VotoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +16,42 @@ Route::get('/prepadron/{cedula}', [PrePadronController::class, 'buscarPorCedula'
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// =============================================
+// RUTAS EXISTENTES (Prepádron)
+// =============================================
+Route::get('/prepadron/{cedula}', [PrePadronController::class, 'buscarPorCedula']);
+
+// =============================================
+// NUEVAS RUTAS PARA EL SISTEMA DE VOTOS (Luque)
+// =============================================
+Route::prefix('v1')->group(function () {
+    
+    // === Rutas principales para la APK ===
+    Route::post('/cargar-resultados-mesa', [VotoController::class, 'cargarResultadosMesa']);
+    Route::post('/cargar-resultados-mesa/json', [VotoController::class, 'cargarResultadosMesaJson']);
+    
+    // === Rutas para consultar resultados ===
+    Route::get('/resultados-generales', [VotoController::class, 'resultadosGenerales']);
+    Route::get('/resultados-por-cargo/{cargo}', [VotoController::class, 'resultadosPorCargo']);
+    Route::get('/resultados-mesa/{codigoMesa}', [VotoController::class, 'resultadosPorMesa']);
+    Route::get('/mesas', [VotoController::class, 'listarMesas']);
+    
+    // === Rutas para partidos y candidatos ===
+    Route::get('/partidos', [VotoController::class, 'listarPartidos']);
+    Route::get('/candidatos/{partidoId}/{cargo}', [VotoController::class, 'listarCandidatosPorPartido']);
+    
+    // === Ruta para estadísticas en tiempo real ===
+    Route::get('/estadisticas', [VotoController::class, 'estadisticasGenerales']);
+});
+
+// =============================================
+// RUTAS PROTEGIDAS (requieren autenticación)
+// =============================================
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // Si quieres proteger las rutas de votos, muévelas dentro de este grupo
+    // y agrega el middleware 'auth:sanctum' al grupo de v1
 });

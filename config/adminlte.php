@@ -399,15 +399,24 @@ return [
             'can'        => 'Miembros de Mesa',
             'url'        => '/miembros-de-mesa/create',
         ],
+        [
+            'text'       => 'Certificados de Resultado',
+            'icon'       => 'fas fa-file-signature',
+            'icon_color' => 'success',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-file-signature"></i>',
+            'can'        => 'Carga Certificados',
+            'url'        => '/certificados',
+        ],
 
 
         // [
-        //     'text' => 'Perfil',
-        //     'topnav'     => true,
-        //     'url'  => 'profile',
-        //     'classes' => 'custom-icon-box-black',
-        //     'content' => '<i class="fas fa-box"></i>',
-        // ],
+            //     'text' => 'Perfil',
+            //     'topnav'     => true,
+            //     'url'  => 'profile',
+            //     'classes' => 'custom-icon-box-black',
+            //     'content' => '<i class="fas fa-box"></i>',
+            // ],
         // [
         //     'text' => 'Gestión de Permisos',
         //     'topnav'     => true,

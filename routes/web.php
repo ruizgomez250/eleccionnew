@@ -22,6 +22,7 @@ use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VehiculoPunteroController;
 use App\Http\Controllers\VotanteController;
 use App\Http\Controllers\VotosController;
+use App\Http\Controllers\CertificadoController;
 
 // Ruta para cargar votos (la que necesita tu link)
 Route::get('/cargarvotos/{cedula_encriptada}', [VotosController::class, 'cargarVotos'])->name('cargar.votos');
@@ -207,6 +208,17 @@ Route::middleware('auth')->group(function () {
         ->name('configuracion_montos.reporte')
         ->middleware(['auth', 'permission:Administracion General']);
     Route::resource('ciudades_electorales', CiudadElectoralController::class);
+
+    Route::get('certificados', [CertificadoController::class, 'index'])->name('certificados.index');
+    Route::delete('certificados/{id}', [CertificadoController::class, 'destroy'])->name('certificados.destroy');
+    Route::get('certificados/candidatos', [CertificadoController::class, 'getCandidatos'])->name('certificados.candidatos');
+    Route::get('certificados/data', [CertificadoController::class, 'data'])->name('certificados.data');
+    Route::get('certificados/locales', [CertificadoController::class, 'getLocales'])->name('certificados.locales');
+    Route::get('certificados/mesas', [CertificadoController::class, 'getMesas'])->name('certificados.mesas');
+    Route::get('certificados/formulario', [CertificadoController::class, 'getFormularioCarga'])->name('certificados.formulario');
+    Route::post('certificados/guardar', [CertificadoController::class, 'guardarResultados'])->name('certificados.guardar');
+    Route::put('certificados/{id}', [CertificadoController::class, 'update'])->name('certificados.update');
+    Route::get('certificados/exportar-pdf', [CertificadoController::class, 'exportPdf'])->name('certificados.exportar.pdf');
 
     Route::get('/ciudades', [SistemaController::class, 'mostrarCiudades'])
         ->name('ciudades.index'); // opcional según tu sistema de autenticación

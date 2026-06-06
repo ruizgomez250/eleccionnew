@@ -58,4 +58,9 @@ class Equipo extends Model
     {
         return $this->hasMany(MiembroDeMesa::class, 'idequipo');
     }
+
+    public function mesas()
+    {
+        return $this->hasMany(Mesa::class, 'equipo_id');
+    }
 }
