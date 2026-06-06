@@ -473,6 +473,12 @@
                     order: [
                         [0, 'desc']
                     ],
+                    columnDefs: [{
+                        targets: 0,
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1;
+                        }
+                    }],
                     dom: "<'row'<'col-md-4'l><'col-md-4 text-center'f><'col-md-4 text-right'B>>" +
                         "<'row'<'col-sm-12'tr>>" +
                         "<'row'<'col-sm-5'i><'col-sm-7'p>>",
@@ -514,10 +520,8 @@
             }
 
             function agregarVotoATabla(voto) {
-                let rowCount = votosDataTable.rows().count() + 1;
-
                 let nuevaFila = [
-                    rowCount,
+                    0,
                     voto.cedula,
                     (voto.nombres || '') + ' ' + (voto.apellidos || ''),
                     voto.localvotacion,
@@ -530,12 +534,10 @@
 
                 votosDataTable.row.add(nuevaFila).draw();
 
-                // Asignar id al tr para que eliminarVoto pueda encontrarlo
-                let nodes = votosDataTable.rows().nodes();
-                let lastNode = nodes[nodes.length - 1];
-                $(lastNode).attr('id', 'voto-row-' + voto.id);
-
-                reordenarNumeros();
+                // Obtener el índice interno de la fila recién agregada
+                let rowIdx = votosDataTable.rows().count() - 1;
+                let addedNode = votosDataTable.row(rowIdx).node();
+                $(addedNode).attr('id', 'voto-row-' + voto.id);
             }
 
             $('#btnNuevoVoto').click(function() {
@@ -550,13 +552,6 @@
                 $('#votante_cedula, #votante_nombres, #votante_apellidos, #votante_localvotacion, #votante_distrito, #votante_mesa')
                     .val('');
                 $('#display_cedula, #display_nombres, #display_local, #display_distrito, #display_mesa').text('');
-            }
-
-            function reordenarNumeros() {
-                let rows = $('#votos-table tbody tr');
-                rows.each(function(index, row) {
-                    $(row).find('td:first').text(index + 1);
-                });
             }
 
             // Enter para buscar
@@ -575,8 +570,6 @@
             });
         });
 
-        // Función global para eliminar voto
-        // Función global para eliminar voto
         function eliminarVoto(id) {
             Swal.fire({
                 title: '¿Eliminar voto?',
@@ -602,21 +595,16 @@
                                 Swal.fire('Eliminado', response.message, 'success');
 
                                 // Eliminar fila del DataTable
-                                let row = $('#voto-row-' + id);
-                                if (votosDataTable) {
-                                    votosDataTable.row(row).remove().draw();
+                                let rowSelector = '#voto-row-' + id;
+                                let dtRow = votosDataTable.row(rowSelector);
+                                if (dtRow.node()) {
+                                    dtRow.remove().draw(false);
                                 } else {
-                                    row.remove();
+                                    $(rowSelector).remove();
                                 }
 
                                 // Actualizar contador
                                 $('#totalVotos').text(response.total_votos);
-
-                                // Reordenar números
-                                let rows = $('#votos-table tbody tr');
-                                rows.each(function(index, row) {
-                                    $(row).find('td:first').text(index + 1);
-                                });
                             } else {
                                 Swal.fire('Error', response.message, 'error');
                             }
