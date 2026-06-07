@@ -6,6 +6,9 @@ use App\Models\Voto;
 use App\Models\Padron;
 use App\Models\MiembroDeMesa;
 use App\Models\Equipo;
+use App\Models\LocalInterna;
+use App\Models\Sistema;
+use App\Models\CiudadElectoral;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +31,17 @@ class VotosController extends Controller
             // dd('paso');
             $miembro = MiembroDeMesa::where('cedula', $cedula)->with('equipo')->firstOrFail();
             $equipo = $miembro->equipo;
-            $cantidadMesas = 12;
+
+            $sistema = Sistema::find($equipo->sist);
+            $ciudadElectoral = $sistema ? CiudadElectoral::find($sistema->id_ciudad_electoral) : null;
+            $cantidadMesas = 0;
+            if ($ciudadElectoral) {
+                $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
+                    ->where('departamento_nombre', $ciudadElectoral->departamento)
+                    ->where('local_interna', $equipo->descripcion)
+                    ->first();
+                $cantidadMesas = $localInterna ? (int) $localInterna->cantmesa : 0;
+            }
             $votosCargados = Voto::where('idmiembrodemesa', $miembro->id)->count();
 
             $votosCargadosLista = Voto::where('idmiembrodemesa', $miembro->id)
@@ -108,9 +121,33 @@ class VotosController extends Controller
                 'miembro_id' => 'required|exists:miembros_de_mesa,id'
             ]);
 
+            $miembro = MiembroDeMesa::with('equipo')->find($request->miembro_id);
+            $equipo = $miembro->equipo;
+
+            $sistema = Sistema::find($equipo->sist);
+            $ciudadElectoral = $sistema ? CiudadElectoral::find($sistema->id_ciudad_electoral) : null;
+            $distritoNombre = null;
+            $localInternaNombre = null;
+            if ($ciudadElectoral) {
+                $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
+                    ->where('departamento_nombre', $ciudadElectoral->departamento)
+                    ->where('local_interna', $equipo->descripcion)
+                    ->first();
+                if ($localInterna) {
+                    $distritoNombre = $localInterna->distrito_nombre;
+                    $localInternaNombre = $localInterna->local_interna;
+                }
+            }
+
             $votante = Padron::where('mesa', $request->mesa)
-                ->where('orden', $request->orden)
-                ->first();
+                ->where('orden', $request->orden);
+            
+            if ($distritoNombre && $localInternaNombre) {
+                $votante->where('local_interna', $localInternaNombre)
+                    ->where('distrito_nombre', $distritoNombre);
+            }
+
+            $votante = $votante->first();
 
             if (!$votante) {
                 return response()->json([
