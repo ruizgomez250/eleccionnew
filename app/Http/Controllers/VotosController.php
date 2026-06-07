@@ -35,12 +35,25 @@ class VotosController extends Controller
             $sistema = Sistema::find($equipo->sist);
             $ciudadElectoral = $sistema ? CiudadElectoral::find($sistema->id_ciudad_electoral) : null;
             $cantidadMesas = 0;
+            $localInternaNombre = $equipo->descripcion;
+            $distritoNombre = $equipo->ciudad;
             if ($ciudadElectoral) {
+                $distritoNombre = $ciudadElectoral->descripcion;
                 $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
                     ->where('departamento_nombre', $ciudadElectoral->departamento)
                     ->where('local_interna', $equipo->descripcion)
                     ->first();
-                $cantidadMesas = $localInterna ? (int) $localInterna->cantmesa : 0;
+                if ($localInterna) {
+                    $cantidadMesas = (int) $localInterna->cantmesa;
+                    $localInternaNombre = $localInterna->local_interna;
+                    $distritoNombre = $localInterna->distrito_nombre;
+                }
+            }
+            $maxMesaPadron = Padron::where('local_interna', $localInternaNombre)
+                ->where('distrito_nombre', $distritoNombre)
+                ->max('mesa');
+            if ($maxMesaPadron && $maxMesaPadron > $cantidadMesas) {
+                $cantidadMesas = (int) $maxMesaPadron;
             }
             $votosCargados = Voto::where('idmiembrodemesa', $miembro->id)->count();
 
@@ -126,9 +139,10 @@ class VotosController extends Controller
 
             $sistema = Sistema::find($equipo->sist);
             $ciudadElectoral = $sistema ? CiudadElectoral::find($sistema->id_ciudad_electoral) : null;
-            $distritoNombre = null;
-            $localInternaNombre = null;
+            $distritoNombre = $equipo->ciudad;
+            $localInternaNombre = $equipo->descripcion;
             if ($ciudadElectoral) {
+                $distritoNombre = $ciudadElectoral->descripcion;
                 $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
                     ->where('departamento_nombre', $ciudadElectoral->departamento)
                     ->where('local_interna', $equipo->descripcion)
@@ -140,12 +154,9 @@ class VotosController extends Controller
             }
 
             $votante = Padron::where('mesa', $request->mesa)
-                ->where('orden', $request->orden);
-            
-            if ($distritoNombre && $localInternaNombre) {
-                $votante->where('local_interna', $localInternaNombre)
-                    ->where('distrito_nombre', $distritoNombre);
-            }
+                ->where('orden', $request->orden)
+                ->where('local_interna', $localInternaNombre)
+                ->where('distrito_nombre', $distritoNombre);
 
             $votante = $votante->first();
 
