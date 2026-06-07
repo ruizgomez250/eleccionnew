@@ -362,6 +362,9 @@
                                 });
                             }
                         } else {
+                            if (response.debug) {
+                                console.log('DEBUG BÚSQUEDA:', response.debug);
+                            }
                             Swal.fire('No encontrado', response.message, 'warning');
                         }
                     },

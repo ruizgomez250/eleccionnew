@@ -35,22 +35,21 @@ class VotosController extends Controller
             $sistema = Sistema::find($equipo->sist);
             $ciudadElectoral = $sistema ? CiudadElectoral::find($sistema->id_ciudad_electoral) : null;
             $cantidadMesas = 0;
-            $localInternaNombre = $equipo->descripcion;
-            $distritoNombre = $equipo->ciudad;
+
+            $nombreLocal = $equipo->descripcion;
+
             if ($ciudadElectoral) {
-                $distritoNombre = $ciudadElectoral->descripcion;
                 $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
                     ->where('departamento_nombre', $ciudadElectoral->departamento)
                     ->where('local_interna', $equipo->descripcion)
                     ->first();
                 if ($localInterna) {
                     $cantidadMesas = (int) $localInterna->cantmesa;
-                    $localInternaNombre = $localInterna->local_interna;
-                    $distritoNombre = $localInterna->distrito_nombre;
+                    $nombreLocal = $localInterna->local_interna;
                 }
             }
-            $maxMesaPadron = Padron::where('local_interna', $localInternaNombre)
-                ->where('distrito_nombre', $distritoNombre)
+
+            $maxMesaPadron = Padron::where('local_interna', $nombreLocal)
                 ->max('mesa');
             if ($maxMesaPadron && $maxMesaPadron > $cantidadMesas) {
                 $cantidadMesas = (int) $maxMesaPadron;
@@ -111,7 +110,8 @@ class VotosController extends Controller
                     'apellidos' => $votante->apellido ?? '',
                     'localvotacion' => $votante->local_interna ?? '',
                     'distrito' => $votante->distrito_nombre ?? '',
-                    'mesa' => $votante->mesa ?? ''
+                    'mesa' => $votante->mesa ?? '',
+                    'orden' => $votante->orden ?? ''
                 ]
             ]);
         } catch (\Exception $e) {
@@ -137,33 +137,40 @@ class VotosController extends Controller
             $miembro = MiembroDeMesa::with('equipo')->find($request->miembro_id);
             $equipo = $miembro->equipo;
 
+            $nombreLocal = $equipo->descripcion;
+
             $sistema = Sistema::find($equipo->sist);
             $ciudadElectoral = $sistema ? CiudadElectoral::find($sistema->id_ciudad_electoral) : null;
-            $distritoNombre = $equipo->ciudad;
-            $localInternaNombre = $equipo->descripcion;
             if ($ciudadElectoral) {
-                $distritoNombre = $ciudadElectoral->descripcion;
                 $localInterna = LocalInterna::where('distrito_nombre', $ciudadElectoral->descripcion)
                     ->where('departamento_nombre', $ciudadElectoral->departamento)
                     ->where('local_interna', $equipo->descripcion)
                     ->first();
                 if ($localInterna) {
-                    $distritoNombre = $localInterna->distrito_nombre;
-                    $localInternaNombre = $localInterna->local_interna;
+                    $nombreLocal = $localInterna->local_interna;
                 }
             }
 
-            $votante = Padron::where('mesa', $request->mesa)
-                ->where('orden', $request->orden)
-                ->where('local_interna', $localInternaNombre)
-                ->where('distrito_nombre', $distritoNombre);
+            $query = Padron::where('mesa', 22)
+                ->where('orden', 9)
+                ->where('local_interna', 'ESC. Nº859 HEROES DE LA PATRIA');
 
-            $votante = $votante->first();
+            $sql = $query->toSql();
+            $bindings = $query->getBindings();
+
+            $votante = $query->first();
 
             if (!$votante) {
                 return response()->json([
                     'success' => false,
-                    'message' => "No se encontró un votante en la mesa {$request->mesa} con el orden {$request->orden}"
+                    'message' => "No se encontró un votante en la mesa {$request->mesa} con el orden {$request->orden}",
+                    'debug' => [
+                        'sql' => $sql,
+                        'bindings' => $bindings,
+                        'local_buscado' => $nombreLocal,
+                        'mesa' => $request->mesa,
+                        'orden' => $request->orden,
+                    ]
                 ]);
             }
 
@@ -183,7 +190,8 @@ class VotosController extends Controller
                     'apellidos' => $votante->apellido ?? '',
                     'localvotacion' => $votante->local_interna ?? '',
                     'distrito' => $votante->distrito_nombre ?? '',
-                    'mesa' => $votante->mesa ?? ''
+                    'mesa' => $votante->mesa ?? '',
+                    'orden' => $votante->orden ?? ''
                 ]
             ]);
         } catch (\Exception $e) {
