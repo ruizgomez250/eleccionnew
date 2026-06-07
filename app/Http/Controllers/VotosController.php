@@ -49,7 +49,7 @@ class VotosController extends Controller
                 }
             }
 
-            $maxMesaPadron = Padron::where('local_interna', $nombreLocal)
+            $maxMesaPadron = Padron::where('local_interna', 'ESC. Nº859 HEROES DE LA PATRIA')
                 ->max('mesa');
             if ($maxMesaPadron && $maxMesaPadron > $cantidadMesas) {
                 $cantidadMesas = (int) $maxMesaPadron;
@@ -217,18 +217,6 @@ class VotosController extends Controller
                 'idmiembrodemesa' => 'required|exists:miembros_de_mesa,id',
                 'mesa' => 'required|integer'
             ]);
-
-            // Verificar si ya existe un voto con la misma cédula para este miembro
-            $existe = Voto::where('cedula', $request->cedula)
-                ->where('idmiembrodemesa', $request->idmiembrodemesa)
-                ->exists();
-
-            if ($existe) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Este votante ya registró su voto anteriormente. No se permiten duplicados.'
-                ]);
-            }
 
             DB::beginTransaction();
 
