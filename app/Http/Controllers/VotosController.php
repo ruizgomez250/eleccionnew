@@ -178,7 +178,7 @@ class VotosController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => $message,
+                'message' => $sql,
                 'sql' => $sql,
                 'data' => [
                     'cedula' => $votante->cedula,
