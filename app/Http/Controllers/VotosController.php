@@ -174,11 +174,11 @@ class VotosController extends Controller
                 ->where('idmiembrodemesa', $request->miembro_id)
                 ->exists();
 
-            $message = $yaVoto ? "Este votante ya registró su voto anteriormente {$sql}" : null;
+            $message = $yaVoto ? 'Este votante ya registró su voto anteriormente' : null;
 
             return response()->json([
                 'success' => true,
-                'message' => $sql,
+                'message' => $message,
                 'sql' => $sql,
                 'data' => [
                     'cedula' => $votante->cedula,
