@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Candidato;
 use App\Models\Dirigente;
 use App\Models\Equipo;
+use App\Models\LocalInterna;
 use App\Models\MiembroDeMesa;
+use App\Models\Partido;
 use App\Models\Puntero;
 use App\Models\Sistema;
 use App\Models\Vehiculo;
 use App\Models\Votante;
+use App\Models\VotosMesa;
 use Illuminate\Http\Request;
 use TCPDF;
 use Illuminate\Support\Facades\Auth;
@@ -481,6 +485,77 @@ class ReportesController extends Controller
             ], 500);
         }
     }
+    public function resultadosMesa()
+    {
+        $cargos = Candidato::CARGOS;
+        $distritos = LocalInterna::select('distrito_nombre')
+            ->distinct()
+            ->orderBy('distrito_nombre')
+            ->pluck('distrito_nombre');
+
+        return view('reportes.resultados-mesa', compact('cargos', 'distritos'));
+    }
+
+    public function getResultadosMesaData(Request $request)
+    {
+        try {
+            $cargo = $request->cargo;
+            $localNombre = $request->local;
+
+            $equipo = Equipo::where('colegio', $localNombre)->first();
+
+            if (!$equipo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontr\u00f3 el equipo para este local'
+                ]);
+            }
+
+            $mesas = $equipo->mesas()->orderBy('numero_mesa')->get();
+            $mesaIds = $mesas->pluck('id');
+
+            $partidos = Partido::whereHas('candidatos', fn($q) => $q->where('cargo', $cargo)->activos())
+                ->orderByRaw('CAST(numero_lista AS UNSIGNED), numero_lista')
+                ->get();
+
+            $candidatosPorPartido = Candidato::where('cargo', $cargo)
+                ->where('activo', true)
+                ->orderBy('numero_orden')
+                ->get()
+                ->groupBy('partido_id');
+
+            $votosTotales = VotosMesa::whereIn('mesa_id', $mesaIds)
+                ->where('cargo', $cargo)
+                ->where('tipo_voto', 'preferencia')
+                ->select('candidato_id', DB::raw('SUM(cantidad_votos) as total'))
+                ->groupBy('candidato_id')
+                ->pluck('total', 'candidato_id');
+
+            $votosPorMesa = VotosMesa::whereIn('mesa_id', $mesaIds)
+                ->where('cargo', $cargo)
+                ->where('tipo_voto', 'preferencia')
+                ->select('mesa_id', 'candidato_id', 'cantidad_votos')
+                ->get()
+                ->groupBy('mesa_id')
+                ->map(fn($items) => $items->groupBy('candidato_id')
+                    ->map(fn($candItems) => $candItems->sum('cantidad_votos')));
+
+            $html = view('reportes._resultados-mesa-table', compact(
+                'cargo', 'equipo', 'partidos', 'candidatosPorPartido', 'votosTotales', 'votosPorMesa', 'mesas'
+            ))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el reporte: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function porlocal()
     {
         return view('reportes.porlocal-loading');

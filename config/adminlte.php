@@ -359,6 +359,10 @@ return [
                     'url'  => '/porlocal',
                 ],
                 [
+                    'text' => 'Resultados por Mesa',
+                    'url'  => '/reportes/resultados-mesa',
+                ],
+                [
                     'text' => 'Votantes vs Carga de Votos',
                     'url'  => '/reportes/carga-votos',
                 ],

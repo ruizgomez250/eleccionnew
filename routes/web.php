@@ -138,6 +138,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/porlocal', [ReportesController::class, 'porlocal'])->name('informe.porlocal');
     Route::get('/porlocal-data', [ReportesController::class, 'getPorlocalData'])->name('informe.porlocal.data');
     Route::get('/porlocal-detalle', [ReportesController::class, 'getDetalleEquipo'])->name('informe.porlocal.detalle');
+    Route::get('/reportes/resultados-mesa', [ReportesController::class, 'resultadosMesa'])->name('reportes.resultados.mesa');
+    Route::get('/reportes/resultados-mesa-data', [ReportesController::class, 'getResultadosMesaData'])->name('reportes.resultados.mesa.data');
     Route::get('/reportes/carga-votos', [ReportesController::class, 'cargaVotos'])->name('reportes.carga-votos');
     Route::get('/reportes/carga-votos-data', [ReportesController::class, 'getCargaVotosData'])->name('reportes.carga-votos.data');
     Route::get('/reportes/carga-votos-detalle', [ReportesController::class, 'getCargaVotosDetalle'])->name('reportes.carga-votos.detalle');
