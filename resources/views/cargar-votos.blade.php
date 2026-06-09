@@ -350,6 +350,7 @@
                         $('#loading').hide();
 
                         if (response.success) {
+                            console.log('SQL:', response.sql);
                             mostrarDatosVotante(response.data);
                             $('#resultadoBusqueda').show();
                             if (response.message) {

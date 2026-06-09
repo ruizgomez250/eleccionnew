@@ -151,23 +151,18 @@ class VotosController extends Controller
                 }
             }
 
-            $query = Padron::where('mesa', 22)
-                ->where('orden', 9)
-                ->where('local_interna', 'ESC. Nº859 HEROES DE LA PATRIA');
-
-            $sql = $query->toSql();
-            $bindings = $query->getBindings();
-
-            $votante = $query->first();
+            $sql = "SELECT * FROM padron WHERE mesa = '{$request->mesa}' AND orden = '{$request->orden}' AND local_interna = '{$nombreLocal}' LIMIT 1";
+            $result = DB::select($sql);
+            $votante = !empty($result) ? (object) $result[0] : null;
 
             if (!$votante) {
                 return response()->json([
                     'success' => false,
-                    'message' => "No se encontró un votante en la mesa {$request->mesa} con el orden {$request->orden}",
+                    'message' => "No se encontró un votante en la mesa {$sql} con el orden {$request->orden}",
                     'debug' => [
                         'sql' => $sql,
-                        'bindings' => $bindings,
                         'local_buscado' => $nombreLocal,
+
                         'mesa' => $request->mesa,
                         'orden' => $request->orden,
                     ]
@@ -179,11 +174,12 @@ class VotosController extends Controller
                 ->where('idmiembrodemesa', $request->miembro_id)
                 ->exists();
 
-            $message = $yaVoto ? 'Este votante ya registró su voto anteriormente' : null;
+            $message = $yaVoto ? "Este votante ya registró su voto anteriormente {$sql}" : null;
 
             return response()->json([
                 'success' => true,
                 'message' => $message,
+                'sql' => $sql,
                 'data' => [
                     'cedula' => $votante->cedula,
                     'nombres' => $votante->nombre ?? '',

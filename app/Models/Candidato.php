@@ -18,7 +18,7 @@ class Candidato extends Model
     protected $table = 'candidatos';
 
     /**
-     * Los cargos electorales disponibles
+     * Los cargos electorales disponibles si tiene cambios
      */
     const CARGOS = [
         'intendente',
@@ -26,6 +26,15 @@ class Candidato extends Model
         'presidente - vice 1 y vice 2 - plra',
         'directorio nacional',
         'directorio departamental',
+        'comite 1 local',
+        'comite 2 local',
+        'comite 3 local',
+        'comite 4 local',
+        'convencional',
+        'convencional 1',
+        'convencional 2',
+        'convencional 3',
+        'convencional 4',
     ];
 
     /**
@@ -90,6 +99,15 @@ class Candidato extends Model
             'presidente - vice 1 y vice 2 - plra' => 'Presidente - Vice 1 y Vice 2 - PLRA',
             'directorio nacional' => 'Directorio Nacional',
             'directorio departamental' => 'Directorio Departamental',
+            'comite 1 local' => 'Comité 1 Local',
+            'comite 2 local' => 'Comité 2 Local',
+            'comite 3 local' => 'Comité 3 Local',
+            'comite 4 local' => 'Comité 4 Local',
+            'convencional' => 'Convencional',
+            'convencional 1' => 'Convencional 1',
+            'convencional 2' => 'Convencional 2',
+            'convencional 3' => 'Convencional 3',
+            'convencional 4' => 'Convencional 4',
         ];
         
         return $cargos[$this->cargo] ?? ucfirst($this->cargo);
