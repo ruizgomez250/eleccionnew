@@ -1,18 +1,17 @@
 <?php
 
+use App\Http\Controllers\CertificadoController;
 use App\Http\Controllers\CiudadElectoralController;
 use App\Http\Controllers\ConfiguracionMontoController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MesaEntradaController;
 use App\Http\Controllers\DirigenteController;
+use App\Http\Controllers\DuplicadosEntreSistemasController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\MiembroDeMesaController;
+use App\Http\Controllers\PadronCoopController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilesController;
 use App\Http\Controllers\PunteroController;
-use App\Http\Controllers\VotantesDuplicadosController;
-use App\Http\Controllers\DuplicadosEntreSistemasController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\SistemaController;
@@ -21,11 +20,16 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VehiculoPunteroController;
 use App\Http\Controllers\VotanteController;
+use App\Http\Controllers\VotantesDuplicadosController;
 use App\Http\Controllers\VotosController;
-use App\Http\Controllers\CertificadoController;
+use Illuminate\Support\Facades\Route;
 
 // Ruta para cargar votos (la que necesita tu link)
 Route::get('/cargarvotos/{cedula_encriptada}', [VotosController::class, 'cargarVotos'])->name('cargar.votos');
+
+// Padrón cooperativa - búsqueda pública sin autenticación
+Route::get('/padron-coop', [PadronCoopController::class, 'index'])->name('padron-coop.index');
+Route::get('/padron-coop/search', [PadronCoopController::class, 'search'])->name('padron-coop.search');
 
 
 Route::prefix('votos')->name('votos.')->group(function () {
