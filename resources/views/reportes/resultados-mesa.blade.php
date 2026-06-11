@@ -54,6 +54,9 @@
                     <button id="btnGenerar" class="btn btn-primary btn-lg" disabled>
                         <i class="fas fa-search"></i> Generar Reporte
                     </button>
+                    <a id="btnExportarPdf" class="btn btn-danger btn-lg" style="display: none;" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </a>
                 </div>
             </div>
         </div>
@@ -103,6 +106,7 @@
             var distrito = $(this).val();
             var $local = $('#localSelect').empty().append('<option value="">Cargando...</option>').prop('disabled', true);
             $('#btnGenerar').prop('disabled', true);
+            $('#btnExportarPdf').hide();
 
             if (distrito) {
                 $.get('{{ route("certificados.locales") }}', { distrito: distrito }, function(data) {
@@ -119,6 +123,7 @@
 
         $('#localSelect, #cargoSelect').on('change', function() {
             $('#btnGenerar').prop('disabled', !($('#localSelect').val() && $('#cargoSelect').val()));
+            $('#btnExportarPdf').hide();
         });
 
         $('#btnGenerar').on('click', function() {
@@ -130,6 +135,7 @@
                 '<div class="card card-default"><div class="card-body text-center py-5">' +
                 '<i class="fas fa-spinner fa-spin fa-3x mb-3"></i><p>Generando reporte...</p></div></div>'
             );
+            $('#btnExportarPdf').hide();
 
             $.ajax({
                 url: '{{ route("reportes.resultados.mesa.data") }}',
@@ -139,6 +145,8 @@
                 success: function(response) {
                     if (response.success) {
                         $('#reporteContainer').html(response.html);
+                        var pdfUrl = '{{ route("reportes.resultados.mesa.pdf") }}?local=' + encodeURIComponent(local) + '&cargo=' + encodeURIComponent(cargo);
+                        $('#btnExportarPdf').attr('href', pdfUrl).show();
                     } else {
                         $('#reporteContainer').html(
                             '<div class="alert alert-danger">' + (response.message || 'Error al generar el reporte') + '</div>'

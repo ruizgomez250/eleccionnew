@@ -556,6 +556,136 @@ class ReportesController extends Controller
         }
     }
 
+    public function exportarResultadosMesaPDF(Request $request)
+    {
+        $cargo = $request->cargo;
+        $localNombre = $request->local;
+
+        $equipo = Equipo::where('colegio', $localNombre)->firstOrFail();
+
+        $mesas = $equipo->mesas()->orderBy('numero_mesa')->get();
+        $mesaIds = $mesas->pluck('id');
+
+        $partidos = Partido::whereHas('candidatos', fn($q) => $q->where('cargo', $cargo)->activos())
+            ->orderByRaw('CAST(numero_lista AS UNSIGNED), numero_lista')
+            ->get();
+
+        $candidatosPorPartido = Candidato::where('cargo', $cargo)
+            ->where('activo', true)
+            ->orderBy('numero_orden')
+            ->get()
+            ->groupBy('partido_id');
+
+        $votosTotales = VotosMesa::whereIn('mesa_id', $mesaIds)
+            ->where('cargo', $cargo)
+            ->where('tipo_voto', 'preferencia')
+            ->select('candidato_id', DB::raw('SUM(cantidad_votos) as total'))
+            ->groupBy('candidato_id')
+            ->pluck('total', 'candidato_id');
+
+        $votosPorMesa = VotosMesa::whereIn('mesa_id', $mesaIds)
+            ->where('cargo', $cargo)
+            ->where('tipo_voto', 'preferencia')
+            ->select('mesa_id', 'candidato_id', 'cantidad_votos')
+            ->get()
+            ->groupBy('mesa_id')
+            ->map(fn($items) => $items->groupBy('candidato_id')
+                ->map(fn($candItems) => $candItems->sum('cantidad_votos')));
+
+        $numMesas = $mesas->count();
+        $wLista = 10;
+        $wPartido = 35;
+        $wCandidato = 50;
+        $wTotal = 15;
+        $wMesa = max(10, min(22, (287 - $wLista - $wPartido - $wCandidato - $wTotal) / max($numMesas, 1)));
+
+        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('Sistema Elecciones');
+        $pdf->SetMargins(5, 10, 5);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->SetFont('helvetica', '', 7);
+
+        $pdf->AddPage();
+
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->Cell(0, 7, 'REPORTE DE RESULTADOS POR MESA', 0, 1, 'C');
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->Cell(0, 5, $equipo->colegio . ' - ' . $equipo->ciudad, 0, 1, 'C');
+        $pdf->Cell(0, 5, 'Candidatura: ' . ucfirst($cargo), 0, 1, 'C');
+        $pdf->Ln(3);
+
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetFillColor(60, 100, 180);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->Cell($wLista, 7, 'Lista', 1, 0, 'C', true);
+        $pdf->Cell($wPartido, 7, 'Partido', 1, 0, 'C', true);
+        $pdf->Cell($wCandidato, 7, 'Candidato', 1, 0, 'C', true);
+        $pdf->Cell($wTotal, 7, 'Total', 1, 0, 'C', true);
+        foreach ($mesas as $mesa) {
+            $pdf->Cell($wMesa, 7, 'M.' . $mesa->numero_mesa, 1, 0, 'C', true);
+        }
+        $pdf->Ln();
+
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 6.5);
+        $fill = false;
+        $grandTotal = 0;
+
+        foreach ($partidos as $partido) {
+            $candidatos = $candidatosPorPartido->get($partido->id, collect());
+
+            if ($candidatos->isEmpty()) continue;
+
+            $partidoTotal = 0;
+
+            $pdf->SetFont('helvetica', 'B', 6.5);
+            $pdf->SetFillColor(230, 230, 230);
+            $pdf->Cell($wLista, 6, '', 1, 0, 'C', true);
+            $pdf->Cell($wPartido, 6, 'Lista ' . $partido->numero_lista . ' - ' . ($partido->sigla ?? $partido->nombre), 1, 0, 'L', true);
+            $pdf->Cell($wCandidato, 6, '', 1, 0, 'L', true);
+            $pdf->Cell($wTotal, 6, number_format($candidatos->sum(fn($c) => $votosTotales->get($c->id, 0)), 0, ',', '.'), 1, 0, 'C', true);
+            foreach ($mesas as $mesa) {
+                $pdf->Cell($wMesa, 6, number_format($candidatos->sum(fn($c) => ($votosPorMesa[$mesa->id][$c->id] ?? 0)), 0, ',', '.'), 1, 0, 'C', true);
+            }
+            $pdf->Ln();
+
+            $pdf->SetFont('helvetica', '', 6.5);
+            $pdf->SetFillColor(245, 245, 245);
+
+            foreach ($candidatos as $candidato) {
+                $total = $votosTotales->get($candidato->id, 0);
+                $partidoTotal += $total;
+                $grandTotal += $total;
+
+                $pdf->SetFillColor($fill ? 245 : 255, $fill ? 245 : 255, $fill ? 245 : 255);
+                $pdf->Cell($wLista, 5.5, $partido->numero_lista, 1, 0, 'C', true);
+                $pdf->Cell($wPartido, 5.5, $partido->sigla ?? $partido->nombre, 1, 0, 'L', true);
+                $candidatoNombre = $candidato->numero_orden . '. ' . $candidato->nombre_completo;
+                $pdf->Cell($wCandidato, 5.5, $candidatoNombre, 1, 0, 'L', true);
+                $pdf->Cell($wTotal, 5.5, number_format($total, 0, ',', '.'), 1, 0, 'C', true);
+                foreach ($mesas as $mesa) {
+                    $votoMesa = $votosPorMesa[$mesa->id][$candidato->id] ?? 0;
+                    $pdf->Cell($wMesa, 5.5, $votoMesa ? number_format($votoMesa, 0, ',', '.') : '-', 1, 0, 'C', true);
+                }
+                $pdf->Ln();
+                $fill = !$fill;
+            }
+        }
+
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetFillColor(200, 200, 200);
+        $pdf->Cell($wLista + $wPartido + $wCandidato, 6, 'TOTAL GENERAL', 1, 0, 'R', true);
+        $pdf->Cell($wTotal, 6, number_format($grandTotal, 0, ',', '.'), 1, 0, 'C', true);
+        foreach ($mesas as $mesa) {
+            $mesaTotal = $votosPorMesa->has($mesa->id) ? collect($votosPorMesa[$mesa->id])->sum() : 0;
+            $pdf->Cell($wMesa, 6, number_format($mesaTotal, 0, ',', '.'), 1, 0, 'C', true);
+        }
+        $pdf->Ln();
+
+        $pdf->Output('reporte_resultados_mesa.pdf', 'I');
+        exit;
+    }
+
     public function porlocal()
     {
         return view('reportes.porlocal-loading');
