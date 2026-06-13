@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\PadronIluminado;
-use App\Models\PrePadron;
 use App\Models\Puntero;
 use App\Models\Socio;
 use App\Models\Votante;
@@ -24,23 +23,10 @@ class VotanteController extends Controller
             'cedula' => 'required'
         ]);
 
-        $sql = "
-        SELECT 
-            cedula,
-            nombre,
-            apellido,
-            local_interna,
-            local_generales,
-            direccion,
-            mesa,
-            orden,
-            afiliaciones
-        FROM padron
-        WHERE cedula = ?
-        LIMIT 1
-    ";
-
-        $votante = DB::selectOne($sql, [$request->cedula]);
+        $votante = DB::table('padroncoopluque9062026')
+            ->select('NRO', 'SOCIO NRO', 'CI NRO', 'NOMBRE Y APELLIDO', 'SITUACION')
+            ->where('CI NRO', $request->cedula)
+            ->first();
 
         if (!$votante) {
             return response()->json([
@@ -50,7 +36,17 @@ class VotanteController extends Controller
 
         return response()->json([
             'encontrado' => true,
-            'data' => $votante
+            'data' => [
+                'cedula'             => $votante->{'CI NRO'} ?? '',
+                'nombre'             => $votante->{'NOMBRE Y APELLIDO'} ?? '',
+                'apellido'           => '',
+                'local_interna'      => '',
+                'local_generales'    => '',
+                'direccion'          => '',
+                'mesa'               => '0',
+                'orden'              => $votante->NRO ?? '0',
+                'afiliaciones'       => $votante->SITUACION ?? '',
+            ]
         ]);
     }
 
@@ -104,7 +100,9 @@ class VotanteController extends Controller
 
     public function buscarPorCedula($cedula)
     {
-        $votante = PrePadron::where('cedula', $cedula)->first();
+        $votante = DB::table('padroncoopluque9062026')
+            ->where('CI NRO', $cedula)
+            ->first();
 
         if (!$votante) {
             return response()->json([
@@ -112,17 +110,16 @@ class VotanteController extends Controller
             ]);
         }
 
-        // Aliases normalizados para el formulario
         $data = [
-            'cedula'       => $votante->cedula,
-            'nombre'       => trim($votante->nombre . ' ' . $votante->apellido),
-            'direccion'    => $votante->local_interna,
-            'mesa'         => $votante->mesa,
-            'orden'        => $votante->orden,
-            'partido'      => $votante->afiliaciones,
-            'escuela'      => $votante->local_interna,
-            'ciudad'       => $votante->distrito_nombre,
-            'departamento' => $votante->departamento_nombre,
+            'cedula'       => $votante->{'CI NRO'} ?? '',
+            'nombre'       => $votante->{'NOMBRE Y APELLIDO'} ?? '',
+            'direccion'    => '',
+            'mesa'         => '0',
+            'orden'        => $votante->NRO ?? '0',
+            'partido'      => $votante->SITUACION ?? '',
+            'escuela'      => '',
+            'ciudad'       => '',
+            'departamento' => '',
         ];
 
         return response()->json([
@@ -152,42 +149,22 @@ class VotanteController extends Controller
             /* ===========================
            VERIFICAR QUE EXISTA EN PADRÓN
         ============================ */
-            $existeEnPadron = PrePadron::where('cedula', $cedula)->exists();
+            $existeEnPadronCoop = DB::table('padroncoopluque9062026')
+                ->where('CI NRO', $cedula)
+                ->exists();
 
-            if (!$existeEnPadron) {
-                throw new \Exception("La cédula {$cedula} no existe en el padrón electoral.");
+            if (!$existeEnPadronCoop) {
+                throw new \Exception("La cédula {$cedula} no existe en el padrón de la cooperativa.");
             }
 
             /* ===========================
-           OBTENER PUNTERO Y SISTEMA
-        ============================ */
+            OBTENER PUNTERO Y SISTEMA
+         ============================ */
             $puntero = Puntero::with('dirigente.equipo')->find($idPuntero);
 
             if (!$puntero || !$puntero->dirigente || !$puntero->dirigente->equipo) {
                 throw new \Exception('No se pudo determinar el sistema del puntero.');
             }
-
-            $sistemaActual = $puntero->dirigente->equipo->sist;
-
-            /* ===========================
-            DETECTAR MISMO SISTEMA (SOLO AVISO)
-         ============================ */
-            $votanteMismoSistema = Votante::with(['puntero.dirigente'])
-                ->where('cedula', $cedula)
-                ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
-                    $q->where('sist', $sistemaActual);
-                })
-                ->first();
-
-            /* ===========================
-            BUSCAR EN OTRO SISTEMA (AVISO)
-         ============================ */
-            $votanteOtroSistema = Votante::where('cedula', $cedula)
-                ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
-                    $q->where('sist', '!=', $sistemaActual);
-                })
-                ->with('puntero.dirigente.equipo')
-                ->first();
 
             /* ===========================
             CREAR VOTANTE
@@ -211,23 +188,8 @@ class VotanteController extends Controller
 
             DB::commit();
 
-            /* ===========================
-            MENSAJE FINAL
-         ============================ */
-            $mensaje = 'Votante agregado correctamente.';
-
-            if ($votanteMismoSistema) {
-                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
-                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
-                $mensaje = "Atención: esta cédula ya estaba registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}». Se ha guardado igualmente.";
-            } elseif ($votanteOtroSistema) {
-                $mensaje = "Atención: esta cédula ya existe en otro sistema (" .
-                    $votanteOtroSistema->puntero->dirigente->equipo->descripcion .
-                    "). Se ha guardado igualmente.";
-            }
-
             return redirect()->back()
-                ->with('successAlert', $mensaje)
+                ->with('successAlert', 'Votante agregado correctamente.')
                 ->with('abrirModalVotante', true)
                 ->with('punteroId', $idPuntero)
                 ->with('punteroNombre', $puntero->nombre);
@@ -318,13 +280,15 @@ class VotanteController extends Controller
             $cedula = $request->cedula;
             $idPuntero = $request->idpuntero;
 
-            /* =========================== VERIFICAR QUE EXISTA EN PADRÓN ============================ */
-            $existeEnPadron = \App\Models\PrePadron::where('cedula', $cedula)->exists();
+            /* =========================== VERIFICAR QUE EXISTA EN PADRÓN COOPERATIVA ============================ */
+            $existeEnPadronCoop = DB::table('padroncoopluque9062026')
+                ->where('CI NRO', $cedula)
+                ->exists();
 
-            if (!$existeEnPadron) {
+            if (!$existeEnPadronCoop) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Error: la cédula {$cedula} no existe en el padrón electoral."
+                    'message' => "Error: la cédula {$cedula} no existe en el padrón de la cooperativa."
                 ], 422);
             }
 
@@ -337,23 +301,6 @@ class VotanteController extends Controller
                     'message' => 'No se pudo determinar el sistema del puntero.'
                 ], 400);
             }
-
-            $sistemaActual = $puntero->dirigente->equipo->sist;
-
-            /* =========================== DETECTAR MISMO SISTEMA (SOLO AVISO) ============================ */
-            $votanteMismoSistema = Votante::with(['puntero.dirigente'])
-                ->where('cedula', $cedula)
-                ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
-                    $q->where('sist', $sistemaActual);
-                })->first();
-
-            /* =========================== BUSCAR EN OTRO SISTEMA (AVISO) ============================ */
-            $votanteOtroSistema = Votante::where('cedula', $cedula)
-                ->whereHas('puntero.dirigente.equipo', function ($q) use ($sistemaActual) {
-                    $q->where('sist', '!=', $sistemaActual);
-                })
-                ->with('puntero.dirigente.equipo')
-                ->first();
 
             /* =========================== CREAR VOTANTE ============================ */
             $votante = Votante::create([
@@ -375,29 +322,13 @@ class VotanteController extends Controller
 
             DB::commit();
 
-            /* =========================== PREPARAR RESPUESTA ============================ */
-            $mensaje = 'Votante agregado correctamente.';
-            $tipoAlerta = 'success';
-
-            if ($votanteMismoSistema) {
-                $nombrePuntero = $votanteMismoSistema->puntero->nombre ?? 'No especificado';
-                $nombreDirigente = $votanteMismoSistema->puntero->dirigente->nombre ?? 'No especificado';
-                $mensaje = "Atención: esta cédula ya estaba registrada bajo el puntero «{$nombrePuntero}» y el dirigente «{$nombreDirigente}». Se ha guardado igualmente.";
-                $tipoAlerta = 'warning';
-            } elseif ($votanteOtroSistema) {
-                $mensaje = "Atención: esta cédula ya existe en otro sistema (" .
-                    $votanteOtroSistema->puntero->dirigente->equipo->descripcion .
-                    "). Se ha registrado igualmente en este sistema.";
-                $tipoAlerta = 'warning';
-            }
-
             // Obtener la lista actualizada de votantes
             $votantes = Votante::porPuntero($idPuntero);
 
             return response()->json([
                 'success' => true,
-                'message' => $mensaje,
-                'tipo_alerta' => $tipoAlerta,
+                'message' => 'Votante agregado correctamente.',
+                'tipo_alerta' => 'success',
                 'punteroId' => $idPuntero,
                 'punteroNombre' => $puntero->nombre,
                 'votantes' => $votantes,
