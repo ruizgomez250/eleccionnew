@@ -24,7 +24,7 @@ class VotanteController extends Controller
         ]);
 
         $votante = DB::table('padroncoopluque9062026')
-            ->select('NRO', 'SOCIO NRO', 'CI NRO', 'NOMBRE Y APELLIDO', 'SITUACION', 'MESA', 'ORDEN')
+            ->select('NRO', 'SOCIO NRO', 'CI NRO', 'NOMBRE Y APELLIDO', 'SITUACION', 'Mesa', 'Orden')
             ->where('CI NRO', $request->cedula)
             ->first();
 
@@ -43,8 +43,8 @@ class VotanteController extends Controller
                 'local_interna'      => '',
                 'local_generales'    => '',
                 'direccion'          => '',
-                'mesa'               => $votante->MESA ?? '0',
-                'orden'              => $votante->ORDEN ?? ($votante->NRO ?? '0'),
+                'mesa'               => $votante->Mesa ?? '0',
+                'orden'              => $votante->Orden ?? ($votante->NRO ?? '0'),
                 'afiliaciones'       => $votante->SITUACION ?? '',
             ]
         ]);
@@ -114,8 +114,8 @@ class VotanteController extends Controller
             'cedula'       => $votante->{'CI NRO'} ?? '',
             'nombre'       => $votante->{'NOMBRE Y APELLIDO'} ?? '',
             'direccion'    => '',
-            'mesa'         => $votante->MESA ?? '0',
-            'orden'        => $votante->ORDEN ?? ($votante->NRO ?? '0'),
+            'mesa'         => $votante->Mesa ?? '0',
+            'orden'        => $votante->Orden ?? ($votante->NRO ?? '0'),
             'partido'      => $votante->SITUACION ?? '',
             'escuela'      => '',
             'ciudad'       => '',

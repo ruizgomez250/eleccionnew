@@ -335,8 +335,8 @@
                     html += '<td><strong>' + (r['SOCIO NRO'] || '') + '</strong></td>';
                     html += '<td>' + (r['CI NRO'] || '') + '</td>';
                     html += '<td>' + (r['NOMBRE Y APELLIDO'] || '') + '</td>';
-                    html += '<td>' + (r.MESA || '') + '</td>';
-                    html += '<td>' + (r.ORDEN || '') + '</td>';
+                    html += '<td>' + (r.Mesa || '') + '</td>';
+                    html += '<td>' + (r.Orden || '') + '</td>';
                     html += '<td><span class="situacion-badge ' + situClass + '">' + (r.SITUACION || '') + '</span></td>';
                     html += '</tr>';
                 });
