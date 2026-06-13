@@ -11,6 +11,8 @@
                         <th>Socio N°</th>
                         <th>Cédula</th>
                         <th>Nombre y Apellido</th>
+                        <th>Mesa</th>
+                        <th>Orden</th>
                         <th>Situación</th>
                     </tr>
                 </thead>
@@ -26,6 +28,8 @@
                             <td><strong>{{ $r->{'SOCIO NRO'} }}</strong></td>
                             <td>{{ $r->{'CI NRO'} }}</td>
                             <td>{{ $r->{'NOMBRE Y APELLIDO'} }}</td>
+                            <td>{{ $r->MESA ?? '' }}</td>
+                            <td>{{ $r->ORDEN ?? '' }}</td>
                             <td><span class="situacion-badge {{ $situClass }}">{{ $r->SITUACION }}</span></td>
                         </tr>
                     @endforeach

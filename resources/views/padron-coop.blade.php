@@ -323,7 +323,7 @@
             if (data.results && data.results.length > 0) {
                 let html = '<div class="results-header"><span class="results-count">' + data.count + ' resultado' + (data.count !== 1 ? 's' : '') + '</span></div>';
                 html += '<div class="table-container"><div class="table-scroll"><table><thead><tr>';
-                html += '<th>N°</th><th>Socio N°</th><th>Cédula</th><th>Nombre y Apellido</th><th>Situación</th>';
+                html += '<th>N°</th><th>Socio N°</th><th>Cédula</th><th>Nombre y Apellido</th><th>Mesa</th><th>Orden</th><th>Situación</th>';
                 html += '</tr></thead><tbody>';
 
                 data.results.forEach(r => {
@@ -335,6 +335,8 @@
                     html += '<td><strong>' + (r['SOCIO NRO'] || '') + '</strong></td>';
                     html += '<td>' + (r['CI NRO'] || '') + '</td>';
                     html += '<td>' + (r['NOMBRE Y APELLIDO'] || '') + '</td>';
+                    html += '<td>' + (r.MESA || '') + '</td>';
+                    html += '<td>' + (r.ORDEN || '') + '</td>';
                     html += '<td><span class="situacion-badge ' + situClass + '">' + (r.SITUACION || '') + '</span></td>';
                     html += '</tr>';
                 });
