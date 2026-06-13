@@ -198,6 +198,7 @@
                                                 <option value="Convencional">Convencional</option>
                                                 <option value="Miembro de la Juventud">Miembro de la Juventud</option>
                                                 <option value="Convencional Juventud">Convencional Juventud</option>
+                                                <option value="Convencional Juventud">Miembro del Consejo</option>
                                             </select>
                                         </div>
                                         <div class="form-group">

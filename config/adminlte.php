@@ -360,6 +360,7 @@ return [
                 ],
                 [
                     'text' => 'Resultados por Mesa',
+                    'can'        => 'Carga Certificados',
                     'url'  => '/reportes/resultados-mesa',
                 ],
                 [
