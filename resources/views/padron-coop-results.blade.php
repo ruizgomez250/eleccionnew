@@ -28,8 +28,8 @@
                             <td><strong>{{ $r->{'SOCIO NRO'} }}</strong></td>
                             <td>{{ $r->{'CI NRO'} }}</td>
                             <td>{{ $r->{'NOMBRE Y APELLIDO'} }}</td>
-                            <td>{{ $r->Mesa ?? '' }}</td>
                             <td>{{ $r->Orden ?? '' }}</td>
+                            <td>{{ $r->Mesa ?? '' }}</td>
                             <td><span class="situacion-badge {{ $situClass }}">{{ $r->SITUACION }}</span></td>
                         </tr>
                     @endforeach

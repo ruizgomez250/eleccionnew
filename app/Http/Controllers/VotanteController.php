@@ -43,8 +43,8 @@ class VotanteController extends Controller
                 'local_interna'      => '',
                 'local_generales'    => '',
                 'direccion'          => '',
-                'mesa'               => $votante->Mesa ?? '0',
-                'orden'              => $votante->Orden ?? ($votante->NRO ?? '0'),
+                'mesa'               => $votante->Orden ?? '0',
+                'orden'              => $votante->Mesa ?? ($votante->NRO ?? '0'),
                 'afiliaciones'       => $votante->SITUACION ?? '',
             ]
         ]);
@@ -114,8 +114,8 @@ class VotanteController extends Controller
             'cedula'       => $votante->{'CI NRO'} ?? '',
             'nombre'       => $votante->{'NOMBRE Y APELLIDO'} ?? '',
             'direccion'    => '',
-            'mesa'         => $votante->Mesa ?? '0',
-            'orden'        => $votante->Orden ?? ($votante->NRO ?? '0'),
+            'mesa'         => $votante->Orden ?? '0',
+            'orden'        => $votante->Mesa ?? ($votante->NRO ?? '0'),
             'partido'      => $votante->SITUACION ?? '',
             'escuela'      => '',
             'ciudad'       => '',
