@@ -197,13 +197,13 @@
                                                 <option value="Miembro de Comite">Miembro de Comite</option>
                                                 <option value="Convencional">Convencional</option>
                                                 <option value="Miembro de la Juventud">Miembro de la Juventud</option>
+                                                <option value="Miembro del Consejo">Miembro del Consejo</option>
                                                 <option value="Convencional Juventud">Convencional Juventud</option>
-                                                <option value="Convencional Juventud">Miembro del Consejo</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Candidato Superior <span class="text-danger">*</span></label>
-                                            <select name="candidatosup" id="candidatosup" class="form-control" required>
+                                             </select>
+                                         </div>
+                                         <div class="form-group">
+                                             <label>Candidato Superior <span class="text-danger">*</span></label>
+                                             <select name="candidatosup" id="candidatosup" class="form-control" required>
                                                 <option value="0">Sin Dato</option>
                                                 @foreach ($users as $user)
                                                     <option value="{{ $user->id }}">
@@ -401,8 +401,9 @@
                                                 <option value="Miembro de Comite">Miembro de Comite</option>
                                                 <option value="Convencional">Convencional</option>
                                                 <option value="Miembro de la Juventud">Miembro de la Juventud</option>
+                                                <option value="Miembro del Consejo">Miembro del Consejo</option>
                                                 <option value="Convencional Juventud">Convencional Juventud</option>
-                                            </select>
+                                             </select>
                                         </div>
 
                                         <div class="form-group">

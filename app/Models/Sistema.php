@@ -63,7 +63,8 @@ class Sistema extends Model
             'convencional' => 3,
             'convencional juventud' => 4,
             'miembro de comite' => 5,
-            'miembro de la juventud' => 6
+            'miembro de la juventud' => 6,
+            'miembro del consejo' => 7
         ];
         
         return $nivelesPorTipo[$tipo] ?? 99;

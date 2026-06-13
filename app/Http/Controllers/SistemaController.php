@@ -290,7 +290,8 @@ class SistemaController extends Controller
                 'convencional',
                 'convencional juventud',
                 'miembro de comite',
-                'miembro de la juventud'
+                'miembro de la juventud',
+                'miembro del consejo'
             ];
 
             // Filtrar solo candidaturas
@@ -408,7 +409,8 @@ class SistemaController extends Controller
                         'convencional' => 3,
                         'convencional_juventud' => 4,
                         'miembro_comite' => 5,
-                        'miembro_juventud' => 6
+                        'miembro_juventud' => 6,
+                        'miembro_del_consejo' => 7
                     ];
                     $ordenA = $orden[$a['tipo']] ?? 99;
                     $ordenB = $orden[$b['tipo']] ?? 99;
@@ -438,7 +440,8 @@ class SistemaController extends Controller
                 'convencional' => 3,
                 'convencional_juventud' => 4,
                 'miembro_comite' => 5,
-                'miembro_juventud' => 6
+                'miembro_juventud' => 6,
+                'miembro_del_consejo' => 7
             ];
             $ordenA = $orden[$a['tipo']] ?? 99;
             $ordenB = $orden[$b['tipo']] ?? 99;
@@ -465,7 +468,8 @@ class SistemaController extends Controller
             'convencional' => 'Convencional',
             'convencional juventud' => 'Convencional Juventud',
             'miembro de comite' => 'Miembro de Comité',
-            'miembro de la juventud' => 'Miembro de la Juventud'
+            'miembro de la juventud' => 'Miembro de la Juventud',
+            'miembro del consejo' => 'Miembro del Consejo'
         ];
 
         // 🔹 CALCULAR TOTALES DEL SISTEMA (candidatura)
@@ -520,6 +524,7 @@ class SistemaController extends Controller
             'convencionales_juventud' => 0,
             'miembros_comite' => 0,
             'miembros_juventud' => 0,
+            'miembros_consejo' => 0,
             'total_candidaturas' => 0,
             'total_dirigentes' => 0,
             'total_punteros' => 0,
@@ -548,6 +553,9 @@ class SistemaController extends Controller
                 case 'miembro de la juventud':
                     $totales['miembros_juventud']++;
                     break;
+                case 'miembro del consejo':
+                    $totales['miembros_consejo']++;
+                    break;
             }
 
             // Sumar dirigentes, punteros y votantes
@@ -565,7 +573,8 @@ class SistemaController extends Controller
 
         $totales['total_candidaturas'] = $totales['intendentes'] + $totales['concejales'] +
             $totales['convencionales'] + $totales['convencionales_juventud'] +
-            $totales['miembros_comite'] + $totales['miembros_juventud'];
+            $totales['miembros_comite'] + $totales['miembros_juventud'] +
+            $totales['miembros_consejo'];
 
         return $totales;
     }

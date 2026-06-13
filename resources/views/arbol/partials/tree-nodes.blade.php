@@ -22,6 +22,7 @@
                                 @elseif($node['tipo'] == 'convencional_juventud') badge-warning
                                 @elseif($node['tipo'] == 'miembro_comite') badge-orange
                                 @elseif($node['tipo'] == 'miembro_juventud') badge-purple
+                                @elseif($node['tipo'] == 'miembro_del_consejo') badge-teal
                                 @else badge-primary @endif">
                                 {{ $node['tipo_nivel'] ?? 'Nodo' }}
                             </span>
@@ -81,6 +82,8 @@
                                             {{ $node['totales']['miembros_comite'] }}</span>
                                         <span class="badge badge-purple">Miembros Juventud:
                                             {{ $node['totales']['miembros_juventud'] }}</span>
+                                        <span class="badge badge-teal">Miembros Consejo:
+                                            {{ $node['totales']['miembros_consejo'] ?? 0 }}</span>
                                     </span>
                                 </small>
                             </div>

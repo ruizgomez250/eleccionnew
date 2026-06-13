@@ -711,8 +711,18 @@
             background: linear-gradient(135deg, #f4e6ff 0%, #e8d4ff 100%);
         }
 
+        /* Miembro del Consejo */
+        .level-miembro_del_consejo .card {
+            border-left-color: #20c997;
+            border-left-width: 4px;
+        }
+
+        .level-miembro_del_consejo .card-header {
+            background: linear-gradient(135deg, #e6fffa 0%, #d4fff5 100%);
+        }
+
         /* ============================================
-                                                                                                                                   BADGES Y ETIQUETAS
+                                                                                                                                    BADGES Y ETIQUETAS
                                                                                                                                 ============================================ */
         .badge-nivel {
             font-size: 0.7rem;
@@ -723,6 +733,11 @@
 
         .badge-orange {
             background-color: #fd7e14;
+            color: white;
+        }
+
+        .badge-teal {
+            background-color: #20c997;
             color: white;
         }
 
