@@ -413,6 +413,16 @@ return [
             'can'        => 'Carga Certificados',
             'url'        => '/certificados',
         ],
+        [
+            'text'       => 'Efectividad Electoral',
+            'icon'       => 'fas fa-chart-bar',
+            'icon_color' => 'warning',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-chart-bar"></i>',
+            'can'        => 'Carga Certificados',
+            'url'        => '/efectividad',
+        ],
+
 
 
         // [
