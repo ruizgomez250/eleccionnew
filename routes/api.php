@@ -45,6 +45,15 @@ Route::prefix('v1')->group(function () {
 });
 
 // =============================================
+// RUTAS PARA ANÁLISIS DE EFECTIVIDAD ELECTORAL
+// =============================================
+Route::prefix('efectividad')->group(function () {
+    Route::get('/resumen', [App\Http\Controllers\EfectividadController::class, 'resumen']);
+    Route::get('/mesa/{id}', [App\Http\Controllers\EfectividadController::class, 'mesa']);
+    Route::get('/mesas', [App\Http\Controllers\EfectividadController::class, 'listarMesas']);
+});
+
+// =============================================
 // RUTAS PROTEGIDAS (requieren autenticación)
 // =============================================
 Route::middleware('auth:sanctum')->group(function () {

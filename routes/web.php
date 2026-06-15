@@ -5,6 +5,7 @@ use App\Http\Controllers\CiudadElectoralController;
 use App\Http\Controllers\ConfiguracionMontoController;
 use App\Http\Controllers\DirigenteController;
 use App\Http\Controllers\DuplicadosEntreSistemasController;
+use App\Http\Controllers\EfectividadController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\MiembroDeMesaController;
 use App\Http\Controllers\PadronCoopController;
@@ -42,6 +43,9 @@ Route::prefix('votos')->name('votos.')->group(function () {
 });
 
 
+
+Route::get('/efectividad', [EfectividadController::class, 'index'])->name('efectividad.index');
+Route::post('/api/efectividad/cargar', [EfectividadController::class, 'cargar'])->name('efectividad.cargar');
 
 Route::get('votante/buscador', [VotanteController::class, 'buscador']);
 Route::get('/votantes/datatables', [VotanteController::class, 'datatables'])->name('votantes.datatables');
