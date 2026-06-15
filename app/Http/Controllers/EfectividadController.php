@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CargaEfectividad;
+use App\Models\Candidato;
+use App\Models\Mesa;
+use App\Models\Partido;
+use App\Models\VotosMesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -10,176 +13,270 @@ class EfectividadController extends Controller
 {
     public function index()
     {
-        $mesas = CargaEfectividad::select('id', 'mesa')->orderBy('mesa')->get();
-        return view('efectividad.index', compact('mesas'));
+        $partidos = Partido::activos()->orderBy('numero_lista')->get();
+        $mesas = Mesa::with('equipo')->orderBy('codigo_mesa')->get();
+        return view('efectividad.index', compact('partidos', 'mesas'));
     }
 
-    public function resumen()
+    public function resumen(Request $request)
     {
-        $totals = CargaEfectividad::select(
-            DB::raw('SUM(intendente) as total_intendente'),
-            DB::raw('SUM(c1) as c1'), DB::raw('SUM(c2) as c2'), DB::raw('SUM(c3) as c3'),
-            DB::raw('SUM(c4) as c4'), DB::raw('SUM(c5) as c5'), DB::raw('SUM(c6) as c6'),
-            DB::raw('SUM(c7) as c7'), DB::raw('SUM(c8) as c8'), DB::raw('SUM(c9) as c9'),
-            DB::raw('SUM(c10) as c10'), DB::raw('SUM(c11) as c11'), DB::raw('SUM(c12) as c12')
-        )->first();
+        $partidoId = $request->get('partido_id');
 
-        $totalIntendente = (int) $totals->total_intendente;
+        $totalIntendente = (int) VotosMesa::when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->where('cargo', 'intendente')
+            ->sum('cantidad_votos');
+
+        $concejales = Candidato::where('cargo', 'Concejal Municipal')
+            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->orderBy('numero_orden')
+            ->get();
+
+        $comiteTotals = $this->getCargoTotals('comite', $partidoId);
+        $juventudTotals = $this->getCargoTotals('juventud', $partidoId);
 
         $result = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $col = "c{$i}";
-            $votosConcejal = (int) $totals->$col;
-            $efectividad = $totalIntendente > 0 ? round($votosConcejal / $totalIntendente, 2) : 0;
-            $votosPerdidos = $totalIntendente - $votosConcejal;
-            $color = $efectividad < 0.6 ? 'danger' : ($efectividad <= 0.8 ? 'warning' : 'success');
+        foreach ($concejales as $cand) {
+            $pos = $cand->numero_orden;
+            $votosConc = (int) VotosMesa::where('candidato_id', $cand->id)
+                ->where('cargo', 'Concejal Municipal')
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->sum('cantidad_votos');
+            $votosCom = (int) ($comiteTotals[$pos] ?? 0);
+            $votosJuv = (int) ($juventudTotals[$pos] ?? 0);
+
+            $efectividad = $totalIntendente > 0 ? round($votosConc / $totalIntendente, 2) : 0;
+            $efectividadCom = $votosConc > 0 ? round($votosCom / $votosConc, 2) : 0;
+            $efectividadJuv = $votosConc > 0 ? round($votosJuv / $votosConc, 2) : 0;
 
             $result[] = [
-                'posicion' => $i,
+                'posicion' => $pos,
+                'candidato' => $cand->nombre_completo,
                 'total_intendente' => $totalIntendente,
-                'total_concejal' => $votosConcejal,
+                'total_concejal' => $votosConc,
+                'total_comite' => $votosCom,
+                'total_juventud' => $votosJuv,
                 'efectividad' => $efectividad,
-                'votos_perdidos' => max(0, $votosPerdidos),
-                'color' => $color,
+                'efectividad_comite' => $efectividadCom,
+                'efectividad_juventud' => $efectividadJuv,
+                'votos_perdidos' => max(0, $totalIntendente - $votosConc),
+                'color' => $efectividad < 0.6 ? 'danger' : ($efectividad <= 0.8 ? 'warning' : 'success'),
+                'color_comite' => $efectividadCom < 0.6 ? 'danger' : ($efectividadCom <= 0.8 ? 'warning' : 'success'),
+                'color_juventud' => $efectividadJuv < 0.6 ? 'danger' : ($efectividadJuv <= 0.8 ? 'warning' : 'success'),
             ];
         }
 
         return response()->json($result);
     }
 
-    public function mesa($id)
+    public function mesa(Request $request, $id)
     {
-        $row = CargaEfectividad::findOrFail($id);
-        $intendente = (int) $row->intendente;
+        $mesa = Mesa::findOrFail($id);
+        $partidoId = $request->get('partido_id');
 
-        $concejales = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $votos = (int) $row->{"c{$i}"};
-            $comite = (int) $row->{"com{$i}"};
-            $juventud = (int) $row->{"juv{$i}"};
-            $efectividad = $intendente > 0 ? round($votos / $intendente, 2) : 0;
-            $votosPerdidos = $intendente - $votos;
-            $efectividadComite = $votos > 0 ? round($comite / $votos, 2) : 0;
-            $efectividadJuventud = $votos > 0 ? round($juventud / $votos, 2) : 0;
+        $intendenteVotos = (int) VotosMesa::where('mesa_id', $id)
+            ->where('cargo', 'intendente')
+            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->sum('cantidad_votos');
 
-            $concejales[] = [
-                'posicion' => $i,
-                'votos' => $votos,
-                'efectividad' => $efectividad,
-                'votos_perdidos' => max(0, $votosPerdidos),
-                'efectividad_comite' => $efectividadComite,
-                'efectividad_juventud' => $efectividadJuventud,
-                'votos_comite' => $comite,
-                'votos_juventud' => $juventud,
-                'color_intendente' => $efectividad < 0.6 ? 'danger' : ($efectividad <= 0.8 ? 'warning' : 'success'),
-                'color_comite' => $efectividadComite < 0.6 ? 'danger' : ($efectividadComite <= 0.8 ? 'warning' : 'success'),
-                'color_juventud' => $efectividadJuventud < 0.6 ? 'danger' : ($efectividadJuventud <= 0.8 ? 'warning' : 'success'),
-            ];
-        }
+        $concejales = Candidato::where('cargo', 'Concejal Municipal')
+            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->orderBy('numero_orden')
+            ->get();
 
-        // Generate alerts
+        $detalle = [];
         $alertas = [];
-        foreach ($concejales as $c) {
-            if ($c['efectividad'] < 0.6) {
-                $alertas[] = "⚠️ Posición {$c['posicion']}: efectividad {$c['efectividad']} en {$row->mesa} ({$c['votos_perdidos']} votos perdidos)";
+
+        foreach ($concejales as $cand) {
+            $pos = $cand->numero_orden;
+            $votosConc = (int) VotosMesa::where('mesa_id', $id)
+                ->where('candidato_id', $cand->id)
+                ->where('cargo', 'Concejal Municipal')
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->sum('cantidad_votos');
+
+            $votosCom = (int) VotosMesa::where('mesa_id', $id)
+                ->where('cargo', "comite {$pos}")
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->sum('cantidad_votos');
+
+            $votosJuv = (int) VotosMesa::where('mesa_id', $id)
+                ->where('cargo', "juventud {$pos}")
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->sum('cantidad_votos');
+
+            $efectividad = $intendenteVotos > 0 ? round($votosConc / $intendenteVotos, 2) : 0;
+            $efectividadCom = $votosConc > 0 ? round($votosCom / $votosConc, 2) : 0;
+            $efectividadJuv = $votosConc > 0 ? round($votosJuv / $votosConc, 2) : 0;
+
+            $detalle[] = [
+                'posicion' => $pos,
+                'candidato' => $cand->nombre_completo,
+                'votos' => $votosConc,
+                'votos_comite' => $votosCom,
+                'votos_juventud' => $votosJuv,
+                'efectividad' => $efectividad,
+                'votos_perdidos' => max(0, $intendenteVotos - $votosConc),
+                'efectividad_comite' => $efectividadCom,
+                'efectividad_juventud' => $efectividadJuv,
+                'color_intendente' => $efectividad < 0.6 ? 'danger' : ($efectividad <= 0.8 ? 'warning' : 'success'),
+                'color_comite' => $efectividadCom < 0.6 ? 'danger' : ($efectividadCom <= 0.8 ? 'warning' : 'success'),
+                'color_juventud' => $efectividadJuv < 0.6 ? 'danger' : ($efectividadJuv <= 0.8 ? 'warning' : 'success'),
+            ];
+
+            if ($efectividad < 0.6 && $intendenteVotos > 0) {
+                $alertas[] = "Posición {$pos} ({$cand->nombre_completo}): efectividad {$efectividad} en {$mesa->codigo_mesa} ({$detalle[count($detalle)-1]['votos_perdidos']} votos perdidos)";
             }
-            if ($c['efectividad_comite'] < 0.6 && $c['votos'] > 0) {
-                $alertas[] = "⚠️ Posición {$c['posicion']}: comité solo arrastra {$c['efectividad_comite']} de los votos del concejal";
+            if ($efectividadCom < 0.6 && $votosConc > 0) {
+                $alertas[] = "Posición {$pos}: comité solo arrastra {$efectividadCom} de los votos del concejal";
             }
-            if ($c['efectividad_juventud'] < 0.6 && $c['votos'] > 0) {
-                $alertas[] = "⚠️ Posición {$c['posicion']}: juventud solo arrastra {$c['efectividad_juventud']} de los votos del concejal";
+            if ($efectividadJuv < 0.6 && $votosConc > 0) {
+                $alertas[] = "Posición {$pos}: juventud solo arrastra {$efectividadJuv} de los votos del concejal";
             }
         }
 
         return response()->json([
-            'id' => $row->id,
-            'mesa' => $row->mesa,
-            'votos_intendente' => $intendente,
-            'concejales' => $concejales,
+            'id' => $mesa->id,
+            'mesa' => $mesa->codigo_mesa,
+            'votos_intendente' => $intendenteVotos,
+            'concejales' => $detalle,
             'alertas' => $alertas,
         ]);
     }
 
-    public function listarMesas()
+    public function ranking(Request $request)
     {
+        $partidoId = $request->get('partido_id');
+
+        $mesasConVotos = VotosMesa::where('cargo', 'intendente')
+            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->select('mesa_id', DB::raw('SUM(cantidad_votos) as total'))
+            ->groupBy('mesa_id')
+            ->having('total', '>', 0)
+            ->pluck('total', 'mesa_id');
+
+        $result = [];
+        foreach ($mesasConVotos as $mesaId => $intVotos) {
+            $concejales = Candidato::where('cargo', 'Concejal Municipal')
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->pluck('id');
+
+            $concSum = (int) VotosMesa::where('mesa_id', $mesaId)
+                ->where('cargo', 'Concejal Municipal')
+                ->whereIn('candidato_id', $concejales)
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->sum('cantidad_votos');
+
+            $efectividadGeneral = $intVotos > 0 ? round($concSum / $intVotos, 2) : 0;
+
+            $mesa = Mesa::find($mesaId);
+            $result[] = [
+                'mesa_id' => $mesaId,
+                'mesa' => $mesa ? $mesa->codigo_mesa : "Mesa #{$mesaId}",
+                'votos_intendente' => (int) $intVotos,
+                'votos_concejales_total' => $concSum,
+                'efectividad' => $efectividadGeneral,
+                'votos_perdidos' => max(0, (int) $intVotos - $concSum),
+            ];
+        }
+
+        usort($result, fn($a, $b) => $b['efectividad'] <=> $a['efectividad']);
+
+        return response()->json($result);
+    }
+
+    public function comparar(Request $request)
+    {
+        $partidoId = $request->get('partido_id');
+        $candidatoA = $request->get('candidato_a');
+        $candidatoB = $request->get('candidato_b');
+
+        $cargosComparables = ['intendente', 'Concejal Municipal', 'comite 1', 'comite 2', 'comite 3', 'comite 4',
+            'comite 5', 'comite 6', 'comite 7', 'comite 8', 'comite 9', 'comite 10', 'comite 11', 'comite 12',
+            'juventud 1', 'juventud 2', 'juventud 3', 'juventud 4', 'juventud 5', 'juventud 6',
+            'juventud 7', 'juventud 8', 'juventud 9', 'juventud 10', 'juventud 11', 'juventud 12',
+        ];
+
+        $candidatos = Candidato::whereIn('cargo', $cargosComparables)
+            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->orderBy('cargo')->orderBy('numero_orden')
+            ->get(['id', 'nombre_completo', 'cargo', 'numero_orden']);
+
+        $comparacion = null;
+        if ($candidatoA && $candidatoB) {
+            $candA = Candidato::find($candidatoA);
+            $candB = Candidato::find($candidatoB);
+            if (!$candA || !$candB) {
+                return response()->json(['error' => 'Candidatos no encontrados'], 404);
+            }
+
+            $votosA = VotosMesa::where('candidato_id', $candidatoA)
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->select('mesa_id', DB::raw('SUM(cantidad_votos) as total'))
+                ->groupBy('mesa_id')->pluck('total', 'mesa_id');
+
+            $votosB = VotosMesa::where('candidato_id', $candidatoB)
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->select('mesa_id', DB::raw('SUM(cantidad_votos) as total'))
+                ->groupBy('mesa_id')->pluck('total', 'mesa_id');
+
+            $todasMesas = $votosA->keys()->merge($votosB->keys())->unique()->sort();
+            $detalle = [];
+            foreach ($todasMesas as $mesaId) {
+                $mesa = Mesa::find($mesaId);
+                $detalle[] = [
+                    'mesa' => $mesa ? $mesa->codigo_mesa : "Mesa #{$mesaId}",
+                    'votos_a' => (int) ($votosA[$mesaId] ?? 0),
+                    'votos_b' => (int) ($votosB[$mesaId] ?? 0),
+                ];
+            }
+
+            $totalA = $votosA->sum();
+            $totalB = $votosB->sum();
+            $comparacion = [
+                'candidato_a' => ['id' => $candA->id, 'nombre' => $candA->nombre_completo, 'cargo' => $candA->cargo_nombre, 'total' => (int) $totalA],
+                'candidato_b' => ['id' => $candB->id, 'nombre' => $candB->nombre_completo, 'cargo' => $candB->cargo_nombre, 'total' => (int) $totalB],
+                'diferencia' => (int) ($totalA - $totalB),
+                'ganador' => $totalA > $totalB ? 'A' : ($totalB > $totalA ? 'B' : 'EMPATE'),
+                'detalle' => $detalle,
+            ];
+        }
+
+        return response()->json([
+            'candidatos' => $candidatos,
+            'comparacion' => $comparacion,
+        ]);
+    }
+
+    public function candidatos(Request $request)
+    {
+        $partidoId = $request->get('partido_id');
+        $cargosComparables = ['intendente', 'Concejal Municipal',
+            'comite 1', 'comite 2', 'comite 3', 'comite 4', 'comite 5', 'comite 6',
+            'comite 7', 'comite 8', 'comite 9', 'comite 10', 'comite 11', 'comite 12',
+            'juventud 1', 'juventud 2', 'juventud 3', 'juventud 4', 'juventud 5', 'juventud 6',
+            'juventud 7', 'juventud 8', 'juventud 9', 'juventud 10', 'juventud 11', 'juventud 12',
+        ];
+
         return response()->json(
-            CargaEfectividad::select('id', 'mesa')->orderBy('mesa')->get()
+            Candidato::whereIn('cargo', $cargosComparables)
+                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+                ->orderBy('cargo')->orderBy('numero_orden')
+                ->get(['id', 'nombre_completo', 'cargo', 'numero_orden'])
         );
     }
 
-    public function cargar(Request $request)
+    private function getCargoTotals(string $prefix, ?int $partidoId): array
     {
-        $request->validate([
-            'archivo' => 'required|file|mimes:csv,txt|max:5120',
-        ]);
+        $query = VotosMesa::where('cargo', 'like', "{$prefix} %")
+            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
+            ->select('cargo', DB::raw('SUM(cantidad_votos) as total'))
+            ->groupBy('cargo');
 
-        $file = $request->file('archivo');
-        $handle = fopen($file->getPathname(), 'r');
-        $header = fgetcsv($handle, 0, ',');
-
-        $expectedHeader = [
-            'mesa', 'intendente',
-            'c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11','c12',
-            'com1','com2','com3','com4','com5','com6','com7','com8','com9','com10','com11','com12',
-            'juv1','juv2','juv3','juv4','juv5','juv6','juv7','juv8','juv9','juv10','juv11','juv12',
-        ];
-
-        if (!$header || count($header) !== count($expectedHeader)) {
-            fclose($handle);
-            return response()->json([
-                'success' => false,
-                'message' => 'Formato de CSV inválido. Debe tener ' . count($expectedHeader) . ' columnas.',
-            ], 422);
+        $result = [];
+        foreach ($query->get() as $row) {
+            $num = (int) substr($row->cargo, strlen($prefix) + 1);
+            $result[$num] = (int) $row->total;
         }
-
-        $normalized = array_map(function ($h) {
-            return trim(mb_strtolower($h));
-        }, $header);
-
-        if ($normalized !== $expectedHeader) {
-            fclose($handle);
-            return response()->json([
-                'success' => false,
-                'message' => 'Las columnas no coinciden con el formato esperado.',
-            ], 422);
-        }
-
-        $imported = 0;
-        $errors = [];
-
-        DB::beginTransaction();
-        try {
-            CargaEfectividad::query()->delete();
-
-            while (($row = fgetcsv($handle, 0, ',')) !== false) {
-                $data = array_combine($expectedHeader, $row);
-                $data['mesa'] = trim($data['mesa']);
-
-                foreach ($data as $key => $value) {
-                    if ($key !== 'mesa') {
-                        $data[$key] = (int) preg_replace('/[^0-9]/', '', $value);
-                    }
-                }
-
-                CargaEfectividad::create($data);
-                $imported++;
-            }
-
-            DB::commit();
-            fclose($handle);
-
-            return response()->json([
-                'success' => true,
-                'message' => "Se importaron {$imported} mesas correctamente.",
-                'imported' => $imported,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            fclose($handle);
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al importar: ' . $e->getMessage(),
-            ], 500);
-        }
+        return $result;
     }
 }

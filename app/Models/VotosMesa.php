@@ -122,7 +122,20 @@ class VotosMesa extends Model
             'presidente - vice 1 y vice 2 - plra' => 'Presidente - Vice 1 y Vice 2 - PLRA',
             'directorio nacional' => 'Directorio Nacional',
             'directorio departamental' => 'Directorio Departamental',
+            'comite 1 local' => 'Comité 1 Local',
+            'comite 2 local' => 'Comité 2 Local',
+            'comite 3 local' => 'Comité 3 Local',
+            'comite 4 local' => 'Comité 4 Local',
+            'convencional' => 'Convencional',
+            'convencional 1' => 'Convencional 1',
+            'convencional 2' => 'Convencional 2',
+            'convencional 3' => 'Convencional 3',
+            'convencional 4' => 'Convencional 4',
         ];
+        for ($i = 1; $i <= 12; $i++) {
+            $cargos["comite {$i}"] = "Comité Concejal {$i}";
+            $cargos["juventud {$i}"] = "Juventud Concejal {$i}";
+        }
         
         return $cargos[$this->cargo] ?? ucfirst($this->cargo);
     }

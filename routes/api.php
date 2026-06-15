@@ -50,7 +50,9 @@ Route::prefix('v1')->group(function () {
 Route::prefix('efectividad')->group(function () {
     Route::get('/resumen', [App\Http\Controllers\EfectividadController::class, 'resumen']);
     Route::get('/mesa/{id}', [App\Http\Controllers\EfectividadController::class, 'mesa']);
-    Route::get('/mesas', [App\Http\Controllers\EfectividadController::class, 'listarMesas']);
+    Route::get('/ranking', [App\Http\Controllers\EfectividadController::class, 'ranking']);
+    Route::get('/comparar', [App\Http\Controllers\EfectividadController::class, 'comparar']);
+    Route::get('/candidatos', [App\Http\Controllers\EfectividadController::class, 'candidatos']);
 });
 
 // =============================================

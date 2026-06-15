@@ -35,6 +35,10 @@ class Candidato extends Model
         'convencional 2',
         'convencional 3',
         'convencional 4',
+        'comite 1', 'comite 2', 'comite 3', 'comite 4', 'comite 5', 'comite 6',
+        'comite 7', 'comite 8', 'comite 9', 'comite 10', 'comite 11', 'comite 12',
+        'juventud 1', 'juventud 2', 'juventud 3', 'juventud 4', 'juventud 5', 'juventud 6',
+        'juventud 7', 'juventud 8', 'juventud 9', 'juventud 10', 'juventud 11', 'juventud 12',
     ];
 
     /**
@@ -109,6 +113,10 @@ class Candidato extends Model
             'convencional 3' => 'Convencional 3',
             'convencional 4' => 'Convencional 4',
         ];
+        for ($i = 1; $i <= 12; $i++) {
+            $cargos["comite {$i}"] = "Comité Concejal {$i}";
+            $cargos["juventud {$i}"] = "Juventud Concejal {$i}";
+        }
         
         return $cargos[$this->cargo] ?? ucfirst($this->cargo);
     }
