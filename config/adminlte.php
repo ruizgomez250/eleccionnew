@@ -364,6 +364,15 @@ return [
                     'url'  => '/reportes/resultados-mesa',
                 ],
                 [
+                    'text'       => 'Efectividad Electoral',
+                    'icon'       => 'fas fa-chart-bar',
+                    'icon_color' => 'warning',
+                    'classes'    => 'custom-icon-box custom-icon-box-dark',
+                    'content'    => '<i class="fas fa-chart-bar"></i>',
+                    'can'        => 'Carga Certificados',
+                    'url'        => '/efectividad',
+                ],
+                [
                     'text' => 'Votantes vs Carga de Votos',
                     'url'  => '/reportes/carga-votos',
                 ],
@@ -413,25 +422,17 @@ return [
             'can'        => 'Carga Certificados',
             'url'        => '/certificados',
         ],
-        [
-            'text'       => 'Efectividad Electoral',
-            'icon'       => 'fas fa-chart-bar',
-            'icon_color' => 'warning',
-            'classes'    => 'custom-icon-box custom-icon-box-dark',
-            'content'    => '<i class="fas fa-chart-bar"></i>',
-            'can'        => 'Carga Certificados',
-            'url'        => '/efectividad',
-        ],
+
 
 
 
         // [
-            //     'text' => 'Perfil',
-            //     'topnav'     => true,
-            //     'url'  => 'profile',
-            //     'classes' => 'custom-icon-box-black',
-            //     'content' => '<i class="fas fa-box"></i>',
-            // ],
+        //     'text' => 'Perfil',
+        //     'topnav'     => true,
+        //     'url'  => 'profile',
+        //     'classes' => 'custom-icon-box-black',
+        //     'content' => '<i class="fas fa-box"></i>',
+        // ],
         // [
         //     'text' => 'Gestión de Permisos',
         //     'topnav'     => true,
