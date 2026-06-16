@@ -186,6 +186,119 @@
             </div>
         </div>
 
+        {{-- Arrastre Comite Analysis --}}
+        <div class="card">
+            <div class="card-header py-2 bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-layer-group"></i> Arrastre Concejal → Comité</h5>
+                <div>
+                    <select id="arrastreComiteIntendente" class="form-control form-control-sm" style="min-width:280px">
+                        <option value="">Todos los intendentes</option>
+                    </select>
+                    <span class="badge badge-light ml-2" id="arrastreComiteCount">—</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Compara por mesa los votos totales de Concejales vs. la suma de Comité.
+                    Cada concejal debería <strong>arrastrar</strong> su voto a la misma posición de comité.
+                    Si la suma de comité es menor, hay votantes que marcaron concejal pero no comité.
+                    Si la diferencia coincide con los votos de un concejal, sugiere que ese concejal
+                    <strong>no logró arrastrar</strong> a sus votantes al comité.
+                </p>
+                <div class="row">
+                    <div class="col-md-8">
+                        <canvas id="chartArrastreComite" height="350"></canvas>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="thead-dark" style="position:sticky;top:0">
+                                    <tr>
+                                        <th>Partido</th>
+                                        <th>Mesa</th>
+                                        <th class="text-right">Conc.</th>
+                                        <th class="text-right">Com.</th>
+                                        <th class="text-center">Dif.</th>
+                                        <th class="text-center">Sospechoso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="arrastreComiteBody">
+                                    <tr><td colspan="6" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="small text-muted mb-1"><i class="fas fa-info-circle"></i> <strong>Vista por posición:</strong> seleccioná una mesa en la tabla de arriba para ver la comparación posición por posición.</div>
+                <div id="arrastreComitePosiciones" style="display:none">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="chartComitePosiciones" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th class="text-center">Pos.</th>
+                                        <th>Candidato</th>
+                                        <th class="text-right">Conc.</th>
+                                        <th class="text-right">Comité</th>
+                                        <th class="text-center">Dif.</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="arrastreComitePosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Arrastre Completo (Int → Conc → Com) --}}
+        <div class="card">
+            <div class="card-header py-2 bg-indigo text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-simple"></i> Embudo Intendente → Concejal → Comité</h5>
+                <div>
+                    <select id="arrastreCompletoIntendente" class="form-control form-control-sm" style="min-width:280px">
+                        <option value="">Todos los intendentes</option>
+                    </select>
+                    <span class="badge badge-light ml-2" id="arrastreCompletoCount">—</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Muestra las <strong>3 barras</strong> por mesa: Intendente, Concejales (suma) y Comité (suma).
+                    El <strong>embudo</strong> visual revela dónde se pierden más votos en cada escalón.
+                    Ideal para identificar mesas donde el corte de boleta es más frecuente.
+                </p>
+                <div class="row">
+                    <div class="col-md-7">
+                        <canvas id="chartArrastreCompleto" height="400"></canvas>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="table-responsive" style="max-height:450px;overflow-y:auto">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="thead-dark" style="position:sticky;top:0">
+                                    <tr>
+                                        <th>Partido</th>
+                                        <th>Mesa</th>
+                                        <th class="text-right">Int.</th>
+                                        <th class="text-right">Conc.</th>
+                                        <th class="text-right">Com.</th>
+                                        <th class="text-center">Ef.Global</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="arrastreCompletoBody">
+                                    <tr><td colspan="6" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Candidate Comparison --}}
         <div class="card">
             <div class="card-header py-2 bg-danger text-white">
@@ -514,7 +627,12 @@ $(document).ready(function () {
             if (cmp.detalle && cmp.detalle.length) {
                 html += '<table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Mesa</th><th class="text-right">' + cmp.candidato_a.nombre + '</th><th class="text-right">' + cmp.candidato_b.nombre + '</th></tr></thead><tbody>';
                 $.each(cmp.detalle, function (_, d) {
-                    html += '<tr><td>' + d.mesa + '</td><td class="text-right">' + d.votos_a.toLocaleString('es') + '</td><td class="text-right">' + d.votos_b.toLocaleString('es') + '</td></tr>';
+                    var clsA = '', clsB = '';
+                    if (d.votos_a > d.votos_b) { clsA = 'table-success font-weight-bold'; clsB = 'table-danger'; }
+                    else if (d.votos_b > d.votos_a) { clsA = 'table-danger'; clsB = 'table-success font-weight-bold'; }
+                    html += '<tr><td>' + d.mesa + '</td>' +
+                        '<td class="text-right ' + clsA + '">' + d.votos_a.toLocaleString('es') + (d.votos_a > d.votos_b ? ' ✓' : '') + '</td>' +
+                        '<td class="text-right ' + clsB + '">' + d.votos_b.toLocaleString('es') + (d.votos_b > d.votos_a ? ' ✓' : '') + '</td></tr>';
                 });
                 html += '</tbody></table>';
             }
@@ -652,6 +770,247 @@ $(document).ready(function () {
             });
             $sel.select2({ theme: 'bootstrap4', width: '280px', placeholder: 'Seleccionar intendente' });
             $sel.on('change', function () { cargarArrastre(); });
+
+            var $sel2 = $('#arrastreComiteIntendente');
+            $sel2.empty().append('<option value="">Todos los intendentes</option>');
+            $.each(data, function (_, c) {
+                var label = (c.partido ? (c.partido.sigla || c.partido.nombre) : 'Lista') + ' - ' + c.nombre_completo;
+                $sel2.append('<option value="' + c.partido_id + '">' + label + '</option>');
+            });
+            $sel2.select2({ theme: 'bootstrap4', width: '280px', placeholder: 'Seleccionar intendente' });
+            $sel2.on('change', function () { cargarArrastreComite(); });
+
+            var $sel3 = $('#arrastreCompletoIntendente');
+            $sel3.empty().append('<option value="">Todos los intendentes</option>');
+            $.each(data, function (_, c) {
+                var label = (c.partido ? (c.partido.sigla || c.partido.nombre) : 'Lista') + ' - ' + c.nombre_completo;
+                $sel3.append('<option value="' + c.partido_id + '">' + label + '</option>');
+            });
+            $sel3.select2({ theme: 'bootstrap4', width: '280px', placeholder: 'Seleccionar intendente' });
+            $sel3.on('change', function () { cargarArrastreCompleto(); });
+        });
+    }
+
+    // ---- Arrastre Concejal → Comité ----
+    let chartArrastreComite = null;
+    let chartComitePosiciones = null;
+
+    function cargarArrastreComite() {
+        var pid = $('#arrastreComiteIntendente').val();
+        var url = '{{ url("api/efectividad/arrastre-comite") }}';
+        var params = [];
+        if (pid) params.push('partido_id=' + pid);
+        var topPid = getPartidoId();
+        if (!pid && topPid) params.push('partido_id=' + topPid);
+        if (params.length) url += '?' + params.join('&');
+
+        $('#arrastreComitePosiciones').hide();
+
+        $.get(url, function (data) {
+            $('#arrastreComiteCount').text(data.length + ' mesas');
+            var $body = $('#arrastreComiteBody');
+            $body.empty();
+
+            if (!data.length) {
+                $body.html('<tr><td colspan="6" class="text-center text-muted py-3">Sin datos</td></tr>');
+                return;
+            }
+
+            var $posBody = $('#arrastreComitePosBody');
+
+            $.each(data, function (_, r) {
+                var badgeClass = r.diferencia > 0 ? 'badge-info' : (r.diferencia < 0 ? 'badge-warning' : 'badge-secondary');
+                var signo = r.diferencia > 0 ? '+' : '';
+                var sospechosoHtml = '';
+                if (r.sospechoso) {
+                    sospechosoHtml = '<span class="badge badge-danger">⚠ ' + r.sospechoso.nombre + '</span>';
+                } else if (r.candidato_mas_cercano && r.diferencia !== 0) {
+                    sospechosoHtml = '<small class="text-muted">' + r.candidato_mas_cercano.nombre + ' (' + r.candidato_mas_cercano.votos + 'v)</small>';
+                } else {
+                    sospechosoHtml = '<small class="text-muted">—</small>';
+                }
+                var partidoLabel = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
+                var rowClass = r.sospechoso ? 'table-danger' : '';
+                $body.append(
+                    '<tr class="' + rowClass + '" data-mesa-idx="' + data.indexOf(r) + '" style="cursor:pointer">' +
+                    '<td><small class="font-weight-bold">' + partidoLabel + '</small></td>' +
+                    '<td><small>' + r.mesa + '</small></td>' +
+                    '<td class="text-right">' + r.total_concejales.toLocaleString('es') + '</td>' +
+                    '<td class="text-right">' + r.total_comite.toLocaleString('es') + '</td>' +
+                    '<td class="text-center"><span class="badge ' + badgeClass + '">' + signo + r.diferencia + '</span></td>' +
+                    '<td class="text-center align-middle">' + sospechosoHtml + '</td>' +
+                    '</tr>'
+                );
+            });
+
+            // Click row → show position detail
+            $('#arrastreComiteBody tr[data-mesa-idx]').on('click', function () {
+                var idx = $(this).data('mesa-idx');
+                var r = data[idx];
+                if (!r || !r.por_posicion) return;
+
+                var $posBody = $('#arrastreComitePosBody');
+                $posBody.empty();
+                $.each(r.por_posicion, function (_, p) {
+                    var badgeP = p.diferencia > 0 ? 'badge-info' : (p.diferencia < 0 ? 'badge-warning' : 'badge-secondary');
+                    $posBody.append(
+                        '<tr>' +
+                        '<td class="text-center font-weight-bold">' + p.posicion + '</td>' +
+                        '<td><small>' + (p.candidato || '').substring(0, 18) + '</small></td>' +
+                        '<td class="text-right">' + p.votos_concejal + '</td>' +
+                        '<td class="text-right">' + p.votos_comite + '</td>' +
+                        '<td class="text-center"><span class="badge ' + badgeP + '">' + (p.diferencia > 0 ? '+' : '') + p.diferencia + '</span></td>' +
+                        '</tr>'
+                    );
+                });
+
+                var posLabels = r.por_posicion.map(function (p) { return 'Pos ' + p.posicion; });
+                var concDataP = r.por_posicion.map(function (p) { return p.votos_concejal; });
+                var comDataP = r.por_posicion.map(function (p) { return p.votos_comite; });
+
+                if (chartComitePosiciones) chartComitePosiciones.destroy();
+                chartComitePosiciones = new Chart(document.getElementById('chartComitePosiciones'), {
+                    type: 'bar',
+                    data: {
+                        labels: posLabels,
+                        datasets: [
+                            { label: 'Concejal', data: concDataP, backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 },
+                            { label: 'Comité', data: comDataP, backgroundColor: 'rgba(255, 193, 7, 0.7)', borderColor: 'rgba(255, 193, 7, 1)', borderWidth: 1 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, legend: { position: 'top' }, scales: { yAxes: [{ ticks: { beginAtZero: true } }] } }
+                });
+
+                $('#arrastreComitePosiciones').show();
+            });
+
+            // Chart: top 20 mesas
+            var top20 = data.slice(0, 20);
+            var labels = top20.map(function (r) {
+                var p = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
+                return p + ' - ' + r.mesa;
+            });
+            var concTotal = top20.map(function (r) { return r.total_concejales; });
+            var comTotal = top20.map(function (r) { return r.total_comite; });
+
+            if (chartArrastreComite) chartArrastreComite.destroy();
+            chartArrastreComite = new Chart(document.getElementById('chartArrastreComite'), {
+                type: 'horizontalBar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Concejales (suma)', data: concTotal, backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 },
+                        { label: 'Comité (suma)', data: comTotal, backgroundColor: 'rgba(255, 193, 7, 0.7)', borderColor: 'rgba(255, 193, 7, 1)', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'top' },
+                    scales: {
+                        xAxes: [{ ticks: { beginAtZero: true } }],
+                        yAxes: [{ ticks: { fontSize: 10 } }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            afterBody: function (tooltipItem, data) {
+                                var idx = tooltipItem.index;
+                                var d = top20[idx];
+                                var lines = [];
+                                if (d.sospechoso) {
+                                    lines.push('🔴 SOSPECHOSO: ' + d.sospechoso.nombre + ' (' + d.sospechoso.votos + 'v)');
+                                }
+                                return lines.join('\n');
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // ---- Arrastre Completo (Int → Conc → Com) ----
+    let chartArrastreCompleto = null;
+
+    function cargarArrastreCompleto() {
+        var pid = $('#arrastreCompletoIntendente').val();
+        var url = '{{ url("api/efectividad/arrastre-completo") }}';
+        var params = [];
+        if (pid) params.push('partido_id=' + pid);
+        var topPid = getPartidoId();
+        if (!pid && topPid) params.push('partido_id=' + topPid);
+        if (params.length) url += '?' + params.join('&');
+
+        $.get(url, function (data) {
+            $('#arrastreCompletoCount').text(data.length + ' mesas');
+            var $body = $('#arrastreCompletoBody');
+            $body.empty();
+
+            if (!data.length) {
+                $body.html('<tr><td colspan="6" class="text-center text-muted py-3">Sin datos</td></tr>');
+                return;
+            }
+
+            $.each(data, function (_, r) {
+                var partidoLabel = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
+                var pct = (r.efectividad_global * 100).toFixed(0) + '%';
+                var barColor = r.efectividad_global > 0.75 ? 'success' : (r.efectividad_global > 0.50 ? 'warning' : 'danger');
+                $body.append(
+                    '<tr>' +
+                    '<td><small class="font-weight-bold">' + partidoLabel + '</small></td>' +
+                    '<td><small>' + r.mesa + '</small></td>' +
+                    '<td class="text-right">' + r.votos_intendente.toLocaleString('es') + '</td>' +
+                    '<td class="text-right">' + r.suma_concejales.toLocaleString('es') + '</td>' +
+                    '<td class="text-right">' + r.suma_comite.toLocaleString('es') + '</td>' +
+                    '<td class="text-center"><span class="badge badge-' + barColor + '">' + pct + '</span></td>' +
+                    '</tr>'
+                );
+            });
+
+            var top20 = data.slice(0, 20);
+            var labels = top20.map(function (r) {
+                var p = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
+                return p + ' - ' + r.mesa;
+            });
+            var intData = top20.map(function (r) { return r.votos_intendente; });
+            var concData = top20.map(function (r) { return r.suma_concejales; });
+            var comData = top20.map(function (r) { return r.suma_comite; });
+
+            if (chartArrastreCompleto) chartArrastreCompleto.destroy();
+            chartArrastreCompleto = new Chart(document.getElementById('chartArrastreCompleto'), {
+                type: 'horizontalBar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Intendente', data: intData, backgroundColor: 'rgba(23, 162, 184, 0.7)', borderColor: 'rgba(23, 162, 184, 1)', borderWidth: 1 },
+                        { label: 'Concejales', data: concData, backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 },
+                        { label: 'Comité', data: comData, backgroundColor: 'rgba(255, 193, 7, 0.7)', borderColor: 'rgba(255, 193, 7, 1)', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'top' },
+                    scales: {
+                        xAxes: [{ ticks: { beginAtZero: true } }],
+                        yAxes: [{ ticks: { fontSize: 10 } }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            afterBody: function (tooltipItem, data) {
+                                var idx = tooltipItem.index;
+                                var d = top20[idx];
+                                if (!d) return '';
+                                var lines = [];
+                                lines.push('Int → Conc: -' + d.perdidos_int_conc.toLocaleString('es') + ' (' + (d.efectividad_concejal * 100).toFixed(0) + '%)');
+                                lines.push('Conc → Com: -' + d.perdidos_conc_com.toLocaleString('es') + ' (' + (d.efectividad_comite * 100).toFixed(0) + '%)');
+                                lines.push('Global: -' + d.perdidos_int_com.toLocaleString('es') + ' (' + (d.efectividad_global * 100).toFixed(0) + '%)');
+                                return lines.join('\n');
+                            }
+                        }
+                    }
+                }
+            });
         });
     }
 
@@ -661,6 +1020,8 @@ $(document).ready(function () {
     cargarCandidatos();
     cargarIntendentes();
     cargarArrastre();
+    cargarArrastreComite();
+    cargarArrastreCompleto();
 });
 </script>
 @endpush
