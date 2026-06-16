@@ -141,6 +141,45 @@
             </div>
         </div>
 
+        {{-- Arrastre Analysis --}}
+        <div class="card">
+            <div class="card-header py-2 bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Análisis de Arrastre y Discrepancia</h5>
+                <span class="badge badge-light" id="arrastreCount">—</span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Compara por mesa los votos de Intendente vs. la suma de Concejales.
+                    La <strong>discrepancia</strong> revela votantes que marcaron solo un cargo.
+                    Si la diferencia coincide con los votos de un candidato específico,
+                    sugiere que ese candidato <strong>arrastra votos propios</strong> que no van al intendente.
+                </p>
+                <div class="row">
+                    <div class="col-md-8">
+                        <canvas id="chartArrastreGlobal" height="350"></canvas>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="thead-dark" style="position:sticky;top:0">
+                                    <tr>
+                                        <th>Mesa</th>
+                                        <th class="text-right">Int.</th>
+                                        <th class="text-right">Conc.</th>
+                                        <th class="text-center">Dif.</th>
+                                        <th>¿Coincide con?</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="arrastreBody">
+                                    <tr><td colspan="5" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Candidate Comparison --}}
         <div class="card">
             <div class="card-header py-2 bg-danger text-white">
@@ -193,6 +232,7 @@ $(document).ready(function () {
         cargarResumen();
         cargarRanking();
         cargarCandidatos();
+        cargarArrastre();
     });
 
     // ---- Summary ----
@@ -389,10 +429,93 @@ $(document).ready(function () {
             (valor * 100).toFixed(0) + '%</div></div>';
     }
 
+    // ---- Arrastre Analysis ----
+    let chartArrastre = null;
+
+    function cargarArrastre() {
+        $.get(apiUrl('/arrastre'), function (data) {
+            $('#arrastreCount').text(data.length + ' mesas');
+            var $body = $('#arrastreBody');
+            $body.empty();
+
+            if (!data.length) {
+                $body.html('<tr><td colspan="5" class="text-center text-muted py-3">Sin datos</td></tr>');
+                return;
+            }
+
+            $.each(data, function (_, r) {
+                var badgeClass = r.diferencia > 0 ? 'badge-info' : (r.diferencia < 0 ? 'badge-warning' : 'badge-secondary');
+                var signo = r.diferencia > 0 ? '+' : '';
+                var matchHtml = '';
+                if (r.candidatos_coincidentes && r.candidatos_coincidentes.length) {
+                    matchHtml = '<small class="text-danger font-weight-bold">';
+                    $.each(r.candidatos_coincidentes, function (_, c) {
+                        var absDiff = Math.abs(r.diferencia);
+                        matchHtml += 'Pos.' + c.orden + ' ' + c.nombre + ' (' + c.votos + ' votos)<br>';
+                    });
+                    matchHtml += '</small>';
+                } else {
+                    matchHtml = '<small class="text-muted">—</small>';
+                }
+                $body.append(
+                    '<tr>' +
+                    '<td><small>' + r.mesa + '</small></td>' +
+                    '<td class="text-right">' + r.votos_intendente.toLocaleString('es') + '</td>' +
+                    '<td class="text-right">' + r.suma_concejales.toLocaleString('es') + '</td>' +
+                    '<td class="text-center"><span class="badge ' + badgeClass + '">' + signo + r.diferencia + '</span></td>' +
+                    '<td>' + matchHtml + '</td>' +
+                    '</tr>'
+                );
+            });
+
+            // Global chart: top 20 mesas sorted by abs discrepancy
+            var top20 = data.slice(0, 20).reverse();
+            var labels = top20.map(function (r) { return r.mesa; });
+            var intData = top20.map(function (r) { return r.votos_intendente; });
+            var concData = top20.map(function (r) { return r.suma_concejales; });
+
+            if (chartArrastre) chartArrastre.destroy();
+            chartArrastre = new Chart(document.getElementById('chartArrastreGlobal'), {
+                type: 'horizontalBar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Intendente', data: intData, backgroundColor: 'rgba(23, 162, 184, 0.7)', borderColor: 'rgba(23, 162, 184, 1)', borderWidth: 1 },
+                        { label: 'Concejales (suma)', data: concData, backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'top' },
+                    scales: {
+                        xAxes: [{ ticks: { beginAtZero: true } }],
+                        yAxes: [{ ticks: { fontSize: 10 } }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            afterBody: function (tooltipItem, data) {
+                                var idx = tooltipItem.index;
+                                var d = top20[top20.length - 1 - idx];
+                                if (d.candidatos_coincidentes && d.candidatos_coincidentes.length) {
+                                    return '⚠ Coincide: ' + d.candidatos_coincidentes.map(function (c) {
+                                        return c.nombre + ' (' + c.votos + 'v)';
+                                    }).join(', ');
+                                }
+                                return '';
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
     // ---- Initial load ----
     cargarResumen();
     cargarRanking();
     cargarCandidatos();
+    cargarArrastre();
 });
 </script>
 @endpush
