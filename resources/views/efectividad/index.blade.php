@@ -37,7 +37,14 @@
                 <h5 class="mb-0"><i class="fas fa-table"></i> Resumen General por Posición</h5>
                 <span class="badge badge-light" id="totalIntendenteBadge">—</span>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body">
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Votos Int.</strong> = total de votos del candidato a intendente del partido.
+                    <strong>Ef. Concejal</strong> = votos del concejal ÷ votos del intendente.
+                    Si es bajo (&lt;60%), ese concejal <strong>no arrastra</strong> a todos los que votaron al intendente.
+                    <strong>Votos Perd.</strong> = diferencia entre lo que sacó el intendente y lo que sacó ese concejal.
+                </div>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped mb-0" id="tablaResumen">
                         <thead class="thead-dark">
@@ -81,6 +88,11 @@
             <div class="card-body" id="mesaDetail" style="display:none">
                 <div id="alertasContainer"></div>
                 <div id="mesaInfo" class="mb-3"></div>
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-info-circle"></i>
+                    Muestra los mismos indicadores que el resumen, pero aplicados a una mesa específica.
+                    Las <strong class="text-danger">alertas en rojo</strong> señalan posiciones con baja efectividad.
+                </div>
                 <div class="row">
                     <div class="col-md-7">
                         <div class="table-responsive">
@@ -120,7 +132,14 @@
             <div class="card-header py-2 bg-success text-white">
                 <h5 class="mb-0"><i class="fas fa-trophy"></i> Ranking de Mesas por Efectividad</h5>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body">
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Efectividad</strong> = suma de votos de concejales ÷ votos del intendente.
+                    Mide qué tan cohesionado vota el electorado del partido en cada mesa.
+                    Arriba del todo están las mesas donde los votantes marcaron la boleta completa (ideal).
+                    Abajo, las que pierden más votos entre el intendente y los concejales.
+                </div>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped mb-0">
                         <thead class="thead-dark">
@@ -163,6 +182,7 @@
                             <table class="table table-sm table-striped mb-0">
                                 <thead class="thead-dark" style="position:sticky;top:0">
                                     <tr>
+                                        <th>Partido</th>
                                         <th>Mesa</th>
                                         <th class="text-right">Int.</th>
                                         <th class="text-right">Conc.</th>
@@ -171,7 +191,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="arrastreBody">
-                                    <tr><td colspan="5" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -186,6 +206,12 @@
                 <h5 class="mb-0"><i class="fas fa-balance-scale"></i> Comparación de Candidatos</h5>
             </div>
             <div class="card-body">
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-info-circle"></i>
+                    Seleccioná dos candidatos (pueden ser de distintos cargos o partidos) para comparar
+                    sus votos mesa por mesa. Útil para ver si dos candidatos <strong>comparten electorado</strong>
+                    (votan juntos en las mismas mesas) o si uno <strong>le gana al otro</strong> sistemáticamente.
+                </div>
                 <div class="row">
                     <div class="col-md-5">
                         <label class="small">Candidato A</label>
@@ -439,7 +465,7 @@ $(document).ready(function () {
             $body.empty();
 
             if (!data.length) {
-                $body.html('<tr><td colspan="5" class="text-center text-muted py-3">Sin datos</td></tr>');
+                $body.html('<tr><td colspan="6" class="text-center text-muted py-3">Sin datos</td></tr>');
                 return;
             }
 
@@ -457,8 +483,10 @@ $(document).ready(function () {
                 } else {
                     matchHtml = '<small class="text-muted">—</small>';
                 }
+                var partidoLabel = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
                 $body.append(
                     '<tr>' +
+                    '<td><small class="font-weight-bold">' + partidoLabel + '</small></td>' +
                     '<td><small>' + r.mesa + '</small></td>' +
                     '<td class="text-right">' + r.votos_intendente.toLocaleString('es') + '</td>' +
                     '<td class="text-right">' + r.suma_concejales.toLocaleString('es') + '</td>' +
@@ -469,8 +497,11 @@ $(document).ready(function () {
             });
 
             // Global chart: top 20 mesas sorted by abs discrepancy
-            var top20 = data.slice(0, 20).reverse();
-            var labels = top20.map(function (r) { return r.mesa; });
+            var top20 = data.slice(0, 20);
+            var labels = top20.map(function (r) {
+                var p = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
+                return p + ' - ' + r.mesa;
+            });
             var intData = top20.map(function (r) { return r.votos_intendente; });
             var concData = top20.map(function (r) { return r.suma_concejales; });
 
@@ -496,7 +527,7 @@ $(document).ready(function () {
                         callbacks: {
                             afterBody: function (tooltipItem, data) {
                                 var idx = tooltipItem.index;
-                                var d = top20[top20.length - 1 - idx];
+                                var d = top20[idx];
                                 if (d.candidatos_coincidentes && d.candidatos_coincidentes.length) {
                                     return '⚠ Coincide: ' + d.candidatos_coincidentes.map(function (c) {
                                         return c.nombre + ' (' + c.votos + 'v)';

@@ -269,59 +269,78 @@ class EfectividadController extends Controller
     {
         $partidoId = $request->get('partido_id');
 
-        $mesasConVotos = VotosMesa::where('cargo', 'intendente')
-            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-            ->select('mesa_id', DB::raw('SUM(cantidad_votos) as total'))
-            ->groupBy('mesa_id')
-            ->having('total', '>', 0)
-            ->pluck('total', 'mesa_id');
-
-        $concejales = Candidato::where('cargo', 'Concejal Municipal')
-            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-            ->get();
+        $partidos = $partidoId
+            ? Partido::where('id', $partidoId)->get()
+            : Partido::activos()->orderBy('numero_lista')->get();
 
         $result = [];
-        foreach ($mesasConVotos as $mesaId => $intVotos) {
-            $intVotos = (int) $intVotos;
 
-            $concSum = (int) VotosMesa::where('mesa_id', $mesaId)
+        foreach ($partidos as $partido) {
+            $concejales = Candidato::where('partido_id', $partido->id)
                 ->where('cargo', 'Concejal Municipal')
-                ->whereIn('candidato_id', $concejales->pluck('id'))
-                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-                ->sum('cantidad_votos');
+                ->orderBy('numero_orden')
+                ->get();
 
-            $diferencia = $intVotos - $concSum;
+            if ($concejales->isEmpty()) continue;
 
-            $candidatosCoincidentes = [];
-            if ($diferencia != 0) {
-                foreach ($concejales as $cand) {
-                    $votosCand = (int) VotosMesa::where('mesa_id', $mesaId)
-                        ->where('candidato_id', $cand->id)
-                        ->where('cargo', 'Concejal Municipal')
-                        ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-                        ->sum('cantidad_votos');
+            $intendenteVotos = VotosMesa::where('partido_id', $partido->id)
+                ->where('cargo', 'intendente')
+                ->select('mesa_id', DB::raw('SUM(cantidad_votos) as total'))
+                ->groupBy('mesa_id')
+                ->having('total', '>', 0)
+                ->pluck('total', 'mesa_id');
 
-                    if ($votosCand === abs($diferencia)) {
-                        $candidatosCoincidentes[] = [
-                            'nombre' => $cand->nombre_completo,
-                            'orden' => $cand->numero_orden,
-                            'votos' => $votosCand,
-                        ];
+            if ($intendenteVotos->isEmpty()) continue;
+
+            $intendente = Candidato::where('partido_id', $partido->id)
+                ->where('cargo', 'intendente')->first();
+
+            foreach ($intendenteVotos as $mesaId => $intVotos) {
+                $intVotos = (int) $intVotos;
+
+                $concSum = (int) VotosMesa::where('mesa_id', $mesaId)
+                    ->where('partido_id', $partido->id)
+                    ->where('cargo', 'Concejal Municipal')
+                    ->whereIn('candidato_id', $concejales->pluck('id'))
+                    ->sum('cantidad_votos');
+
+                $diferencia = $intVotos - $concSum;
+
+                $candidatosCoincidentes = [];
+                if ($diferencia != 0) {
+                    foreach ($concejales as $cand) {
+                        $votosCand = (int) VotosMesa::where('mesa_id', $mesaId)
+                            ->where('partido_id', $partido->id)
+                            ->where('candidato_id', $cand->id)
+                            ->where('cargo', 'Concejal Municipal')
+                            ->sum('cantidad_votos');
+
+                        if ($votosCand === abs($diferencia)) {
+                            $candidatosCoincidentes[] = [
+                                'nombre' => $cand->nombre_completo,
+                                'orden' => $cand->numero_orden,
+                                'votos' => $votosCand,
+                            ];
+                        }
                     }
                 }
-            }
 
-            $mesa = Mesa::with('equipo')->find($mesaId);
-            $result[] = [
-                'mesa_id' => $mesaId,
-                'mesa' => $mesa ? $mesa->codigo_mesa : "Mesa #{$mesaId}",
-                'local' => $mesa && $mesa->equipo ? $mesa->equipo->descripcion : '',
-                'votos_intendente' => $intVotos,
-                'suma_concejales' => $concSum,
-                'diferencia' => $diferencia,
-                'tipo_discrepancia' => $diferencia > 0 ? 'intendente_tiene_mas' : ($diferencia < 0 ? 'concejales_tienen_mas' : 'igual'),
-                'candidatos_coincidentes' => $candidatosCoincidentes,
-            ];
+                $mesa = Mesa::with('equipo')->find($mesaId);
+                $result[] = [
+                    'partido_id' => $partido->id,
+                    'partido' => $partido->nombre_completo,
+                    'partido_sigla' => $partido->sigla,
+                    'intendente' => $intendente ? $intendente->nombre_completo : '',
+                    'mesa_id' => $mesaId,
+                    'mesa' => $mesa ? $mesa->codigo_mesa : "Mesa #{$mesaId}",
+                    'local' => $mesa && $mesa->equipo ? $mesa->equipo->descripcion : '',
+                    'votos_intendente' => $intVotos,
+                    'suma_concejales' => $concSum,
+                    'diferencia' => $diferencia,
+                    'tipo_discrepancia' => $diferencia > 0 ? 'intendente_tiene_mas' : ($diferencia < 0 ? 'concejales_tienen_mas' : 'igual'),
+                    'candidatos_coincidentes' => $candidatosCoincidentes,
+                ];
+            }
         }
 
         usort($result, fn($a, $b) => abs($b['diferencia']) <=> abs($a['diferencia']));
