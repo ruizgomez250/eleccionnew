@@ -143,7 +143,12 @@
         <div class="card">
             <div class="card-header py-2 bg-secondary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-link"></i> Análisis de Arrastre y Discrepancia</h5>
-                <span class="badge badge-light" id="arrastreCount">—</span>
+                <div>
+                    <select id="arrastreIntendente" class="form-control form-control-sm" style="min-width:280px">
+                        <option value="">Todos los intendentes</option>
+                    </select>
+                    <span class="badge badge-light ml-2" id="arrastreCount">—</span>
+                </div>
             </div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
@@ -151,6 +156,7 @@
                     La <strong>discrepancia</strong> revela votantes que marcaron solo un cargo.
                     Si la diferencia coincide con los votos de un candidato específico,
                     sugiere que ese candidato <strong>arrastra votos propios</strong> que no van al intendente.
+                    <br>Usá el selector de arriba para filtrar por un candidato a intendente específico.
                 </p>
                 <div class="row">
                     <div class="col-md-8">
@@ -528,7 +534,15 @@ $(document).ready(function () {
     let chartArrastre = null;
 
     function cargarArrastre() {
-        $.get(apiUrl('/arrastre'), function (data) {
+        var pid = $('#arrastreIntendente').val();
+        var url = '{{ url("api/efectividad/arrastre") }}';
+        var params = [];
+        if (pid) params.push('partido_id=' + pid);
+        var topPid = getPartidoId();
+        if (!pid && topPid) params.push('partido_id=' + topPid);
+        if (params.length) url += '?' + params.join('&');
+
+        $.get(url, function (data) {
             $('#arrastreCount').text(data.length + ' mesas');
             var $body = $('#arrastreBody');
             $body.empty();
@@ -627,10 +641,25 @@ $(document).ready(function () {
         });
     }
 
+    // ---- Intendente Selector for Arrastre ----
+    function cargarIntendentes() {
+        $.get('{{ url("api/efectividad/intendentes") }}', function (data) {
+            var $sel = $('#arrastreIntendente');
+            $sel.empty().append('<option value="">Todos los intendentes</option>');
+            $.each(data, function (_, c) {
+                var label = (c.partido ? (c.partido.sigla || c.partido.nombre) : 'Lista') + ' - ' + c.nombre_completo;
+                $sel.append('<option value="' + c.partido_id + '">' + label + '</option>');
+            });
+            $sel.select2({ theme: 'bootstrap4', width: '280px', placeholder: 'Seleccionar intendente' });
+            $sel.on('change', function () { cargarArrastre(); });
+        });
+    }
+
     // ---- Initial load ----
     cargarResumen();
     cargarRanking();
     cargarCandidatos();
+    cargarIntendentes();
     cargarArrastre();
 });
 </script>

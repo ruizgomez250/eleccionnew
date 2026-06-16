@@ -54,6 +54,7 @@ Route::prefix('efectividad')->group(function () {
     Route::get('/comparar', [App\Http\Controllers\EfectividadController::class, 'comparar']);
     Route::get('/candidatos', [App\Http\Controllers\EfectividadController::class, 'candidatos']);
     Route::get('/arrastre', [App\Http\Controllers\EfectividadController::class, 'arrastre']);
+    Route::get('/intendentes', [App\Http\Controllers\EfectividadController::class, 'intendentes']);
 });
 
 // =============================================

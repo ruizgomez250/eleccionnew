@@ -270,6 +270,16 @@ class EfectividadController extends Controller
         ]);
     }
 
+    public function intendentes()
+    {
+        return response()->json(
+            Candidato::where('cargo', 'intendente')
+                ->with('partido')
+                ->orderBy('partido_id')
+                ->get(['id', 'partido_id', 'nombre_completo'])
+        );
+    }
+
     public function candidatos(Request $request)
     {
         $partidoId = $request->get('partido_id');
