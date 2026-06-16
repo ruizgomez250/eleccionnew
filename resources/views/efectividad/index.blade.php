@@ -31,43 +31,22 @@
             </div>
         </div>
 
-        {{-- Summary Table Card --}}
+        {{-- Summary Charts Card --}}
         <div class="card">
             <div class="card-header py-2 bg-info text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-table"></i> Resumen General por Posición</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Resumen por Candidatura a Intendente</h5>
                 <span class="badge badge-light" id="totalIntendenteBadge">—</span>
             </div>
             <div class="card-body">
                 <div class="small text-muted mb-2">
                     <i class="fas fa-info-circle"></i>
-                    <strong>Votos Int.</strong> = total de votos del candidato a intendente del partido.
-                    <strong>Ef. Concejal</strong> = votos del concejal ÷ votos del intendente.
-                    Si es bajo (&lt;60%), ese concejal <strong>no arrastra</strong> a todos los que votaron al intendente.
-                    <strong>Votos Perd.</strong> = diferencia entre lo que sacó el intendente y lo que sacó ese concejal.
+                    Cada gráfico muestra los votos de los concejales de una lista (barras naranjas)
+                    comparados con los votos del intendente de esa misma lista (línea azul).
+                    La <strong class="text-danger">barra roja</strong> marca la diferencia (votos perdidos).
+                    Si una barra es mucho más baja que la línea azul, ese candidato
+                    <strong>no arrastra</strong> a todos los que votaron al intendente.
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped mb-0" id="tablaResumen">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th class="text-center">Pos.</th>
-                                <th>Candidato</th>
-                                <th class="text-right">Votos Int.</th>
-                                <th class="text-right">Votos Conc.</th>
-                                <th class="text-center">Ef. Concejal</th>
-                                <th class="text-center">Ef. Comité</th>
-                                <th class="text-center">Ef. Juventud</th>
-                                <th class="text-right">Votos Perd.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resumenBody">
-                            <tr id="resumenLoading">
-                                <td colspan="8" class="text-center text-muted py-4">
-                                    <i class="fas fa-spinner fa-spin"></i> Cargando...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div id="resumenCharts"></div>
             </div>
         </div>
 
@@ -188,10 +167,11 @@
                                         <th class="text-right">Conc.</th>
                                         <th class="text-center">Dif.</th>
                                         <th>¿Coincide con?</th>
+                                        <th class="text-center">Sospechoso</th>
                                     </tr>
                                 </thead>
                                 <tbody id="arrastreBody">
-                                    <tr><td colspan="6" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
+                                    <tr><td colspan="7" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -261,32 +241,121 @@ $(document).ready(function () {
         cargarArrastre();
     });
 
-    // ---- Summary ----
+    // ---- Summary Charts ----
+    var resumenChartInstances = [];
+
     function cargarResumen() {
         $.get(apiUrl('/resumen'), function (data) {
-            var $body = $('#resumenBody');
-            $body.empty();
+            var $container = $('#resumenCharts');
+            $container.empty();
+            resumenChartInstances.forEach(function(c) { if (c) c.destroy(); });
+            resumenChartInstances = [];
+
             if (!data.length) {
-                $body.html('<tr><td colspan="8" class="text-center text-muted py-4">Sin datos</td></tr>');
+                $container.html('<p class="text-muted text-center py-4"><i class="fas fa-info-circle"></i> Sin datos</p>');
                 $('#totalIntendenteBadge').text('—');
                 return;
             }
-            var totalInt = data[0].total_intendente;
-            $('#totalIntendenteBadge').text('Total Intendente: ' + totalInt.toLocaleString('es'));
-            $.each(data, function (_, r) {
-                $body.append(
-                    '<tr>' +
-                    '<td class="text-center align-middle font-weight-bold">' + r.posicion + '</td>' +
-                    '<td class="align-middle"><small>' + (r.candidato || '') + '</small></td>' +
-                    '<td class="text-right align-middle">' + r.total_intendente.toLocaleString('es') + '</td>' +
-                    '<td class="text-right align-middle">' + r.total_concejal.toLocaleString('es') + '</td>' +
-                    '<td class="text-center align-middle">' + barrita(r.efectividad, r.color) + '</td>' +
-                    '<td class="text-center align-middle">' + barrita(r.efectividad_comite, r.color_comite) + '</td>' +
-                    '<td class="text-center align-middle">' + barrita(r.efectividad_juventud, r.color_juventud) + '</td>' +
-                    '<td class="text-right align-middle text-danger font-weight-bold">' + r.votos_perdidos.toLocaleString('es') + '</td>' +
-                    '</tr>'
-                );
+
+            $.each(data, function (pi, partido) {
+                var totalInt = partido.total_intendente;
+                var partidoLabel = partido.partido_sigla || partido.partido || 'Partido';
+                var intendenteLabel = partido.intendente || 'Intendente';
+
+                var cardHtml =
+                    '<div class="card mb-3 border-' + (pi === 0 ? 'info' : 'secondary') + '">' +
+                    '<div class="card-header py-1 px-3 bg-light d-flex justify-content-between align-items-center">' +
+                    '<span class="font-weight-bold"><small>' + partidoLabel + '</small></span>' +
+                    '<span class="small">Intendente: <strong>' + intendenteLabel + '</strong> — <strong>' + totalInt.toLocaleString('es') + '</strong> votos</span>' +
+                    '</div>' +
+                    '<div class="card-body py-2 px-3">' +
+                    '<div class="row">' +
+                    '<div class="col-md-8"><canvas id="resumenChart' + pi + '" height="220"></canvas></div>' +
+                    '<div class="col-md-4"><div class="table-responsive" style="max-height:220px;overflow-y:auto">' +
+                    '<table class="table table-sm table-borderless mb-0"><tbody id="resumenMiniTable' + pi + '"></tbody></table>' +
+                    '</div></div></div></div></div>';
+
+                $container.append(cardHtml);
+
+                var labels = [];
+                var concVotos = [];
+                var colores = [];
+                var perdidos = [];
+                var $miniBody = $('#resumenMiniTable' + pi);
+
+                $.each(partido.concejales, function (_, c) {
+                    labels.push('Pos. ' + c.posicion + ' ' + (c.candidato || '').substring(0, 18));
+                    concVotos.push(c.votos);
+                    perdidos.push(c.votos_perdidos);
+                    var color = c.efectividad < 0.6 ? '#dc3545' : (c.efectividad <= 0.8 ? '#ffc107' : '#28a745');
+                    colores.push(color);
+
+                    var miniRow =
+                        '<tr>' +
+                        '<td class="text-center p-0 small font-weight-bold">' + c.posicion + '.</td>' +
+                        '<td class="p-0 small">' + (c.candidato || '').substring(0, 22) + '</td>' +
+                        '<td class="text-right p-0 small">' + c.votos + '</td>' +
+                        '<td class="text-center p-0" style="width:50px">' +
+                        '<div class="progress" style="height:10px;min-width:40px">' +
+                        '<div class="progress-bar bg-' + c.color + '" style="width:' + Math.min(c.efectividad*100,100) + '%">' +
+                        (c.efectividad*100).toFixed(0) + '%</div></div></td>' +
+                        '</tr>';
+                    $miniBody.append(miniRow);
+                });
+
+                var ctx = document.getElementById('resumenChart' + pi).getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Intendente',
+                                data: labels.map(function () { return totalInt; }),
+                                backgroundColor: 'rgba(23, 162, 184, 0.15)',
+                                borderColor: 'rgba(23, 162, 184, 0.8)',
+                                borderWidth: 2,
+                                type: 'line',
+                                pointRadius: 0,
+                                fill: false,
+                                order: 0
+                            },
+                            {
+                                label: 'Concejales',
+                                data: concVotos,
+                                backgroundColor: colores.map(function (c) { return c + '99'; }),
+                                borderColor: colores,
+                                borderWidth: 1.5,
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { position: 'top', labels: { fontSize: 10 } },
+                        scales: {
+                            xAxes: [{ ticks: { fontSize: 9, maxRotation: 45 } }],
+                            yAxes: [{ ticks: { beginAtZero: true, fontSize: 10 } }]
+                        },
+                        tooltips: {
+                            callbacks: {
+                                afterBody: function (tooltipItem, data) {
+                                    var idx = tooltipItem[0].index;
+                                    var c = partido.concejales[idx];
+                                    if (!c) return '';
+                                    return 'Efectividad: ' + (c.efectividad * 100).toFixed(0) + '% | Perdidos: ' + c.votos_perdidos;
+                                }
+                            }
+                        }
+                    }
+                });
+                resumenChartInstances.push(chart);
             });
+
+            var totalGeneral = 0;
+            $.each(data, function (_, p) { totalGeneral += p.total_intendente; });
+            $('#totalIntendenteBadge').text(data.length + ' listas — ' + totalGeneral.toLocaleString('es') + ' votos totales');
         });
     }
 
@@ -465,7 +534,7 @@ $(document).ready(function () {
             $body.empty();
 
             if (!data.length) {
-                $body.html('<tr><td colspan="6" class="text-center text-muted py-3">Sin datos</td></tr>');
+                $body.html('<tr><td colspan="7" class="text-center text-muted py-3">Sin datos</td></tr>');
                 return;
             }
 
@@ -476,22 +545,34 @@ $(document).ready(function () {
                 if (r.candidatos_coincidentes && r.candidatos_coincidentes.length) {
                     matchHtml = '<small class="text-danger font-weight-bold">';
                     $.each(r.candidatos_coincidentes, function (_, c) {
-                        var absDiff = Math.abs(r.diferencia);
                         matchHtml += 'Pos.' + c.orden + ' ' + c.nombre + ' (' + c.votos + ' votos)<br>';
                     });
                     matchHtml += '</small>';
                 } else {
                     matchHtml = '<small class="text-muted">—</small>';
                 }
+
+                var sospechosoHtml = '';
+                if (r.sospechoso) {
+                    sospechosoHtml = '<span class="badge badge-danger" title="Concejales suman más que Intendente">' +
+                        '⚠ ' + r.sospechoso.nombre + '</span>';
+                } else if (r.candidato_mas_cercano && r.diferencia !== 0) {
+                    sospechosoHtml = '<small class="text-muted">' + r.candidato_mas_cercano.nombre + ' (' + r.candidato_mas_cercano.votos + 'v)</small>';
+                } else {
+                    sospechosoHtml = '<small class="text-muted">—</small>';
+                }
+
                 var partidoLabel = (r.partido_sigla || r.partido || '').split(' ').slice(0,2).join(' ');
+                var rowClass = r.sospechoso ? 'table-danger' : '';
                 $body.append(
-                    '<tr>' +
+                    '<tr class="' + rowClass + '">' +
                     '<td><small class="font-weight-bold">' + partidoLabel + '</small></td>' +
                     '<td><small>' + r.mesa + '</small></td>' +
                     '<td class="text-right">' + r.votos_intendente.toLocaleString('es') + '</td>' +
                     '<td class="text-right">' + r.suma_concejales.toLocaleString('es') + '</td>' +
                     '<td class="text-center"><span class="badge ' + badgeClass + '">' + signo + r.diferencia + '</span></td>' +
                     '<td>' + matchHtml + '</td>' +
+                    '<td class="text-center align-middle">' + sospechosoHtml + '</td>' +
                     '</tr>'
                 );
             });
@@ -528,12 +609,16 @@ $(document).ready(function () {
                             afterBody: function (tooltipItem, data) {
                                 var idx = tooltipItem.index;
                                 var d = top20[idx];
+                                var lines = [];
                                 if (d.candidatos_coincidentes && d.candidatos_coincidentes.length) {
-                                    return '⚠ Coincide: ' + d.candidatos_coincidentes.map(function (c) {
+                                    lines.push('⚠ Coincide: ' + d.candidatos_coincidentes.map(function (c) {
                                         return c.nombre + ' (' + c.votos + 'v)';
-                                    }).join(', ');
+                                    }).join(', '));
                                 }
-                                return '';
+                                if (d.sospechoso) {
+                                    lines.push('🔴 SOSPECHOSO: ' + d.sospechoso.nombre + ' (' + d.sospechoso.votos + 'v)');
+                                }
+                                return lines.join('\n');
                             }
                         }
                     }

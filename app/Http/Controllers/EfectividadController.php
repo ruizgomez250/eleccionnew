@@ -22,46 +22,69 @@ class EfectividadController extends Controller
     {
         $partidoId = $request->get('partido_id');
 
-        $totalIntendente = (int) VotosMesa::when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-            ->where('cargo', 'intendente')
-            ->sum('cantidad_votos');
-
-        $concejales = Candidato::where('cargo', 'Concejal Municipal')
-            ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-            ->orderBy('numero_orden')
-            ->get();
-
-        $comiteTotals = $this->getCargoTotals('comite', $partidoId);
-        $juventudTotals = $this->getCargoTotals('juventud', $partidoId);
+        $partidos = $partidoId
+            ? Partido::where('id', $partidoId)->get()
+            : Partido::activos()->orderBy('numero_lista')->get();
 
         $result = [];
-        foreach ($concejales as $cand) {
-            $pos = $cand->numero_orden;
-            $votosConc = (int) VotosMesa::where('candidato_id', $cand->id)
-                ->where('cargo', 'Concejal Municipal')
-                ->when($partidoId, fn($q) => $q->where('partido_id', $partidoId))
-                ->sum('cantidad_votos');
-            $votosCom = (int) ($comiteTotals[$pos] ?? 0);
-            $votosJuv = (int) ($juventudTotals[$pos] ?? 0);
 
-            $efectividad = $totalIntendente > 0 ? round($votosConc / $totalIntendente, 2) : 0;
-            $efectividadCom = $votosConc > 0 ? round($votosCom / $votosConc, 2) : 0;
-            $efectividadJuv = $votosConc > 0 ? round($votosJuv / $votosConc, 2) : 0;
+        foreach ($partidos as $partido) {
+            $totalIntendente = (int) VotosMesa::where('partido_id', $partido->id)
+                ->where('cargo', 'intendente')
+                ->sum('cantidad_votos');
+
+            if ($totalIntendente === 0) continue;
+
+            $intendente = Candidato::where('partido_id', $partido->id)
+                ->where('cargo', 'intendente')->first();
+
+            $concejales = Candidato::where('partido_id', $partido->id)
+                ->where('cargo', 'Concejal Municipal')
+                ->orderBy('numero_orden')
+                ->get();
+
+            if ($concejales->isEmpty()) continue;
+
+            $comiteTotals = $this->getCargoTotals('comite', $partido->id);
+            $juventudTotals = $this->getCargoTotals('juventud', $partido->id);
+
+            $concejalesData = [];
+            foreach ($concejales as $cand) {
+                $pos = $cand->numero_orden;
+                $votosConc = (int) VotosMesa::where('candidato_id', $cand->id)
+                    ->where('partido_id', $partido->id)
+                    ->where('cargo', 'Concejal Municipal')
+                    ->sum('cantidad_votos');
+                $votosCom = (int) ($comiteTotals[$pos] ?? 0);
+                $votosJuv = (int) ($juventudTotals[$pos] ?? 0);
+
+                $efectividad = $totalIntendente > 0 ? round($votosConc / $totalIntendente, 2) : 0;
+                $efectividadCom = $votosConc > 0 ? round($votosCom / $votosConc, 2) : 0;
+                $efectividadJuv = $votosConc > 0 ? round($votosJuv / $votosConc, 2) : 0;
+
+                $concejalesData[] = [
+                    'posicion' => $pos,
+                    'candidato' => $cand->nombre_completo,
+                    'votos' => $votosConc,
+                    'votos_comite' => $votosCom,
+                    'votos_juventud' => $votosJuv,
+                    'efectividad' => $efectividad,
+                    'efectividad_comite' => $efectividadCom,
+                    'efectividad_juventud' => $efectividadJuv,
+                    'votos_perdidos' => max(0, $totalIntendente - $votosConc),
+                    'color' => $efectividad < 0.6 ? 'danger' : ($efectividad <= 0.8 ? 'warning' : 'success'),
+                    'color_comite' => $efectividadCom < 0.6 ? 'danger' : ($efectividadCom <= 0.8 ? 'warning' : 'success'),
+                    'color_juventud' => $efectividadJuv < 0.6 ? 'danger' : ($efectividadJuv <= 0.8 ? 'warning' : 'success'),
+                ];
+            }
 
             $result[] = [
-                'posicion' => $pos,
-                'candidato' => $cand->nombre_completo,
+                'partido_id' => $partido->id,
+                'partido' => $partido->nombre_completo,
+                'partido_sigla' => $partido->sigla,
+                'intendente' => $intendente ? $intendente->nombre_completo : '',
                 'total_intendente' => $totalIntendente,
-                'total_concejal' => $votosConc,
-                'total_comite' => $votosCom,
-                'total_juventud' => $votosJuv,
-                'efectividad' => $efectividad,
-                'efectividad_comite' => $efectividadCom,
-                'efectividad_juventud' => $efectividadJuv,
-                'votos_perdidos' => max(0, $totalIntendente - $votosConc),
-                'color' => $efectividad < 0.6 ? 'danger' : ($efectividad <= 0.8 ? 'warning' : 'success'),
-                'color_comite' => $efectividadCom < 0.6 ? 'danger' : ($efectividadCom <= 0.8 ? 'warning' : 'success'),
-                'color_juventud' => $efectividadJuv < 0.6 ? 'danger' : ($efectividadJuv <= 0.8 ? 'warning' : 'success'),
+                'concejales' => $concejalesData,
             ];
         }
 
@@ -307,23 +330,41 @@ class EfectividadController extends Controller
                 $diferencia = $intVotos - $concSum;
 
                 $candidatosCoincidentes = [];
-                if ($diferencia != 0) {
-                    foreach ($concejales as $cand) {
-                        $votosCand = (int) VotosMesa::where('mesa_id', $mesaId)
-                            ->where('partido_id', $partido->id)
-                            ->where('candidato_id', $cand->id)
-                            ->where('cargo', 'Concejal Municipal')
-                            ->sum('cantidad_votos');
+                $candidatoMasCercano = null;
+                $menorDistancia = PHP_INT_MAX;
 
-                        if ($votosCand === abs($diferencia)) {
-                            $candidatosCoincidentes[] = [
-                                'nombre' => $cand->nombre_completo,
-                                'orden' => $cand->numero_orden,
-                                'votos' => $votosCand,
-                            ];
-                        }
+                foreach ($concejales as $cand) {
+                    $votosCand = (int) VotosMesa::where('mesa_id', $mesaId)
+                        ->where('partido_id', $partido->id)
+                        ->where('candidato_id', $cand->id)
+                        ->where('cargo', 'Concejal Municipal')
+                        ->sum('cantidad_votos');
+
+                    if ($votosCand === 0) continue;
+
+                    if ($votosCand === abs($diferencia)) {
+                        $candidatosCoincidentes[] = [
+                            'nombre' => $cand->nombre_completo,
+                            'orden' => $cand->numero_orden,
+                            'votos' => $votosCand,
+                        ];
+                    }
+
+                    $distancia = abs($votosCand - abs($diferencia));
+                    if ($distancia < $menorDistancia) {
+                        $menorDistancia = $distancia;
+                        $candidatoMasCercano = [
+                            'nombre' => $cand->nombre_completo,
+                            'orden' => $cand->numero_orden,
+                            'votos' => $votosCand,
+                            'distancia' => $distancia,
+                        ];
                     }
                 }
+
+                $sospechoso = $diferencia < 0 && $candidatoMasCercano
+                    ? $candidatoMasCercano
+                    : null;
 
                 $mesa = Mesa::with('equipo')->find($mesaId);
                 $result[] = [
@@ -339,6 +380,8 @@ class EfectividadController extends Controller
                     'diferencia' => $diferencia,
                     'tipo_discrepancia' => $diferencia > 0 ? 'intendente_tiene_mas' : ($diferencia < 0 ? 'concejales_tienen_mas' : 'igual'),
                     'candidatos_coincidentes' => $candidatosCoincidentes,
+                    'candidato_mas_cercano' => $candidatoMasCercano,
+                    'sospechoso' => $sospechoso,
                 ];
             }
         }
