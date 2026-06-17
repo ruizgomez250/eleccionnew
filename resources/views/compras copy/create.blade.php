@@ -5,10 +5,10 @@
 @section('content_header')
     <h1 class="m-0 custom-heading">Registrar Orden de Compra</h1>
 @stop
+{{-- e
+pc --}}
 
-
-
-@section('content')
+@section('content') 
     <div class="row">
         <div class="col-12">
             <div class="card" style="background-color:#D3D4D5;">
