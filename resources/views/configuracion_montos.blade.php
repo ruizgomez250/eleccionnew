@@ -73,7 +73,7 @@
         </div>
     </div>
 
-    {{-- Modal para editar monto --}}
+    {{-- Modal para editar monto monto  --}}
     <div class="modal fade" id="modalMonto" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <form action="{{ route('configuracion_montos.store') }}" method="POST" id="formMonto">
