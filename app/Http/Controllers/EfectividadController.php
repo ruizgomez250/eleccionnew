@@ -15,7 +15,8 @@ class EfectividadController extends Controller
     {
         $partidos = Partido::activos()->orderBy('numero_lista')->get();
         $mesas = Mesa::with('equipo')->orderBy('codigo_mesa')->get();
-        return view('efectividad.index', compact('partidos', 'mesas'));
+        $cargos = Candidato::CARGOS;
+        return view('efectividad.index', compact('partidos', 'mesas', 'cargos'));
     }
 
     public function resumen(Request $request)

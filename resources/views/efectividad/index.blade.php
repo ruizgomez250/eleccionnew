@@ -31,6 +31,16 @@
             </div>
         </div>
 
+        {{-- Certificado de Resultado --}}
+        <div class="card">
+            <div class="card-header py-2 bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-signature"></i> Certificado de Resultado</h5>
+                <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#modalCertificado">
+                    <i class="fas fa-external-link-alt"></i> Ver Certificado
+                </button>
+            </div>
+        </div>
+
         {{-- Summary Charts Card --}}
         <div class="card">
             <div class="card-header py-2 bg-info text-white d-flex justify-content-between align-items-center">
@@ -334,6 +344,58 @@
     </div>
 </div>
 @stop
+
+{{-- Modal Certificado de Resultado --}}
+<div class="modal fade" id="modalCertificado" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-signature"></i> Certificado de Resultado</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label><i class="fas fa-briefcase"></i> Candidatura Local</label>
+                            <select class="form-control form-control-sm select2" id="modalCertCargo" style="width:100%">
+                                <option value="">Seleccione cargo</option>
+                                @foreach ($cargos as $cargo)
+                                    <option value="{{ $cargo }}">{{ ucfirst($cargo) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label><i class="fas fa-table"></i> Mesa</label>
+                            <select class="form-control form-control-sm select2" id="modalCertMesa" style="width:100%">
+                                <option value="">Seleccione mesa</option>
+                                @foreach ($mesas as $m)
+                                    <option value="{{ $m->id }}">{{ $m->codigo_mesa }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary btn-block" id="btnModalCertCargar" disabled>
+                            <i class="fas fa-search"></i> Cargar
+                        </button>
+                    </div>
+                </div>
+                <div id="modalCertContainer" class="mt-3">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                        <p class="mb-0">Seleccione candidatura local y mesa para ver el certificado.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @push('js')
 <script>
@@ -1013,6 +1075,42 @@ $(document).ready(function () {
             });
         });
     }
+
+    // ---- Certificado de Resultado (Modal) ----
+    $('#modalCertificado').on('shown.bs.modal', function() {
+        $('#modalCertCargo, #modalCertMesa').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Buscar...',
+            dropdownParent: $('#modalCertificado')
+        });
+    });
+
+    $('#modalCertificado').on('hidden.bs.modal', function() {
+        $('#modalCertCargo, #modalCertMesa').select2('destroy');
+    });
+
+    $('#modalCertCargo, #modalCertMesa').on('change', function() {
+        $('#btnModalCertCargar').prop('disabled', !($('#modalCertCargo').val() && $('#modalCertMesa').val()));
+    });
+
+    $('#btnModalCertCargar').on('click', function() {
+        var cargo = $('#modalCertCargo').val();
+        var mesaId = $('#modalCertMesa').val();
+        if (!cargo || !mesaId) return;
+
+        $('#modalCertContainer').html(
+            '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Cargando certificado...</p></div>'
+        );
+
+        $.get('{{ route("certificados.formulario") }}', { mesa_id: mesaId, cargo: cargo }, function(resp) {
+            $('#modalCertContainer').html(resp.html);
+        }).fail(function() {
+            $('#modalCertContainer').html(
+                '<div class="alert alert-danger">Error al cargar el certificado.</div>'
+            );
+        });
+    });
 
     // ---- Initial load ----
     cargarResumen();
