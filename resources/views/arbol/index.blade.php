@@ -671,79 +671,14 @@
             background: linear-gradient(135deg, #f0fff4 0%, #e6ffe6 100%);
         }
 
-        /* Convencional */
-        .level-convencional .card {
-            border-left-color: #17a2b8;
-            border-left-width: 4px;
-        }
-
-        .level-convencional .card-header {
-            background: linear-gradient(135deg, #e6f7ff 0%, #d4f0ff 100%);
-        }
-
-        /* Convencional Juventud */
-        .level-convencional_juventud .card {
-            border-left-color: #ffc107;
-            border-left-width: 4px;
-        }
-
-        .level-convencional_juventud .card-header {
-            background: linear-gradient(135deg, #fff9e6 0%, #fff3d4 100%);
-        }
-
-        /* Miembro de Comité */
-        .level-miembro_comite .card {
-            border-left-color: #fd7e14;
-            border-left-width: 4px;
-        }
-
-        .level-miembro_comite .card-header {
-            background: linear-gradient(135deg, #fff4e6 0%, #ffe8d4 100%);
-        }
-
-        /* Miembro de la Juventud */
-        .level-miembro_juventud .card {
-            border-left-color: #6f42c1;
-            border-left-width: 4px;
-        }
-
-        .level-miembro_juventud .card-header {
-            background: linear-gradient(135deg, #f4e6ff 0%, #e8d4ff 100%);
-        }
-
-        /* Miembro del Consejo */
-        .level-miembro_del_consejo .card {
-            border-left-color: #20c997;
-            border-left-width: 4px;
-        }
-
-        .level-miembro_del_consejo .card-header {
-            background: linear-gradient(135deg, #e6fffa 0%, #d4fff5 100%);
-        }
-
         /* ============================================
-                                                                                                                                    BADGES Y ETIQUETAS
-                                                                                                                                ============================================ */
+                                                                                                                                     BADGES Y ETIQUETAS
+                                                                                                                                 ============================================ */
         .badge-nivel {
             font-size: 0.7rem;
             padding: 4px 8px;
             border-radius: 20px;
             font-weight: 500;
-        }
-
-        .badge-orange {
-            background-color: #fd7e14;
-            color: white;
-        }
-
-        .badge-teal {
-            background-color: #20c997;
-            color: white;
-        }
-
-        .badge-purple {
-            background-color: #6f42c1;
-            color: white;
         }
 
         /* ============================================

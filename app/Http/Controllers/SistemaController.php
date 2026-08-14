@@ -162,6 +162,12 @@ class SistemaController extends Controller
                     });
                 })
                 ->get();
+
+            // 🔹 Solo candidaturas de Intendente y Concejal
+            $sistemas = $sistemas->filter(function ($sistema) {
+                return in_array(strtolower(trim($sistema->tipo ?? '')), ['intendente', 'concejal']);
+            });
+
             // 🔹 Agrupar por ciudad y calcular totales
             $totalesDistritos = [];
 
@@ -169,8 +175,12 @@ class SistemaController extends Controller
                 $ciudadNombre = $sistema->ciudad->descripcion ?? 'Sin ciudad';
                 $idCiudadElectoral = $sistema->id_ciudad_electoral; // o como se llame el campo
 
-                // Suma por tipo 'Concejal' para esta ciudad electoral
-                $sumaConcejal = Sistema::where('tipo', 'Concejal')
+                // Suma por tipo 'Intendente' y 'Concejal' para esta ciudad electoral
+                $sumaIntendente = Sistema::whereRaw('LOWER(tipo) = ?', ['intendente'])
+                    ->where('id_ciudad_electoral', $idCiudadElectoral)
+                    ->count();
+
+                $sumaConcejal = Sistema::whereRaw('LOWER(tipo) = ?', ['concejal'])
                     ->where('id_ciudad_electoral', $idCiudadElectoral)
                     ->count();
 
@@ -190,6 +200,7 @@ class SistemaController extends Controller
                         'dirigentes' => $totalDirigentes,
                         'punteros' => $totalPunteros,
                         'votantes' => $totalVotantes,
+                        'intendentes' => $sumaIntendente,
                         'concejales' => $sumaConcejal,
                         'id_ciudad_electoral' => $sistema->id_ciudad_electoral,
                         'departamento' => $sistema->ciudad->departamento ?? ''
@@ -240,6 +251,11 @@ class SistemaController extends Controller
                 ->get();
         }
 
+        // 🔹 Solo candidaturas de Intendente y Concejal
+        $sistemas = $sistemas->filter(function ($sistema) {
+            return in_array(strtolower(trim($sistema->tipo ?? '')), ['intendente', 'concejal']);
+        });
+
         // 🔹 Calculamos totales por sistema
         $totalesSistemas = [];
 
@@ -287,11 +303,6 @@ class SistemaController extends Controller
             $tiposCandidaturas = [
                 'intendente',
                 'concejal',
-                'convencional',
-                'convencional juventud',
-                'miembro de comite',
-                'miembro de la juventud',
-                'miembro del consejo'
             ];
 
             // Filtrar solo candidaturas
@@ -406,11 +417,6 @@ class SistemaController extends Controller
                     $orden = [
                         'intendente' => 1,
                         'concejal' => 2,
-                        'convencional' => 3,
-                        'convencional_juventud' => 4,
-                        'miembro_comite' => 5,
-                        'miembro_juventud' => 6,
-                        'miembro_del_consejo' => 7
                     ];
                     $ordenA = $orden[$a['tipo']] ?? 99;
                     $ordenB = $orden[$b['tipo']] ?? 99;
@@ -437,11 +443,6 @@ class SistemaController extends Controller
             $orden = [
                 'intendente' => 1,
                 'concejal' => 2,
-                'convencional' => 3,
-                'convencional_juventud' => 4,
-                'miembro_comite' => 5,
-                'miembro_juventud' => 6,
-                'miembro_del_consejo' => 7
             ];
             $ordenA = $orden[$a['tipo']] ?? 99;
             $ordenB = $orden[$b['tipo']] ?? 99;
@@ -465,11 +466,6 @@ class SistemaController extends Controller
         $nombresTipos = [
             'intendente' => 'Intendente',
             'concejal' => 'Concejal',
-            'convencional' => 'Convencional',
-            'convencional juventud' => 'Convencional Juventud',
-            'miembro de comite' => 'Miembro de Comité',
-            'miembro de la juventud' => 'Miembro de la Juventud',
-            'miembro del consejo' => 'Miembro del Consejo'
         ];
 
         // 🔹 CALCULAR TOTALES DEL SISTEMA (candidatura)
@@ -520,11 +516,6 @@ class SistemaController extends Controller
         $totales = [
             'intendentes' => 0,
             'concejales' => 0,
-            'convencionales' => 0,
-            'convencionales_juventud' => 0,
-            'miembros_comite' => 0,
-            'miembros_juventud' => 0,
-            'miembros_consejo' => 0,
             'total_candidaturas' => 0,
             'total_dirigentes' => 0,
             'total_punteros' => 0,
@@ -541,21 +532,6 @@ class SistemaController extends Controller
                 case 'concejal':
                     $totales['concejales']++;
                     break;
-                case 'convencional':
-                    $totales['convencionales']++;
-                    break;
-                case 'convencional juventud':
-                    $totales['convencionales_juventud']++;
-                    break;
-                case 'miembro de comite':
-                    $totales['miembros_comite']++;
-                    break;
-                case 'miembro de la juventud':
-                    $totales['miembros_juventud']++;
-                    break;
-                case 'miembro del consejo':
-                    $totales['miembros_consejo']++;
-                    break;
             }
 
             // Sumar dirigentes, punteros y votantes
@@ -571,10 +547,7 @@ class SistemaController extends Controller
             });
         }
 
-        $totales['total_candidaturas'] = $totales['intendentes'] + $totales['concejales'] +
-            $totales['convencionales'] + $totales['convencionales_juventud'] +
-            $totales['miembros_comite'] + $totales['miembros_juventud'] +
-            $totales['miembros_consejo'];
+        $totales['total_candidaturas'] = $totales['intendentes'] + $totales['concejales'];
 
         return $totales;
     }
@@ -632,10 +605,6 @@ class SistemaController extends Controller
         $map = [
             'intendente' => 'intendente',
             'concejal' => 'concejal',
-            'convencional' => 'convencional',
-            'convencional juventud' => 'convencional_juventud',
-            'miembro de comite' => 'miembro_comite',
-            'miembro de la juventud' => 'miembro_juventud',
             'distrito' => 'distrito'
         ];
 

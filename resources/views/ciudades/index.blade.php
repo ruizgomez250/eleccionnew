@@ -42,6 +42,17 @@
                         <div class="row mb-1 justify-content-center">
                             <div class="col-12">
                                 <p class="mb-0">
+                                    <i class="fas fa-user-tie text-danger"></i>
+                                    <strong>Intendentes:</strong>
+                                    <span class="badge badge-danger badge-pill">
+                                        {{ number_format($totales['intendentes'] ?? 0, 0, '', '.') }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row mb-1 justify-content-center">
+                            <div class="col-12">
+                                <p class="mb-0">
                                     <i class="fas fa-users text-info"></i>
                                     <strong>Concejales:</strong>
                                     <span class="badge badge-info badge-pill">

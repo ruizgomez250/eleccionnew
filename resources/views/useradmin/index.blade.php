@@ -2,14 +2,20 @@
 
 @section('title', 'Administración de Usuarios y Sistemas')
 
+@section('css')
+    @include('useradmin._dark_theme')
+@stop
+
 @section('content_header')
-    <h1>Administración de Usuarios y Sistemas <button class="btn btn-info btn-sm float-right mr-2"
-            onclick="abrirModalReporte()">
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-user-cog"></i> Administración de Usuarios y Sistemas</h1>
+            <p class="ua-subtitle">Gestión central de candidatos, sistemas y accesos</p>
+        </div>
+        <button class="ua-btn ua-btn-teal" onclick="abrirModalReporte()">
             <i class="fas fa-file-excel"></i> Reporte Totales
         </button>
-    </h1>
-
-
+    </div>
 @stop
 @section('js')
 
@@ -41,15 +47,15 @@
 
         {{-- Sección de sistemas --}}
         <div class="col-md-6">
-            <div class="card">
+            <div class="card ua-card">
                 <div class="card-header">
-                    <h3 class="card-title">Sistemas</h3>
-                    <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modalSistema">
+                    <h3 class="card-title"><i class="fas fa-server"></i>Sistemas</h3>
+                    <button class="ua-btn ua-btn-grad btn-sm float-right" data-toggle="modal" data-target="#modalSistema">
                         <i class="fas fa-plus"></i> Nuevo Sistema
                     </button>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-striped" id="sistemas-table">
+                    <table class="table ua-table" id="sistemas-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -63,11 +69,25 @@
                             @foreach ($sistemas as $sistema)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $sistema->nombre . ' - ' . $sistema->tipo }}</td>
-                                    <td>{{ $sistema->ciudad->descripcion }}</td>
-                                    <td>{{ $sistema->usuario->name ?? 'Sin asignar' }}</td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm"
+                                        <span class="ua-badge ua-badge-violet">
+                                            <i class="fas fa-star"></i>
+                                            {{ $sistema->nombre }}
+                                        </span>
+                                        <span class="ua-badge ua-badge-muted ml-1">{{ $sistema->tipo }}</span>
+                                    </td>
+                                    <td>{{ $sistema->ciudad->descripcion }}</td>
+                                    <td>
+                                        @if ($sistema->usuario)
+                                            <span class="ua-badge ua-badge-teal">
+                                                <i class="fas fa-user-tie"></i> {{ $sistema->usuario->name }}
+                                            </span>
+                                        @else
+                                            <span class="ua-badge ua-badge-muted">Sin asignar</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <button class="ua-btn-icon ua-btn-edit"
                                             onclick="editarSistema(
                                             {{ $sistema->id }},
                                             '{{ $sistema->nombre }}',
@@ -81,7 +101,7 @@
                                             class="d-inline form-eliminar">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="button" class="btn btn-danger btn-sm btn-eliminar">
+                                            <button type="button" class="ua-btn-icon ua-btn-del btn-eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -96,15 +116,15 @@
 
         {{-- Sección de usuarios --}}
         <div class="col-md-6">
-            <div class="card">
+            <div class="card ua-card">
                 <div class="card-header">
-                    <h3 class="card-title">Usuarios</h3>
-                    <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modalUsuario">
+                    <h3 class="card-title"><i class="fas fa-users"></i>Usuarios</h3>
+                    <button class="ua-btn ua-btn-grad btn-sm float-right" data-toggle="modal" data-target="#modalUsuario">
                         <i class="fas fa-plus"></i> Nuevo Usuario
                     </button>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-striped" id="usuarios-table">
+                    <table class="table ua-table" id="usuarios-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -118,17 +138,23 @@
                             @foreach ($users as $user)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $user->name }}</td>
+                                    <td>
+                                        <span class="ua-badge ua-badge-teal">
+                                            <i class="fas fa-user"></i> {{ $user->name }}
+                                        </span>
+                                    </td>
                                     <td>{{ $user->email }}</td>
                                     <td>
                                         @if ($user->id == 1)
-                                            Dpto. Central{{--  ({{ $user->sistemaRelacion->nombre }}) --}}
+                                            <span class="ua-badge ua-badge-amber">Dpto. Central</span>
                                         @else
-                                            {{ $user->sistemaRelacion->nombre ?? '' }}
+                                            <span class="ua-badge ua-badge-violet">
+                                                {{ $user->sistemaRelacion->nombre ?? 'Sin sistema' }}
+                                            </span>
                                         @endif
                                     </td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm"
+                                        <button class="ua-btn-icon ua-btn-edit"
                                             onclick="editarUsuario({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->sistema }}','{{ $user->getRoleNames()->first() ?? '' }}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -137,7 +163,7 @@
                                             @csrf
                                             @method('DELETE')
 
-                                            <button type="button" class="btn btn-danger btn-sm btn-eliminar">
+                                            <button type="button" class="ua-btn-icon ua-btn-del btn-eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -153,23 +179,23 @@
     </div>
 
     {{-- Modal Sistema --}}
-    <div class="modal fade" id="modalSistema" tabindex="-1" role="dialog">
+    <div class="modal fade ua-modal" id="modalSistema" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-xl" role="document">
             <form action="{{ route('sistema.store') }}" method="POST" id="formSistema">
                 @csrf
                 <input type="hidden" name="sistema_id" id="sistema_id">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Nuevo Sistema</h5>
+                        <h5 class="modal-title"><i class="fas fa-server mr-1"></i> Nuevo Sistema</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body ua-form">
                         <div class="row">
                             {{-- Columna Izquierda: Datos del Sistema --}}
                             <div class="col-md-6">
-                                <div class="card card-primary">
+                                <div class="card ua-inner-card">
                                     <div class="card-header">
-                                        <h6 class="card-title">Datos del Sistema</h6>
+                                        <h6 class="card-title"><i class="fas fa-cogs"></i> Datos del Sistema</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="form-group">
@@ -194,11 +220,6 @@
                                             <select name="tipo" id="tipo" class="form-control" required>
                                                 <option value="Concejal">Concejal</option>
                                                 <option value="Intendente">Intendente</option>
-                                                <option value="Miembro de Comite">Miembro de Comite</option>
-                                                <option value="Convencional">Convencional</option>
-                                                <option value="Miembro de la Juventud">Miembro de la Juventud</option>
-                                                <option value="Miembro del Consejo">Miembro del Consejo</option>
-                                                <option value="Convencional Juventud">Convencional Juventud</option>
                                              </select>
                                          </div>
                                          <div class="form-group">
@@ -220,7 +241,7 @@
 
                             {{-- Columna Derecha: Datos del Usuario (Opcional) --}}
                             <div class="col-md-6">
-                                <div class="card card-success">
+                                <div class="card ua-inner-card">
                                     <div class="card-header">
                                         <h6 class="card-title">
                                             <i class="fas fa-user-plus"></i> Crear Usuario (Opcional)
@@ -266,24 +287,24 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Guardar Sistema</button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="ua-btn ua-btn-grad">Guardar Sistema</button>
+                        <button type="button" class="ua-btn ua-btn-ghost" data-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
     {{-- Modal Reporte --}}
-    <div class="modal fade" id="modalReporte" tabindex="-1">
+    <div class="modal fade ua-modal" id="modalReporte" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header bg-success">
-                    <h5 class="modal-title">Reporte General de Sistemas</h5>
+                <div class="modal-header" style="background: linear-gradient(135deg, rgba(5,150,105,.25), rgba(52,211,153,.12));">
+                    <h5 class="modal-title"><i class="fas fa-chart-pie mr-1"></i> Reporte General de Sistemas</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
 
-                    <table class="table table-bordered table-striped" id="reporte-table">
+                    <table class="table ua-table" id="reporte-table">
                         <thead>
                             <tr>
                                 <th>Sistema</th>
@@ -304,23 +325,23 @@
     </div>
 
     {{-- Modal Usuario --}}
-    <div class="modal fade" id="modalUsuario" tabindex="-1" role="dialog">
+    <div class="modal fade ua-modal" id="modalUsuario" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-xl" role="document">
             <form action="{{ route('useradmin.store') }}" method="POST" id="formUsuario">
                 @csrf
                 <input type="hidden" name="user_id" id="user_id">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Nuevo Usuario</h5>
+                        <h5 class="modal-title"><i class="fas fa-user-plus mr-1"></i> Nuevo Usuario</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body ua-form">
                         <div class="row">
                             {{-- Columna Izquierda: Datos del Usuario --}}
                             <div class="col-md-6">
-                                <div class="card card-primary">
+                                <div class="card ua-inner-card">
                                     <div class="card-header">
-                                        <h6 class="card-title">Datos del Usuario</h6>
+                                        <h6 class="card-title"><i class="fas fa-id-card"></i> Datos del Usuario</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="form-group">
@@ -369,7 +390,7 @@
 
                             {{-- Columna Derecha: Crear Nuevo Sistema (se muestra solo cuando se selecciona "nuevo") --}}
                             <div class="col-md-6" id="nuevoSistemaSection" style="display: none;">
-                                <div class="card card-success">
+                                <div class="card ua-inner-card">
                                     <div class="card-header">
                                         <h6 class="card-title">
                                             <i class="fas fa-server"></i> Datos del Nuevo Sistema
@@ -398,11 +419,6 @@
                                                 <option value="">-- Seleccione --</option>
                                                 <option value="Concejal">Concejal</option>
                                                 <option value="Intendente">Intendente</option>
-                                                <option value="Miembro de Comite">Miembro de Comite</option>
-                                                <option value="Convencional">Convencional</option>
-                                                <option value="Miembro de la Juventud">Miembro de la Juventud</option>
-                                                <option value="Miembro del Consejo">Miembro del Consejo</option>
-                                                <option value="Convencional Juventud">Convencional Juventud</option>
                                              </select>
                                         </div>
 
@@ -429,8 +445,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Guardar Usuario</button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="ua-btn ua-btn-grad">Guardar Usuario</button>
+                        <button type="button" class="ua-btn ua-btn-ghost" data-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </form>

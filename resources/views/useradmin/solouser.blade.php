@@ -2,8 +2,17 @@
 
 @section('title', 'Administración de Usuarios')
 
+@section('css')
+    @include('useradmin._dark_theme')
+@stop
+
 @section('content_header')
-    <h1>Administración de Usuarios</h1>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-user-cog"></i> Administración de Usuarios</h1>
+            <p class="ua-subtitle">Gestión de usuarios y sistemas</p>
+        </div>
+    </div>
 @stop
 
 @section('js')
@@ -34,15 +43,15 @@
     <div class="row">
         {{-- Sección de usuarios - Ocupa toda la pantalla --}}
         <div class="col-md-12">
-            <div class="card">
+            <div class="card ua-card">
                 <div class="card-header">
-                    <h3 class="card-title">Usuarios</h3>
-                    <button class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modalUsuario">
+                    <h3 class="card-title"><i class="fas fa-users"></i>Usuarios</h3>
+                    <button class="ua-btn ua-btn-grad btn-sm float-right" data-toggle="modal" data-target="#modalUsuario">
                         <i class="fas fa-plus"></i> Nuevo Usuario
                     </button>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered table-striped" id="usuarios-table">
+                    <table class="table ua-table" id="usuarios-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -56,11 +65,19 @@
                             @foreach ($users as $user)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $user->name }}</td>
-                                    <td>{{ $user->email }}</td>
-                                    <td>{{ $user->sistemaRelacion->nombre ?? 'Sin sistema' }}</td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm"
+                                        <span class="ua-badge ua-badge-teal">
+                                            <i class="fas fa-user"></i> {{ $user->name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $user->email }}</td>
+                                    <td>
+                                        <span class="ua-badge ua-badge-violet">
+                                            {{ $user->sistemaRelacion->nombre ?? 'Sin sistema' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="ua-btn-icon ua-btn-edit"
                                             onclick="editarUsuario({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->sistema }}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -68,7 +85,7 @@
                                             class="d-inline form-eliminar">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="button" class="btn btn-danger btn-sm btn-eliminar">
+                                            <button type="button" class="ua-btn-icon ua-btn-del btn-eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -83,17 +100,17 @@
     </div>
 
     {{-- Modal Usuario --}}
-    <div class="modal fade" id="modalUsuario" tabindex="-1" role="dialog">
+    <div class="modal fade ua-modal" id="modalUsuario" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <form action="{{ route('useradmin.store') }}" method="POST" id="formUsuario">
                 @csrf
                 <input type="hidden" name="user_id" id="user_id">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Nuevo Usuario</h5>
+                        <h5 class="modal-title"><i class="fas fa-user-plus mr-1"></i> Nuevo Usuario</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body ua-form">
                         <div class="form-group">
                             <label>Nombre</label>
                             <input type="text" name="name" id="name" class="form-control" required>
@@ -139,8 +156,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Guardar Usuario</button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="ua-btn ua-btn-grad">Guardar Usuario</button>
+                        <button type="button" class="ua-btn ua-btn-ghost" data-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </form>
