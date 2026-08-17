@@ -99,6 +99,16 @@
         color: var(--ua-text);
         box-shadow: 0 0 0 3px rgba(139, 92, 246, .18);
     }
+    .form-control[readonly] {
+        background: var(--ua-input) !important;
+        color: var(--ua-text) !important;
+        opacity: 1;
+    }
+    .form-control:disabled {
+        background: var(--ua-input) !important;
+        color: var(--ua-muted) !important;
+        opacity: 1;
+    }
     .form-control::placeholder { color: rgba(142, 163, 191, .6); }
     .form-control option { background: var(--ua-card); color: var(--ua-text); }
     select.form-control { background: var(--ua-input); }
