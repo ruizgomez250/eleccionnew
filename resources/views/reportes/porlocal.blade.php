@@ -3,9 +3,12 @@
 @section('title', 'Reporte por Escuela')
 
 @section('content_header')
-    <h4 class="mb-2">
-        <i class="fas fa-school"></i> Reporte por Escuela
-    </h4>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-school"></i> Reporte por Escuela</h1>
+            <p class="ua-subtitle">Votantes por escuela y su participación en la última elección</p>
+        </div>
+    </div>
 @stop
 
 @section('content')
@@ -54,7 +57,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card ua-card">
         <div class="card-header">
             <h5 class="mb-0">Detalle por Escuela</h5>
         </div>
@@ -168,6 +171,10 @@
         </div>
     @endforeach
 
+@stop
+
+@section('css')
+    @include('useradmin._dark_pages')
 @stop
 
 @push('js')

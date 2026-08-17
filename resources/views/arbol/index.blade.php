@@ -3,30 +3,33 @@
 @section('title', 'Árbol de Candidaturas')
 
 @section('content_header')
-    <h1 class="m-0">
-        <i class="fas fa-sitemap text-primary"></i> Árbol de Candidaturas por Distrito
-    </h1>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-sitemap"></i> Árbol de Candidaturas por Distrito</h1>
+            <p class="ua-subtitle">Estructura jerárquica de candidatos, equipos, dirigentes y punteros</p>
+        </div>
+    </div>
 @stop
 
 @section('content')
 
     {{-- BUSCADOR --}}
-    <div class="card mb-3">
+    <div class="card ua-card mb-3">
         <div class="card-body">
             <div class="input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text bg-primary">
-                        <i class="fas fa-search text-white"></i>
+                    <span class="input-group-text ua-input-icon">
+                        <i class="fas fa-search"></i>
                     </span>
                 </div>
                 <input type="text" id="buscadorArbol" class="form-control"
                     placeholder="Buscar distrito, candidatura, intendente, concejal...">
             </div>
             <div class="mt-2">
-                <button type="button" id="expandirTodos" class="btn btn-sm btn-success">
+                <button type="button" id="expandirTodos" class="ua-btn ua-btn-emerald btn-sm mr-1">
                     <i class="fas fa-expand-alt"></i> Expandir Todos
                 </button>
-                <button type="button" id="colapsarTodos" class="btn btn-sm btn-secondary">
+                <button type="button" id="colapsarTodos" class="ua-btn ua-btn-ghost btn-sm">
                     <i class="fas fa-compress-alt"></i> Colapsar Todos
                 </button>
             </div>
@@ -34,16 +37,16 @@
     </div>
 
     {{-- ÁRBOL JERÁRQUICO --}}
-    <div class="card">
-        <div class="card-header bg-primary text-white">
+    <div class="card ua-card">
+        <div class="card-header">
             <h3 class="card-title mb-0">
                 <i class="fas fa-sitemap"></i> Estructura Jerárquica por Distrito
             </h3>
             <div class="card-tools">
-                <a href="{{ route('reportes.duplicados.entre.sistemas') }}" class="btn btn-sm btn-warning text-dark mr-2" title="Ver duplicados entre sistemas">
+                <a href="{{ route('reportes.duplicados.entre.sistemas') }}" class="ua-btn ua-btn-ghost btn-sm mr-2" title="Ver duplicados entre sistemas">
                     <i class="fas fa-clone"></i> Duplicados entre Sistemas
                 </a>
-                <button type="button" class="btn btn-tool text-white" data-card-widget="collapse">
+                <button type="button" class="btn btn-tool ua-tool" data-card-widget="collapse">
                     <i class="fas fa-minus"></i>
                 </button>
             </div>
@@ -484,8 +487,8 @@
 @section('css')
     <style>
         /* ============================================
-                                                                                                                                   ESTILOS BASE DEL ÁRBOL
-                                                                                                                                ============================================ */
+                                                                                                                           ESTILOS BASE DEL ÁRBOL
+                                                                                                                        ============================================ */
         .tree {
             min-height: 20px;
             padding: 19px;
@@ -901,6 +904,7 @@
             background-color: #f5f5f5;
         }
     </style>
+    @include('useradmin._dark_pages')
 @stop
 
 @section('js')

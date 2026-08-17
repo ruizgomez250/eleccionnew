@@ -3,10 +3,11 @@
 @section('title', 'Reporte de Votantes Duplicados')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">
-            <i class="fas fa-clone"></i> Reporte de Votantes Duplicados
-        </h4>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-clone"></i> Reporte de Votantes Duplicados</h1>
+            <p class="ua-subtitle">Cédulas repetidas en la jerarquía votante, puntero y dirigente</p>
+        </div>
         <div>
             <span class="badge badge-primary">
                 <i class="fas fa-building"></i> Mi Sistema ID: {{ $sistemaUsuario ?? Auth::user()->sistema }}
@@ -88,7 +89,7 @@
     </div>
 
     {{-- Tabs --}}
-    <div class="card">
+    <div class="card ua-card">
         <div class="card-header bg-primary text-white p-0">
             <ul class="nav nav-tabs card-header-tabs ml-2 pt-2" id="duplicadosTab" role="tablist">
                 <li class="nav-item">
@@ -470,6 +471,7 @@
     display: none;
 }
 </style>
+@include('useradmin._dark_pages')
 @endpush
 
 @push('js')

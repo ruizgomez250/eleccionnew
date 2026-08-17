@@ -122,22 +122,28 @@ class DirigenteController extends Controller
 
         $sistemaUsuario = Auth::user()->sistema;
 
-        $dirigentes = Dirigente::with('punteros.votantes', 'equipo')
+        $dirigentes = Dirigente::with('equipo')
+            ->withCount('punteros')
             ->whereHas('equipo', function ($q) use ($sistemaUsuario) {
                 $q->where('sist', $sistemaUsuario);
             })
             ->when($equipoId, fn($q) => $q->where('id_equipo', $equipoId))
             ->get();
 
+        $dirigenteIds = $dirigentes->pluck('id');
+        $votantesPorDirigente = DB::table('puntero')
+            ->join('votante', 'votante.idpuntero', '=', 'puntero.id')
+            ->whereIn('puntero.id_dirigente', $dirigenteIds)
+            ->groupBy('puntero.id_dirigente')
+            ->select('puntero.id_dirigente', DB::raw('COUNT(votante.id) as total'))
+            ->get()
+            ->keyBy('id_dirigente');
 
-        // Calcular punteros_count y votantes_count por dirigente
         foreach ($dirigentes as $dir) {
-            $dir->punteros_count = $dir->punteros->count();
-            $dir->votantes_count = $dir->punteros->sum(fn($p) => $p->votantes->count());
+            $dir->votantes_count = $votantesPorDirigente[$dir->id]->total ?? 0;
         }
 
-        // Total general de votantes
-        $totalVotantesGeneral = $dirigentes->sum(fn($d) => $d->votantes_count);
+        $totalVotantesGeneral = $dirigentes->sum('votantes_count');
 
         return view('dirigente.index', compact('equipos', 'equipoId', 'dirigentes', 'totalVotantesGeneral'));
     }
@@ -210,8 +216,9 @@ class DirigenteController extends Controller
         // Equipos del sistema
         $equipos = Equipo::where('sist', $sistemaId)->get();
 
-        // Dirigentes
-        $dirigentes = Dirigente::with(['punteros.votantes', 'equipo'])
+        // Dirigentes con conteos via DB (sin cargar punteros/votantes a memoria)
+        $dirigentes = Dirigente::with(['equipo'])
+            ->withCount('punteros')
             ->whereHas('equipo', function ($q) use ($sistemaId) {
                 $q->where('sist', $sistemaId);
             })
@@ -220,14 +227,18 @@ class DirigenteController extends Controller
             })
             ->get();
 
-        // Calcular punteros y votantes
+        // Calcular votantes via DB por cada dirigente
+        $dirigenteIds = $dirigentes->pluck('id');
+        $votantesPorDirigente = DB::table('puntero')
+            ->join('votante', 'votante.idpuntero', '=', 'puntero.id')
+            ->whereIn('puntero.id_dirigente', $dirigenteIds)
+            ->groupBy('puntero.id_dirigente')
+            ->select('puntero.id_dirigente', DB::raw('COUNT(votante.id) as total'))
+            ->get()
+            ->keyBy('id_dirigente');
+
         foreach ($dirigentes as $dir) {
-
-            $dir->punteros_count = $dir->punteros->count();
-
-            $dir->votantes_count = $dir->punteros->sum(function ($p) {
-                return $p->votantes->count();
-            });
+            $dir->votantes_count = $votantesPorDirigente[$dir->id]->total ?? 0;
         }
 
         // Total general

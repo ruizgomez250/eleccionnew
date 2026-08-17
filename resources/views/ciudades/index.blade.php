@@ -3,20 +3,23 @@
 @section('title', 'Distritos')
 
 @section('content_header')
-    <h1 class="m-0 ">
-        <i class="fas fa-map-marker-alt text-primary"></i> Distritos
-    </h1>
+    <div class="ua-header">
+        <h1 class="ua-title">
+            <i class="fas fa-map-marker-alt"></i> Distritos
+        </h1>
+        <p class="ua-subtitle">Resumen de afiliados, sistemas y estructura por distrito</p>
+    </div>
 @stop
 
 @section('content')
 
     {{-- BUSCADOR DE DISTRITOS --}}
-    <div class="card mb-3">
+    <div class="card ua-card mb-3">
         <div class="card-body">
             <div class="input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text bg-primary">
-                        <i class="fas fa-search text-white"></i>
+                    <span class="input-group-text ua-input-icon">
+                        <i class="fas fa-search"></i>
                     </span>
                 </div>
                 <input type="text" id="buscadorDistrito" class="form-control" placeholder="Buscar distrito por nombre...">
@@ -28,7 +31,7 @@
     <div class="row" id="listaDistritos">
         @foreach ($totalesDistritos as $distrito => $totales)
             <div class="col-md-3 mb-3">
-                <div class="card distrito-card h-100 shadow-sm border-primary"
+                <div class="card distrito-card h-100 shadow-sm"
                     style="cursor:pointer; transition: transform 0.2s;"
                     data-ciudad-id="{{ $totales['id_ciudad_electoral'] }}" data-distrito="{{ $distrito }}">
                     <div class="card-body text-center">
@@ -542,6 +545,7 @@
             }
         }
     </style>
+    @include('useradmin._dark_pages')
 @stop
 
 @section('js')

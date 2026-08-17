@@ -3,9 +3,12 @@
 @section('title', 'Reporte de Resultados por Mesa')
 
 @section('content_header')
-    <h4 class="mb-2">
-        <i class="fas fa-chart-bar"></i> Reporte de Resultados por Mesa
-    </h4>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-chart-bar"></i> Reporte de Resultados por Mesa</h1>
+            <p class="ua-subtitle">Resultados electorales detallados por mesa de votación</p>
+        </div>
+    </div>
 @stop
 
 @section('content')
@@ -95,6 +98,7 @@
             text-align: center;
         }
     </style>
+    @include('useradmin._dark_pages')
 @stop
 
 @section('js')

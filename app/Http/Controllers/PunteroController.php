@@ -171,7 +171,8 @@ class PunteroController extends Controller
         })->when($id_equipo, fn($q) => $q->where('id_equipo', $id_equipo))
             ->get();
 
-        $punteros = Puntero::with(['dirigente', 'equipo', 'votantes'])
+        $punteros = Puntero::with(['dirigente', 'equipo'])
+            ->withCount('votantes')
             ->whereHas('dirigente.equipo', function ($q) {
                 $q->where('sist', Auth::user()->sistema);
             })
@@ -183,11 +184,7 @@ class PunteroController extends Controller
             })
             ->get();
 
-        foreach ($punteros as $p) {
-            $p->votantes_count = $p->votantes->count();
-        }
-
-        $totalVotantesGeneral = $punteros->sum(fn($p) => $p->votantes_count);
+        $totalVotantesGeneral = $punteros->sum('votantes_count');
 
         return view('puntero.index', compact('equipos', 'dirigentes', 'punteros', 'id_equipo', 'id_dirigente', 'totalVotantesGeneral'));
     }
@@ -368,20 +365,16 @@ class PunteroController extends Controller
             $sistema = Sistema::findOrFail($sistemaId);
 
             // Obtener equipos del sistema
-            $equipos = Equipo::where('sist', $sistema->id)
-                ->with('dirigentes.punteros')
+            $equipos = Equipo::where('sist', $sistema->id)->get();
+
+            // Obtener todos los punteros del sistema con conteos via DB
+            $punteros = Puntero::with(['dirigente', 'equipo'])
+                ->withCount('votantes')
+                ->withCount('vehiculos')
+                ->whereHas('dirigente.equipo', function ($q) use ($sistema) {
+                    $q->where('sist', $sistema->id);
+                })
                 ->get();
-
-            // Obtener todos los punteros del sistema
-            $punteros = Puntero::whereHas('dirigente.equipo', function ($q) use ($sistema) {
-                $q->where('sist', $sistema->id);
-            })->with(['dirigente', 'equipo', 'votantes', 'vehiculos'])->get(); // Agregar 'vehiculos' a with
-
-            // Contar votantes y vehículos por puntero
-            foreach ($punteros as $p) {
-                $p->votantes_count = $p->votantes->count();
-                $p->vehiculos_count = $p->vehiculos->count(); // Agregar contador de vehículos
-            }
 
             // Total de votantes general
             $totalVotantesGeneral = $punteros->sum('votantes_count');
@@ -446,12 +439,7 @@ class PunteroController extends Controller
                 ->get();
 
             // Obtener todos los punteros del sistema
-            $punteros = Puntero::where('id_equipo', $equipoId)->get();
-
-            // Contar votantes por puntero
-            foreach ($punteros as $p) {
-                $p->votantes_count = $p->votantes->count();
-            }
+            $punteros = Puntero::withCount('votantes')->where('id_equipo', $equipoId)->get();
 
             // Total de votantes general
             $totalVotantesGeneral = $punteros->sum('votantes_count');
@@ -518,15 +506,9 @@ class PunteroController extends Controller
                 ->get();
 
             // Obtener todos los punteros del dirigente con sus relaciones
-            $punteros = Puntero::where('id_dirigente', $dirigenteId)
-                ->with(['votantes', 'vehiculos']) // Agregar 'vehiculos' a with
+            $punteros = Puntero::withCount(['votantes', 'vehiculos'])
+                ->where('id_dirigente', $dirigenteId)
                 ->get();
-
-            // Contar votantes y vehículos por puntero
-            foreach ($punteros as $p) {
-                $p->votantes_count = $p->votantes->count();
-                $p->vehiculos_count = $p->vehiculos->count(); // Agregar contador de vehículos
-            }
 
             // Total de votantes general
             $totalVotantesGeneral = $punteros->sum('votantes_count');
@@ -583,7 +565,9 @@ class PunteroController extends Controller
             $equipoId = $request->equipo_id;
             $dirigenteId = $request->dirigente_id;
 
-            $query = Puntero::with(['dirigente', 'equipo', 'votantes'])
+            $query = Puntero::with(['dirigente', 'equipo'])
+                ->withCount('votantes')
+                ->withCount('vehiculos')
                 ->whereHas('dirigente.equipo', function ($q) {
                     $q->where('sist', Auth::user()->sistema);
                 });
@@ -597,11 +581,6 @@ class PunteroController extends Controller
             }
 
             $punteros = $query->get();
-
-            // Contar votantes por puntero
-            foreach ($punteros as $p) {
-                $p->votantes_count = $p->votantes->count();
-            }
 
             $totalVotantesGeneral = $punteros->sum('votantes_count');
 

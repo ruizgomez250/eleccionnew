@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\CiudadElectoral;
+use App\Models\Dirigente;
 use App\Models\Equipo;
+use App\Models\Puntero;
 use App\Models\PrePadron;
 use App\Models\Sistema;
 use App\Models\Sistemaspadre;
@@ -153,66 +155,82 @@ class SistemaController extends Controller
         try {
             $userId = Auth::id();
             $userSistema = Auth::user()->sistema;
-            // 🔹 Obtener los sistemas permitidos según el usuario
-            $sistemas = Sistema::with(['equipos.dirigentes.punteros.votantes', 'ciudad'])
+
+            // IDs de sistemas que el usuario puede ver (solo intendente/concejal)
+            $sistemasQuery = Sistema::select('sistemas.id', 'sistemas.id_ciudad_electoral')
+                ->whereRaw('LOWER(sistemas.tipo) IN (?, ?)', ['intendente', 'concejal'])
                 ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
                     $query->where(function ($q) use ($userId, $userSistema) {
-                        $q->where('idusuario', $userId)
-                            ->orWhere('id', $userSistema);
-                    });
-                })
-                ->get();
-
-            // 🔹 Solo candidaturas de Intendente y Concejal
-            $sistemas = $sistemas->filter(function ($sistema) {
-                return in_array(strtolower(trim($sistema->tipo ?? '')), ['intendente', 'concejal']);
-            });
-
-            // 🔹 Agrupar por ciudad y calcular totales
-            $totalesDistritos = [];
-
-            foreach ($sistemas as $sistema) {
-                $ciudadNombre = $sistema->ciudad->descripcion ?? 'Sin ciudad';
-                $idCiudadElectoral = $sistema->id_ciudad_electoral; // o como se llame el campo
-
-                // Suma por tipo 'Intendente' y 'Concejal' para esta ciudad electoral
-                $sumaIntendente = Sistema::whereRaw('LOWER(tipo) = ?', ['intendente'])
-                    ->where('id_ciudad_electoral', $idCiudadElectoral)
-                    ->count();
-
-                $sumaConcejal = Sistema::whereRaw('LOWER(tipo) = ?', ['concejal'])
-                    ->where('id_ciudad_electoral', $idCiudadElectoral)
-                    ->count();
-
-                $totalDirigentes = $sistema->equipos->flatMap->dirigentes->count();
-                $totalPunteros = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
-                    return $d->punteros->count();
-                });
-                $totalVotantes = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
-                    return $d->punteros->sum(function ($p) {
-                        return $p->votantes->count();
+                        $q->where('sistemas.idusuario', $userId)
+                            ->orWhere('sistemas.id', $userSistema);
                     });
                 });
 
-                // 🔹 Si la ciudad ya existe, sumamos los totales
-                if (!isset($totalesDistritos[$ciudadNombre])) {
-                    $totalesDistritos[$ciudadNombre] = [
-                        'dirigentes' => $totalDirigentes,
-                        'punteros' => $totalPunteros,
-                        'votantes' => $totalVotantes,
-                        'intendentes' => $sumaIntendente,
-                        'concejales' => $sumaConcejal,
-                        'id_ciudad_electoral' => $sistema->id_ciudad_electoral,
-                        'departamento' => $sistema->ciudad->departamento ?? ''
-                    ];
-                } else {
-                    $totalesDistritos[$ciudadNombre]['dirigentes'] += $totalDirigentes;
-                    $totalesDistritos[$ciudadNombre]['punteros'] += $totalPunteros;
-                    $totalesDistritos[$ciudadNombre]['votantes'] += $totalVotantes;
-                }
+            $sistemaIds = $sistemasQuery->pluck('id');
+
+            if ($sistemaIds->isEmpty()) {
+                return view('ciudades.index', ['totalesDistritos' => collect()]);
             }
 
-            // 🔹 Ordenar por departamento y nombre de ciudad
+            // Totales de dirigentes, punteros y votantes por ciudad electoral (1 sola query)
+            $totalesEstructura = DB::table('sistemas')
+                ->join('equipo', 'equipo.sist', '=', 'sistemas.id')
+                ->join('dirigente', 'dirigente.id_equipo', '=', 'equipo.id')
+                ->leftJoin('puntero', 'puntero.id_dirigente', '=', 'dirigente.id')
+                ->leftJoin('votante', 'votante.idpuntero', '=', 'puntero.id')
+                ->whereIn('sistemas.id', $sistemaIds)
+                ->groupBy('sistemas.id_ciudad_electoral')
+                ->select(
+                    'sistemas.id_ciudad_electoral',
+                    DB::raw('COUNT(DISTINCT dirigente.id) as total_dirigentes'),
+                    DB::raw('COUNT(DISTINCT puntero.id) as total_punteros'),
+                    DB::raw('COUNT(DISTINCT votante.id) as total_votantes')
+                )
+                ->get()
+                ->keyBy('id_ciudad_electoral');
+
+            // Intendentes y concejales por ciudad electoral (1 sola query)
+            $candidaturasPorCiudad = DB::table('sistemas')
+                ->whereIn('sistemas.id', $sistemaIds)
+                ->groupBy('sistemas.id_ciudad_electoral', 'sistemas.tipo')
+                ->select('sistemas.id_ciudad_electoral', 'sistemas.tipo', DB::raw('COUNT(*) as total'))
+                ->get()
+                ->groupBy('id_ciudad_electoral');
+
+            // Datos de ciudades electorales involucradas
+            $ciudadIds = $candidaturasPorCiudad->keys();
+            $ciudadesMap = CiudadElectoral::whereIn('id', $ciudadIds)
+                ->get()
+                ->keyBy('id');
+
+            // Construir resultado
+            $totalesDistritos = [];
+
+            foreach ($candidaturasPorCiudad as $ciudadId => $candidaturas) {
+                $ciudad = $ciudadesMap[$ciudadId] ?? null;
+                $ciudadNombre = $ciudad->descripcion ?? 'Sin ciudad';
+
+                $intendentes = 0;
+                $concejales = 0;
+                foreach ($candidaturas as $c) {
+                    if (strtolower(trim($c->tipo)) === 'intendente') $intendentes = $c->total;
+                    if (strtolower(trim($c->tipo)) === 'concejal') $concejales = $c->total;
+                }
+
+                $estructura = $totalesEstructura[$ciudadId] ?? null;
+
+                $totalesDistritos[$ciudadNombre] = [
+                    'dirigentes' => (int) ($estructura->total_dirigentes ?? 0),
+                    'punteros' => (int) ($estructura->total_punteros ?? 0),
+                    'votantes' => (int) ($estructura->total_votantes ?? 0),
+                    'intendentes' => $intendentes,
+                    'concejales' => $concejales,
+                    'id_ciudad_electoral' => $ciudadId,
+                    'departamento' => $ciudad->departamento ?? ''
+                ];
+            }
+
+            // Ordenar por departamento y nombre de ciudad
             $totalesDistritos = collect($totalesDistritos)
                 ->sortBy(['departamento', function ($item) {
                     return $item['descripcion'] ?? '';
@@ -239,45 +257,48 @@ class SistemaController extends Controller
             ], 404);
         }
 
-        // 🔹 Sistemas visibles según usuario
-        if (in_array($userId, [1, 4])) {
-            $sistemas = Sistema::where('id_ciudad_electoral', $ciudad->id)->get();
-        } else {
-            $sistemas = Sistema::where('id_ciudad_electoral', $ciudad->id)
-                ->where(function ($q) use ($userId, $userSistema) {
-                    $q->where('idusuario', $userId)
-                        ->orWhere('id', $userSistema);
-                })
-                ->get();
+        // 🔹 Sistemas visibles según usuario (solo datos básicos, sin eager load pesado)
+        $sistemasQuery = Sistema::select('id', 'nombre', 'tipo', 'id_ciudad_electoral')
+            ->where('id_ciudad_electoral', $ciudad->id)
+            ->whereRaw('LOWER(tipo) IN (?, ?)', ['intendente', 'concejal']);
+
+        if (!in_array($userId, [1, 4])) {
+            $sistemasQuery->where(function ($q) use ($userId, $userSistema) {
+                $q->where('idusuario', $userId)
+                    ->orWhere('id', $userSistema);
+            });
         }
 
-        // 🔹 Solo candidaturas de Intendente y Concejal
-        $sistemas = $sistemas->filter(function ($sistema) {
-            return in_array(strtolower(trim($sistema->tipo ?? '')), ['intendente', 'concejal']);
-        });
+        $sistemas = $sistemasQuery->get();
+        $sistemaIds = $sistemas->pluck('id');
 
-        // 🔹 Calculamos totales por sistema
+        // 🔹 Totales por sistema via SQL (1 sola query en lugar de N+1)
         $totalesSistemas = [];
 
-        foreach ($sistemas as $sistema) {
+        if ($sistemaIds->isNotEmpty()) {
+            $totalesQuery = DB::table('equipo')
+                ->join('dirigente', 'dirigente.id_equipo', '=', 'equipo.id')
+                ->leftJoin('puntero', 'puntero.id_dirigente', '=', 'dirigente.id')
+                ->leftJoin('votante', 'votante.idpuntero', '=', 'puntero.id')
+                ->whereIn('equipo.sist', $sistemaIds)
+                ->groupBy('equipo.sist')
+                ->select(
+                    'equipo.sist',
+                    DB::raw('COUNT(DISTINCT dirigente.id) as total_dirigentes'),
+                    DB::raw('COUNT(DISTINCT puntero.id) as total_punteros'),
+                    DB::raw('COUNT(DISTINCT votante.id) as total_votantes')
+                )
+                ->get()
+                ->keyBy('sist');
 
-            $totalDirigentes = $sistema->equipos->flatMap->dirigentes->count();
-
-            $totalPunteros = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
-                return $d->punteros->count();
-            });
-
-            $totalVotantes = $sistema->equipos->flatMap->dirigentes->sum(function ($d) {
-                return $d->punteros->sum(function ($p) {
-                    return $p->votantes->count();
-                });
-            });
-
-            $totalesSistemas[$sistema->id] = [
-                'dirigentes' => $totalDirigentes,
-                'punteros' => $totalPunteros,
-                'votantes' => $totalVotantes,
-            ];
+            foreach ($sistemaIds as $id) {
+                $fila = $totalesQuery[$id] ?? null;
+                $totalesSistemas[$id] = [
+                    'dirigentes' => (int) ($fila->total_dirigentes ?? 0),
+                    'punteros' => (int) ($fila->total_punteros ?? 0),
+                    'votantes' => (int) ($fila->total_votantes ?? 0),
+                ];
+            }
         }
 
         // 🔹 Retornamos la vista con sistemas + totales
@@ -289,8 +310,8 @@ class SistemaController extends Controller
             $userId = Auth::id();
             $userSistema = Auth::user()->sistema;
 
-            // Obtener los sistemas permitidos según el usuario
-            $sistemas = Sistema::with(['equipos.dirigentes.punteros.votantes', 'ciudad', 'usuario'])
+            // Obtener los sistemas permitidos según el usuario (sin cargar votantes a memoria)
+            $sistemas = Sistema::with(['ciudad', 'usuario'])
                 ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
                     $query->where(function ($q) use ($userId, $userSistema) {
                         $q->where('idusuario', $userId)
@@ -298,6 +319,40 @@ class SistemaController extends Controller
                     });
                 })
                 ->get();
+
+            // Precargar conteos via DB para todos los sistemas de una sola vez
+            $sistemaIds = $sistemas->pluck('id')->toArray();
+            $conteosDirigentes = DB::table('dirigente')
+                ->join('equipo', 'equipo.id', '=', 'dirigente.id_equipo')
+                ->whereIn('equipo.sist', $sistemaIds)
+                ->groupBy('equipo.sist')
+                ->select('equipo.sist as sistema_id', DB::raw('COUNT(dirigente.id) as total'))
+                ->get()
+                ->keyBy('sistema_id');
+            $conteosPunteros = DB::table('puntero')
+                ->join('dirigente', 'dirigente.id', '=', 'puntero.id_dirigente')
+                ->join('equipo', 'equipo.id', '=', 'dirigente.id_equipo')
+                ->whereIn('equipo.sist', $sistemaIds)
+                ->groupBy('equipo.sist')
+                ->select('equipo.sist as sistema_id', DB::raw('COUNT(puntero.id) as total'))
+                ->get()
+                ->keyBy('sistema_id');
+            $conteosVotantes = DB::table('votante')
+                ->join('puntero', 'puntero.id', '=', 'votante.idpuntero')
+                ->join('dirigente', 'dirigente.id', '=', 'puntero.id_dirigente')
+                ->join('equipo', 'equipo.id', '=', 'dirigente.id_equipo')
+                ->whereIn('equipo.sist', $sistemaIds)
+                ->groupBy('equipo.sist')
+                ->select('equipo.sist as sistema_id', DB::raw('COUNT(votante.id) as total'))
+                ->get()
+                ->keyBy('sistema_id');
+
+            // Adjuntar conteos a cada sistema
+            foreach ($sistemas as $sistema) {
+                $sistema->total_dirigentes = $conteosDirigentes[$sistema->id]->total ?? 0;
+                $sistema->total_punteros = $conteosPunteros[$sistema->id]->total ?? 0;
+                $sistema->total_votantes = $conteosVotantes[$sistema->id]->total ?? 0;
+            }
 
             // Definir los tipos de candidaturas
             $tiposCandidaturas = [
@@ -476,9 +531,8 @@ class SistemaController extends Controller
             'nombre' => $sistema->nombre,
             'tipo' => $this->getTipoSlug($tipo),
             'tipo_nivel' => $nombresTipos[$tipo] ?? ucfirst($tipo),
-            'totales' => $totalesSistema,  // 🔹 AGREGAR TOTALES DEL SISTEMA
-            'candidatos' => $this->obtenerCandidatos($sistema),
-            'hijos' => [] // Se llenará después
+            'totales' => $totalesSistema,
+            'hijos' => []
         ];
     }
 
@@ -487,24 +541,10 @@ class SistemaController extends Controller
      */
     private function calcularTotalesSistema($sistema)
     {
-        $totalDirigentes = 0;
-        $totalPunteros = 0;
-        $totalVotantes = 0;
-
-        foreach ($sistema->equipos as $equipo) {
-            foreach ($equipo->dirigentes as $dirigente) {
-                $totalDirigentes++;
-                foreach ($dirigente->punteros as $puntero) {
-                    $totalPunteros++;
-                    $totalVotantes += $puntero->votantes->count();
-                }
-            }
-        }
-
         return [
-            'dirigentes' => $totalDirigentes,
-            'punteros' => $totalPunteros,
-            'votantes' => $totalVotantes,
+            'dirigentes' => $sistema->total_dirigentes ?? 0,
+            'punteros' => $sistema->total_punteros ?? 0,
+            'votantes' => $sistema->total_votantes ?? 0,
         ];
     }
 
@@ -534,67 +574,14 @@ class SistemaController extends Controller
                     break;
             }
 
-            // Sumar dirigentes, punteros y votantes
-            $candidatosSistema = $this->obtenerCandidatos($sistema);
-            $totales['total_dirigentes'] += count($candidatosSistema);
-            $totales['total_punteros'] += collect($candidatosSistema)->sum(function ($d) {
-                return count($d['punteros'] ?? []);
-            });
-            $totales['total_votantes'] += collect($candidatosSistema)->sum(function ($d) {
-                return collect($d['punteros'] ?? [])->sum(function ($p) {
-                    return count($p['votantes'] ?? []);
-                });
-            });
+            $totales['total_dirigentes'] += $sistema->total_dirigentes ?? 0;
+            $totales['total_punteros'] += $sistema->total_punteros ?? 0;
+            $totales['total_votantes'] += $sistema->total_votantes ?? 0;
         }
 
         $totales['total_candidaturas'] = $totales['intendentes'] + $totales['concejales'];
 
         return $totales;
-    }
-
-    /**
-     * Obtener candidatos (dirigentes, punteros, votantes)
-     */
-    private function obtenerCandidatos($sistema)
-    {
-        $candidatos = [];
-
-        foreach ($sistema->equipos as $equipo) {
-            foreach ($equipo->dirigentes as $dirigente) {
-                $dirigenteData = [
-                    'id' => $dirigente->id,
-                    'nombre' => $dirigente->nombre,
-                    'cedula' => $dirigente->cedula,
-                    'telefono' => $dirigente->telefono,
-                    'tipo' => 'dirigente',
-                    'punteros' => []
-                ];
-
-                foreach ($dirigente->punteros as $puntero) {
-                    $punteroData = [
-                        'id' => $puntero->id,
-                        'nombre' => $puntero->nombre,
-                        'cedula' => $puntero->cedula,
-                        'telefono' => $puntero->telefono,
-                        'tipo' => 'puntero',
-                        'votantes' => $puntero->votantes->map(function ($votante) {
-                            return [
-                                'id' => $votante->id,
-                                'nombre' => $votante->nombre,
-                                'cedula' => $votante->cedula,
-                                'tipo' => 'votante'
-                            ];
-                        })->toArray()
-                    ];
-
-                    $dirigenteData['punteros'][] = $punteroData;
-                }
-
-                $candidatos[] = $dirigenteData;
-            }
-        }
-
-        return $candidatos;
     }
 
     /**
@@ -620,7 +607,7 @@ class SistemaController extends Controller
             $userId = Auth::id();
             $userSistema = Auth::user()->sistema;
 
-            $sistema = Sistema::with(['equipos.dirigentes.punteros.votantes'])
+            $sistema = Sistema::with(['equipos'])
                 ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
                     $query->where(function ($q) use ($userId, $userSistema) {
                         $q->where('idusuario', $userId)
@@ -629,11 +616,24 @@ class SistemaController extends Controller
                 })
                 ->findOrFail($sistemaId);
 
-            $dirigentes = [];
-            foreach ($sistema->equipos as $equipo) {
-                foreach ($equipo->dirigentes as $dirigente) {
-                    $dirigentes[] = $dirigente;
-                }
+            $dirigentes = Dirigente::with(['equipo'])
+                ->withCount('punteros')
+                ->whereHas('equipo', function ($q) use ($sistemaId) {
+                    $q->where('sist', $sistemaId);
+                })
+                ->get();
+
+            $dirigenteIds = $dirigentes->pluck('id');
+            $votantesPorDirigente = DB::table('puntero')
+                ->join('votante', 'votante.idpuntero', '=', 'puntero.id')
+                ->whereIn('puntero.id_dirigente', $dirigenteIds)
+                ->groupBy('puntero.id_dirigente')
+                ->select('puntero.id_dirigente', DB::raw('COUNT(votante.id) as total'))
+                ->get()
+                ->keyBy('id_dirigente');
+
+            foreach ($dirigentes as $dir) {
+                $dir->votantes_count = $votantesPorDirigente[$dir->id]->total ?? 0;
             }
 
             return view('arbol.partials.dirigentes', compact('dirigentes', 'sistema'));
@@ -651,7 +651,7 @@ class SistemaController extends Controller
             $userId = Auth::id();
             $userSistema = Auth::user()->sistema;
 
-            $sistema = Sistema::with(['equipos.dirigentes.punteros'])
+            $sistema = Sistema::with(['ciudad'])
                 ->when(!in_array($userId, [1, 4]), function ($query) use ($userId, $userSistema) {
                     $query->where(function ($q) use ($userId, $userSistema) {
                         $q->where('idusuario', $userId)
@@ -660,14 +660,11 @@ class SistemaController extends Controller
                 })
                 ->findOrFail($sistemaId);
 
-            $punteros = [];
-            foreach ($sistema->equipos as $equipo) {
-                foreach ($equipo->dirigentes as $dirigente) {
-                    foreach ($dirigente->punteros as $puntero) {
-                        $punteros[] = $puntero;
-                    }
-                }
-            }
+            $punteros = Puntero::with(['dirigente', 'equipo'])
+                ->whereHas('dirigente.equipo', function ($q) use ($sistemaId) {
+                    $q->where('sist', $sistemaId);
+                })
+                ->get();
 
             return view('arbol.partials.punteros', compact('punteros', 'sistema'));
         } catch (\Exception $e) {

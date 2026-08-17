@@ -3,26 +3,24 @@
 @section('title', 'Vehículos')
 
 @section('content_header')
-    <div class="row mb-2">
-        <div class="col-md-4">
-            <label for="equipo_id" class="form-label fw-bold">
-                Equipos
-            </label>
-            <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarPorEquipo()" disable-faster-look>
-                <option value="">Todos los equipos</option>
-                @foreach ($equipos as $eq)
-                    <option value="{{ $eq->id }}" @if ($equipoId == $eq->id) selected @endif>
-                        {{ $eq->descripcion }}
-                    </option>
-                @endforeach
-            </x-adminlte-select2>
+    <div class="ua-header">
+        <div>
+            <label for="equipo_id" class="form-label fw-bold">Equipos</label>
+            <div style="min-width: 280px; display: inline-block; vertical-align: middle;">
+                <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarPorEquipo()" disable-faster-look>
+                    <option value="">Todos los equipos</option>
+                    @foreach ($equipos as $eq)
+                        <option value="{{ $eq->id }}" @if ($equipoId == $eq->id) selected @endif>
+                            {{ $eq->descripcion }}
+                        </option>
+                    @endforeach
+                </x-adminlte-select2>
+            </div>
         </div>
-        
-        <div class="col-md-8 text-right">
-            <button class="btn btn-danger" data-toggle="modal" data-target="#modalReporteEquipos">
-                <i class="fas fa-file-pdf"></i> Reporte por Equipo
-            </button>
-        </div>
+
+        <button class="ua-btn ua-btn-grad" data-toggle="modal" data-target="#modalReporteEquipos">
+            <i class="fas fa-file-pdf"></i> Reporte por Equipo
+        </button>
     </div>
 @stop
 
@@ -336,14 +334,15 @@
 @section('css')
     <style>
         .is-valid {
-            border-color: #28a745 !important;
-            background-color: #f0fff0 !important;
+            border-color: #34d399 !important;
+            background-color: rgba(5, 150, 105, .25) !important;
         }
         .is-invalid {
-            border-color: #dc3545 !important;
-            background-color: #fff0f0 !important;
+            border-color: #fb7185 !important;
+            background-color: rgba(225, 29, 72, .20) !important;
         }
     </style>
+    @include('useradmin._dark_pages')
 @stop
 
 @section('js')

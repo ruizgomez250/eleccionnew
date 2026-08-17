@@ -3,10 +3,11 @@
 @section('title', 'Duplicados dentro del mismo Sistema')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">
-            <i class="fas fa-clone"></i> Duplicados dentro del mismo Sistema
-        </h4>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-clone"></i> Duplicados dentro del mismo Sistema</h1>
+            <p class="ua-subtitle">Cédulas repetidas dentro de un mismo sistema electoral</p>
+        </div>
         <div>
             <a href="{{ route('reportes.votantes.duplicados.interno.pdf', request()->only(['sistema_id', 'ciudad_id'])) }}" class="btn btn-danger btn-sm" target="_blank">
                 <i class="fas fa-file-pdf"></i> Exportar PDF
@@ -87,7 +88,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card ua-card">
         <div class="card-header bg-primary text-white">
             <h5><i class="fas fa-list"></i> Listado de Cédulas Duplicadas (mismo sistema)</h5>
             <small>Votantes repetidos dentro de <strong>MI SISTEMA</strong>.</small>
@@ -204,6 +205,10 @@
         </div>
     </div>
 
+@stop
+
+@section('css')
+    @include('useradmin._dark_pages')
 @stop
 
 @push('js')

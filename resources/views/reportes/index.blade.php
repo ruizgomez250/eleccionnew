@@ -1,21 +1,19 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1 class="m-0 custom-heading">Gráficos</h1>
-    <style>
-        #myChart {
-            max-width: 400px;
-            max-height: 300px;
-        }
-        #myChart1 {
-            max-height: 900px;
-        }
-    </style>
+    <div class="ua-header">
+        <h1 class="ua-title"><i class="fas fa-chart-bar"></i> Gráficos</h1>
+        <p class="ua-subtitle">Documentos emitidos por mes y tipo</p>
+    </div>
 @stop
 
 @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            Chart.defaults.color = '#8ea3bf';
+            Chart.defaults.borderColor = 'rgba(142, 163, 191, .15)';
+            Chart.defaults.scale.grid.color = 'rgba(142, 163, 191, .12)';
+
             // Definir etiquetas (meses)
             const labels = @json($documentosporfechas->pluck('mes'));
 
@@ -88,20 +86,35 @@
 
 @section('content')
     <div class="row">
-        <div class="col-12">
-            <canvas id="myChart" width="30" height="30"></canvas>
+        <div class="col-lg-5">
+            <div class="card ua-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Total de Documentos por Mes</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="myChart" width="30" height="30" style="max-width:400px; max-height:300px;"></canvas>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-12">
-            <canvas id="myChart1" width="30" height="30"></canvas>
+
+        <div class="col-lg-7">
+            <div class="card ua-card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Tipos de Documentos por Mes</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="myChart1" width="30" height="30" style="max-height:900px;"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Tabla debajo del segundo gráfico -->
-    <div class="row mt-5">
-        <div class="col-12">
+    <div class="card ua-card mt-3">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-table"></i> Detalle por Mes y Tipo de Documento</h3>
+        </div>
+        <div class="card-body">
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -122,4 +135,8 @@
             </table>
         </div>
     </div>
+@stop
+
+@section('css')
+    @include('useradmin._dark_pages')
 @stop

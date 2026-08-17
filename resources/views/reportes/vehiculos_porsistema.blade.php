@@ -3,9 +3,12 @@
 @section('title', 'Reporte de Vehículos')
 
 @section('content_header')
-    <h4 class="mb-2">
-        <i class="fas fa-truck"></i> Planilla de Vehículos y Punteros
-    </h4>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-truck"></i> Planilla de Vehículos y Punteros</h1>
+            <p class="ua-subtitle">Vehículos, choferes y punteros cargados en el sistema</p>
+        </div>
+    </div>
 @stop
 
 @section('content')
@@ -44,7 +47,7 @@
     </div>
 
     {{-- 🔹 Tabla --}}
-    <div class="card">
+    <div class="card ua-card">
         <div class="card-body">
 
             <table id="vehiculos-table" class="table table-bordered table-striped">
@@ -128,6 +131,10 @@
         </div>
     </div>
 
+@stop
+
+@section('css')
+    @include('useradmin._dark_pages')
 @stop
 
 @push('js')

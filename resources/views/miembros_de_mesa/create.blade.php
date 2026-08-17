@@ -3,21 +3,19 @@
 @section('title', 'Miembros de Mesa')
 
 @section('content_header')
-    <div class="row mb-2">
-        <div class="col-md-4">
+    <div class="ua-header">
+        <div>
             <label class="form-label fw-bold">Equipos</label>
-
-            <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarMiembros()" enable-old-support>
-
-                <option value="">Todos</option>
-
-                @foreach ($equipos as $eq)
-                    <option value="{{ $eq->id }}" {{ (string) $equipoId === (string) $eq->id ? 'selected' : '' }}>
-                        {{ $eq->descripcion }}
-                    </option>
-                @endforeach
-
-            </x-adminlte-select2>
+            <div style="min-width: 280px; display: inline-block; vertical-align: middle;">
+                <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarMiembros()" enable-old-support>
+                    <option value="">Todos</option>
+                    @foreach ($equipos as $eq)
+                        <option value="{{ $eq->id }}" {{ (string) $equipoId === (string) $eq->id ? 'selected' : '' }}>
+                            {{ $eq->descripcion }}
+                        </option>
+                    @endforeach
+                </x-adminlte-select2>
+            </div>
         </div>
     </div>
 @stop
@@ -251,9 +249,10 @@
         }
 
         hr {
-            border-top: 2px solid #e9ecef;
+            border-top: 2px solid var(--ua-border);
         }
     </style>
+    @include('useradmin._dark_pages')
 @endpush
 
 @push('js')

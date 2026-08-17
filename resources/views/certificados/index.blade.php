@@ -3,7 +3,10 @@
 @section('title', 'Certificados de Resultado')
 
 @section('content_header')
-    <h1><i class="fas fa-file-signature"></i> Certificados de Resultado</h1>
+    <div class="ua-header">
+        <h1 class="ua-title"><i class="fas fa-file-signature"></i> Certificados de Resultado</h1>
+        <p class="ua-subtitle">Carga de resultados por mesa, seguimiento y cálculo D'Hondt</p>
+    </div>
 @stop
 
 @section('content')
@@ -503,11 +506,16 @@
         .small-box>.inner h3 { font-size: 2rem; }
         #cargaContainer .card-body { min-height: 100px; }
     </style>
+    @include('useradmin._dark_pages')
 @stop
 
 @section('js')
 <script>
     $(document).ready(function() {
+        Chart.defaults.color = '#8ea3bf';
+        Chart.defaults.borderColor = 'rgba(142, 163, 191, .15)';
+        Chart.defaults.scale.grid.color = 'rgba(142, 163, 191, .12)';
+
         $('.select2').select2({ placeholder: 'Seleccione...', width: '100%' });
 
         $('.certificados-table').each(function() {

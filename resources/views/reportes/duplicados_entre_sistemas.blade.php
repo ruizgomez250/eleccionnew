@@ -3,10 +3,11 @@
 @section('title', 'Reporte de Duplicados entre Sistemas')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">
-            <i class="fas fa-clone"></i> Reporte de Duplicados entre Sistemas
-        </h4>
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title"><i class="fas fa-clone"></i> Reporte de Duplicados entre Sistemas</h1>
+            <p class="ua-subtitle">Votantes, punteros y dirigentes registrados en más de un sistema</p>
+        </div>
         <div>
             <a href="{{ route('reportes.duplicados.entre.sistemas.pdf') }}" class="btn btn-danger btn-sm" target="_blank">
                 <i class="fas fa-file-pdf"></i> Exportar PDF
@@ -92,7 +93,7 @@
     </div>
 
     {{-- Tabs --}}
-    <div class="card">
+    <div class="card ua-card">
         <div class="card-header bg-primary text-white p-0">
             <ul class="nav nav-tabs card-header-tabs ml-2 pt-2" id="duplicadosTab" role="tablist">
                 <li class="nav-item">
@@ -397,6 +398,7 @@
     display: none;
 }
 </style>
+@include('useradmin._dark_pages')
 @endpush
 
 @push('js')

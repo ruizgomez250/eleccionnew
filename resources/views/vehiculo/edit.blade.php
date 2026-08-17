@@ -3,9 +3,9 @@
 @section('title', 'Editar Vehículo')
 
 @section('content_header')
-    <h1>
-        <i class="fas fa-car"></i> Editar Vehículo
-    </h1>
+    <div class="ua-header">
+        <h1 class="ua-title"><i class="fas fa-car"></i> Editar Vehículo</h1>
+    </div>
 @stop
 
 @section('content')
@@ -178,6 +178,10 @@
         </form>
     </div>
 </div>
+@stop
+
+@section('css')
+    @include('useradmin._dark_pages')
 @stop
 
 @section('js')

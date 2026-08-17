@@ -1,6 +1,12 @@
 @extends('adminlte::page')
 
 @section('content_header')
+    <div class="ua-header">
+        <div>
+            <h1 class="ua-title">Reporte por Dirigente</h1>
+            <p class="ua-subtitle">Votantes y punteros registrados por cada dirigente</p>
+        </div>
+    </div>
     <div class="row mb-2">
         <div class="col-md-4">
             <label for="equipo_id" class="form-label fw-bold">
@@ -21,7 +27,7 @@
 @stop
 
 @section('content')
-    <div class="card">
+    <div class="card ua-card">
         <div class="card-body">
             <table id="dirigentes-table" class="table table-striped table-bordered">
                 <thead>
@@ -71,6 +77,10 @@
             </table>
         </div>
     </div>  
+@stop
+
+@section('css')
+    @include('useradmin._dark_pages')
 @stop
 
 @push('js')
