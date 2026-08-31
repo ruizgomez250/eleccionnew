@@ -6,7 +6,8 @@
             {{-- Cambiar a un select simple para mejor control --}}
             <div class="input-group">
                 <label class="form-label fw-bold">Colegios electorales: </label>
-                <select name="equipo_id_dir" id="equipo_id_dir" class="form-control" onchange="filtrarDirigentes()">
+                <select name="equipo_id_dir" id="equipo_id_dir" class="form-control select2-arbol"
+                    onchange="filtrarDirigentes()">
                     <option value="">Todos</option>
                     @foreach ($equipos as $eq)
                         <option value="{{ $eq->id }}" {{ $equipoSeleccionado == $eq->id ? 'selected' : '' }}>
@@ -208,23 +209,29 @@
             }]
         });
 
-        // Inicializar Select2 después de cargar el contenido
-        // if ($('#equipo_id_dir').length) {
-        //     $('#equipo_id_dir').select2({
-        //         width: '100%',
-        //         dropdownParent: $('#modalDirigentes'),
-        //         allowClear: true,
-        //         minimumResultsForSearch: 1,
-        //         language: {
-        //             noResults: function() {
-        //                 return "No se encontraron resultados";
-        //             },
-        //             searching: function() {
-        //                 return "Buscando...";
-        //             }
-        //         }
-        //     });
-        // }
+        // El parcial se carga por AJAX: inicializar Select2 cada vez que se inserta.
+        if ($.fn.select2 && $('#equipo_id_dir').length) {
+            if ($('#equipo_id_dir').hasClass('select2-hidden-accessible')) {
+                $('#equipo_id_dir').select2('destroy');
+            }
+
+            $('#equipo_id_dir').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownParent: $('#modalDirigentes'),
+                placeholder: 'Buscar colegio electoral',
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                language: {
+                    noResults: function() {
+                        return 'No se encontraron colegios electorales';
+                    },
+                    searching: function() {
+                        return 'Buscando...';
+                    }
+                }
+            });
+        }
 
         //buscador de dirigentes
         $('#formAgregarDirigente input[name="cedula"]').on('blur', function() {

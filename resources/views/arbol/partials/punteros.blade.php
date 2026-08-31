@@ -8,7 +8,7 @@
         <div class="col-md-6">
             <div class="input-group">
                 <label class="form-label fw-bold">Colegios electorales: </label>
-                <select name="equipo_punteros" id="equipo_punteros" class="form-control"
+                <select name="equipo_punteros" id="equipo_punteros" class="form-control select2-arbol"
                     onchange="filtrarPunterosPorEquipo()">
                     <option value="">Todos</option>
                     @foreach ($equipos as $eq)
@@ -29,7 +29,7 @@
         <div class="col-md-6">
             <div class="input-group">
                 <label class="form-label fw-bold">Dirigentes: </label>
-                <select name="dirigente_punteros" id="dirigente_punteros" class="form-control"
+                <select name="dirigente_punteros" id="dirigente_punteros" class="form-control select2-arbol"
                     onchange="filtrarPunterosPorDirigente()">
                     <option value="">Todos</option>
                     @foreach ($dirigentes as $dir)
@@ -251,43 +251,47 @@
 
 <script>
     $(document).ready(function() {
-        // Inicializar Select2 para equipos
-        // if ($('#equipo_punteros').length) {
-        //     $('#equipo_punteros').select2({
-        //         width: '100%',
-        //         dropdownParent: $('#modalPunterosLista'),
-        //         allowClear: true,
-        //         minimumResultsForSearch: 1,
-        //         placeholder: 'Selecciona un colegio electoral...',
-        //         language: {
-        //             noResults: function() {
-        //                 return "No se encontraron resultados";
-        //             },
-        //             searching: function() {
-        //                 return "Buscando...";
-        //             }
-        //         }
-        //     });
-        // }
+        // El parcial se carga y recarga por AJAX, por eso se reinicializan ambos Select2.
+        if ($.fn.select2) {
+            const configurarSelect2Arbol = function(selector, placeholder, mensajeVacio) {
+                const $select = $(selector);
+                if (!$select.length) {
+                    return;
+                }
 
-        // Inicializar Select2 para dirigentes
-        // if ($('#dirigente_punteros').length) {
-        //     $('#dirigente_punteros').select2({
-        //         width: '100%',
-        //         dropdownParent: $('#modalPunterosLista'),
-        //         allowClear: true,
-        //         minimumResultsForSearch: 1,
-        //         placeholder: 'Selecciona un dirigente...',
-        //         language: {
-        //             noResults: function() {
-        //                 return "No se encontraron resultados";
-        //             },
-        //             searching: function() {
-        //                 return "Buscando...";
-        //             }
-        //         }
-        //     });
-        // }
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    dropdownParent: $('#modalPunterosLista'),
+                    placeholder: placeholder,
+                    allowClear: true,
+                    minimumResultsForSearch: 0,
+                    language: {
+                        noResults: function() {
+                            return mensajeVacio;
+                        },
+                        searching: function() {
+                            return 'Buscando...';
+                        }
+                    }
+                });
+            };
+
+            configurarSelect2Arbol(
+                '#equipo_punteros',
+                'Buscar colegio electoral',
+                'No se encontraron colegios electorales'
+            );
+            configurarSelect2Arbol(
+                '#dirigente_punteros',
+                'Buscar dirigente',
+                'No se encontraron dirigentes'
+            );
+        }
 
         // Inicializar DataTable
         if ($.fn.DataTable && $('#punteros-lista-table').length) {
