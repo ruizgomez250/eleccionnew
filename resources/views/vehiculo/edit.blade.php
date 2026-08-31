@@ -111,9 +111,9 @@
 
                 {{-- Equipo --}}
                 <div class="col-md-4">
-                    <label for="id_equipo" class="form-label fw-bold">Equipo</label>
+                    <label for="id_equipo" class="form-label fw-bold">Colegio electoral</label>
                     <x-adminlte-select2 name="id_equipo" id="id_equipo" enable-old-support>
-                        <option value="">Sin Equipo</option>
+                        <option value="">Sin Colegio electoral</option>
                         @foreach ($equipos as $eq)
                             <option value="{{ $eq->id }}" {{ $vehiculo->id_equipo == $eq->id ? 'selected' : '' }}>
                                 {{ $eq->descripcion }}

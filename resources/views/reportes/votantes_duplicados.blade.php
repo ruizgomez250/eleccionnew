@@ -15,7 +15,7 @@
         </div>
     </div>
     <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
-        <i class="fas fa-sitemap"></i> Jerarquía: <strong>Votante</strong> → <strong>Puntero</strong> → <strong>Dirigente</strong> → <strong>Equipo</strong>
+        <i class="fas fa-sitemap"></i> Jerarquía: <strong>Votante</strong> → <strong>Puntero</strong> → <strong>Dirigente</strong> → <strong>Colegio electoral</strong>
     </p>
 
     @if($esUsuarioPrivilegiado)
@@ -133,7 +133,7 @@
                             </div>
                             <div class="col-md-4">
                                 <span class="badge badge-danger" style="font-size: 0.9rem;">Dirigente x2</span><br>
-                                <small>Los punteros donde está el votante pertenecen a <strong>diferentes dirigentes</strong> (o diferentes equipos).</small>
+                                <small>Los punteros donde está el votante pertenecen a <strong>diferentes dirigentes</strong> (o diferentes colegios electorales).</small>
                             </div>
                         </div>
                         <hr>
@@ -159,7 +159,7 @@
                                     <th>Mesa/Orden</th>
                                     <th>Puntero (mi sistema)</th>
                                     <th>Dirigente (mi sistema)</th>
-                                    <th>Equipo</th>
+                                    <th>Colegio electoral</th>
                                     <th>Duplicados</th>
                                     @if($esUsuarioPrivilegiado)
                                         <th>Otro Sistema</th>
@@ -385,7 +385,7 @@
                                     <th>Teléfono</th>
                                     <th>Registros</th>
                                     <th>Sistemas donde está duplicado</th>
-                                    <th>Equipos involucrados</th>
+                                    <th>Colegios electorales involucrados</th>
                                 </tr>
                             </thead>
                             <tbody>

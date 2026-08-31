@@ -7,7 +7,7 @@
     <div class="row mb-2">
         <div class="col-md-6">
             <div class="input-group">
-                <label class="form-label fw-bold">Equipos: </label>
+                <label class="form-label fw-bold">Colegios electorales: </label>
                 <select name="equipo_punteros" id="equipo_punteros" class="form-control"
                     onchange="filtrarPunterosPorEquipo()">
                     <option value="">Todos</option>
@@ -117,7 +117,7 @@
                     <th>Teléfono</th>
                     <th>Barrio</th>
                     <th>Dirigente</th>
-                    <th>Equipo</th>
+                    <th>Colegio electoral</th>
                     <th>Votantes</th>
                     <th>Acciones</th>
                 </tr>
@@ -225,9 +225,9 @@
                             <small class="text-danger" id="edit-error-id_dirigente"></small>
                         </div>
                         <div class="col-md-6">
-                            <label>Equipo</label>
+                            <label>Colegio electoral</label>
                             <select name="id_equipo" id="edit_puntero_id_equipo" class="form-control" required>
-                                <option value="">Seleccione un equipo</option>
+                                <option value="">Seleccione un colegio electoral</option>
                                 @foreach ($equipos as $eq)
                                     <option value="{{ $eq->id }}">{{ $eq->descripcion }}</option>
                                 @endforeach
@@ -253,7 +253,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="fas fa-search"></i> Buscar Equipo
+                    <i class="fas fa-search"></i> Buscar colegio electoral
                 </h5>
                 <button type="button" class="close text-white" onclick="cerrarequipopunteros()">&times;</button>
             </div>
@@ -368,7 +368,7 @@
                                 <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Cédula</th>
-                                <th>Equipo</th>
+                                <th>Colegio electoral</th>
                                 <th>Acción</th>
                         </thead>
                         <tbody>
@@ -514,7 +514,7 @@
                 pageLength: 10,
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                    search: "Buscar equipo:",
+                    search: "Buscar colegio electoral:",
                     searchPlaceholder: "Nombre, descripción..."
                 },
                 lengthMenu: [
@@ -1110,7 +1110,7 @@
         }
         
         if (!formData.id_equipo) {
-            $('#edit-error-id_equipo').text('Debe seleccionar un equipo');
+            $('#edit-error-id_equipo').text('Debe seleccionar un colegio electoral');
             $('#edit_puntero_id_equipo').addClass('is-invalid');
             btnActualizar.prop('disabled', false).html('<i class="fas fa-save"></i> Actualizar Puntero');
             return;

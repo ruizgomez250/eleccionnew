@@ -5,10 +5,10 @@
 @section('content_header')
     <div class="ua-header">
         <div>
-            <label for="equipo_id" class="form-label fw-bold">Equipos</label>
+            <label for="equipo_id" class="form-label fw-bold">Colegios electorales</label>
             <div style="min-width: 280px; display: inline-block; vertical-align: middle;">
                 <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarPorEquipo()" disable-faster-look>
-                    <option value="">Todos los equipos</option>
+                    <option value="">Todos los colegios electorales</option>
                     @foreach ($equipos as $eq)
                         <option value="{{ $eq->id }}" @if ($equipoId == $eq->id) selected @endif>
                             {{ $eq->descripcion }}
@@ -19,7 +19,7 @@
         </div>
 
         <button class="ua-btn ua-btn-grad" data-toggle="modal" data-target="#modalReporteEquipos">
-            <i class="fas fa-file-pdf"></i> Reporte por Equipo
+            <i class="fas fa-file-pdf"></i> Reporte por colegio electoral
         </button>
     </div>
 @stop
@@ -118,10 +118,10 @@
 
                     <div class="col-md-2">
                         <label for="id_equipo" class="form-label fw-bold">
-                            Equipo <span id="equipoRequired" class="text-danger">*</span>
+                            Colegio electoral <span id="equipoRequired" class="text-danger">*</span>
                         </label>
                         <select name="id_equipo" id="id_equipo" class="form-control">
-                            <option value="">Sin Equipo</option>
+                            <option value="">Sin Colegio electoral</option>
                             @foreach ($equipos as $eq)
                                 <option value="{{ $eq->id }}">{{ $eq->descripcion }}</option>
                             @endforeach
@@ -213,7 +213,7 @@
                         <th>Chapa</th>
                         <th>Tipo</th>
                         <th>Teléfono</th>
-                        <th>Equipo</th>
+                        <th>Colegio electoral</th>
                         <th>Rol</th>
                         <th>Proponente</th>
                         <th>Punteros</th>
@@ -229,7 +229,7 @@
                             <td>{{ $vehiculo->chapa }}</td>
                             <td>{{ $vehiculo->tipovehiculo }}</td>
                             <td>{{ $vehiculo->telefono1 }}{{ $vehiculo->telefono2 ? ' / ' . $vehiculo->telefono2 : '' }}</td>
-                            <td>{{ $vehiculo->equipo->descripcion ?? 'Sin equipo' }}</td>
+                            <td>{{ $vehiculo->equipo->descripcion ?? 'Sin colegio electoral' }}</td>
                             <td>
                                 <span class="badge badge-{{ $vehiculo->rol == 'PUNTERO' ? 'primary' : 'secondary' }}">
                                     {{ $vehiculo->rol }}
@@ -280,14 +280,14 @@
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header bg-danger">
-                    <h5 class="modal-title"><i class="fas fa-file-pdf"></i> Reporte por Equipo</h5>
+                    <h5 class="modal-title"><i class="fas fa-file-pdf"></i> Reporte por Colegio electoral</h5>
                     <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label><i class="fas fa-users"></i> Equipo</label>
+                        <label><i class="fas fa-users"></i> Colegio electoral</label>
                         <select id="selectEquipoReporte" class="form-control select2" style="width:100%">
-                            <option value="">Seleccione un equipo</option>
+                            <option value="">Seleccione un colegio electoral</option>
                             @foreach ($equipos as $equipo)
                                 <option value="{{ $equipo->id }}">{{ $equipo->descripcion }}</option>
                             @endforeach
@@ -414,7 +414,7 @@
         // Reporte PDF
         $('#btnAbrirReporte').on('click', function() {
             let equipoId = $('#selectEquipoReporte').val();
-            if (!equipoId) { Swal.fire('Atención', 'Debe seleccionar un equipo', 'warning'); return; }
+            if (!equipoId) { Swal.fire('Atención', 'Debe seleccionar un colegio electoral', 'warning'); return; }
             window.open(`{{ url('reportes/vehiculos-equipo') }}/${equipoId}`, '_blank');
         });
 
@@ -532,7 +532,7 @@
         if ($('#rol').val() === 'PUNTERO') {
             let equipo = $('#id_equipo').val();
             if (!equipo || equipo === '') {
-                Swal.fire('Campo requerido', 'Debe seleccionar un equipo para rol PUNTERO', 'error');
+                Swal.fire('Campo requerido', 'Debe seleccionar un colegio electoral para rol PUNTERO', 'error');
                 return false;
             }
         }

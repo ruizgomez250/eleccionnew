@@ -6,7 +6,7 @@
     <div class="ua-header">
         <div>
             <h1 class="ua-title"><i class="fas fa-sitemap"></i> Árbol de Candidaturas por Distrito</h1>
-            <p class="ua-subtitle">Estructura jerárquica de candidatos, equipos, dirigentes y punteros</p>
+            <p class="ua-subtitle">Estructura jerárquica de candidatos, colegios electorales, dirigentes y punteros</p>
         </div>
     </div>
 @stop

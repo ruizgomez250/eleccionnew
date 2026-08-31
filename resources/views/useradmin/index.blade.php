@@ -308,7 +308,7 @@
                         <thead>
                             <tr>
                                 <th>Sistema</th>
-                                <th>Equipo</th>
+                                <th>Colegio electoral</th>
                                 <th>Total Dirigentes</th>
                                 <th>Total Punteros</th>
                                 <th>Total Votantes</th>

@@ -10,7 +10,7 @@
     <div class="row mb-2">
         <div class="col-md-4">
             <label for="equipo_id" class="form-label fw-bold">
-                Equipos
+                Colegios electorales
             </label>
 
             <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarDirigentes()" disable-faster-look>
@@ -37,7 +37,7 @@
                         <th>Nombre</th>                        
                         <th>Teléfono</th>
                         <th>Barrio</th>
-                        <th>Equipo</th>
+                        <th>Colegio electoral</th>
                         <th>Punteros</th>
                         <th>Votantes</th>
                         <th>Acciones</th>
@@ -274,7 +274,7 @@
                         extend: 'excelHtml5',
                         text: '<i class="fas fa-file-excel"></i> Excel',
                         className: 'btn btn-info',
-                        title: 'Lista de Dirigentes del equipo ' + equipoNombre,
+                        title: 'Lista de Dirigentes del colegio electoral ' + equipoNombre,
                         filename: 'dirigentes_export_' + equipoNombre.replace(/\s+/g, '_') +
                             '_{{ date('Y-m-d_H-i-s') }}',
                         exportOptions: {
@@ -285,7 +285,7 @@
                         extend: 'pdfHtml5',
                         text: '<i class="fas fa-file-pdf"></i> PDF',
                         className: 'btn btn-danger',
-                        title: 'Lista de Dirigentes del equipo ' + equipoNombre,
+                        title: 'Lista de Dirigentes del colegio electoral ' + equipoNombre,
                         filename: 'dirigentes_export_' + equipoNombre.replace(/\s+/g, '_') +
                             '_{{ date('Y-m-d_H-i-s') }}',
                         exportOptions: {
@@ -307,7 +307,7 @@
             });
         }
 
-        const equipoNombre = @json($equipoId ? $equipos->firstWhere('id', $equipoId)->descripcion : 'Todos los equipos');
+        const equipoNombre = @json($equipoId ? $equipos->firstWhere('id', $equipoId)->descripcion : 'Todos los colegios electorales');
 
         function inicializarTablaPunteros(nombreDirigente) {
 

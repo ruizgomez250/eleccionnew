@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Reporte por Puntero')
+@section('title', 'Reporte de Visitas de Punteros')
 
 @section('content_header')
     <h4 class="mb-2">
-        <i class="fas fa-check-double"></i> Reporte por Puntero - Votos Cargados
+        <i class="fas fa-chart-line"></i> Reporte de Visitas de Punteros
     </h4>
 @stop
 
@@ -13,15 +13,30 @@
         <div class="card-body">
             <form id="filterForm" class="form-inline">
                 <div class="form-group mr-3">
-                    <label class="mr-2"><strong>Filtrar por carga:</strong></label>
-                    <select name="miembro_id" id="miembro_id" class="form-control">
-                        <option value="">Todas las cargas</option>
-                        @foreach($miembros as $miembro)
-                            <option value="{{ $miembro->id }}">
-                                {{ $miembro->nombre }} ({{ $miembro->equipo->descripcion ?? 'Sin colegio electoral' }})
-                            </option>
+                    <label class="mr-2"><strong>Colegio electoral:</strong></label>
+                    <select name="equipo_id" id="equipo_id" class="form-control select2" style="width: 200px;">
+                        <option value="">Todos</option>
+                        @foreach($equipos as $equipo)
+                            <option value="{{ $equipo->id }}">{{ $equipo->descripcion }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><strong>Puntero:</strong></label>
+                    <select name="puntero_id" id="puntero_id" class="form-control select2" style="width: 250px;">
+                        <option value="">Todos</option>
+                        @foreach($punteros as $puntero)
+                            <option value="{{ $puntero->id }}">{{ $puntero->nombre }} ({{ $puntero->cedula }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><strong>Desde:</strong></label>
+                    <input type="date" name="fecha_desde" id="fecha_desde" class="form-control">
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><strong>Hasta:</strong></label>
+                    <input type="date" name="fecha_hasta" id="fecha_hasta" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> Generar
@@ -33,7 +48,7 @@
         </div>
     </div>
 
-    <div id="loadingContainer" class="text-center" style="padding: 50px; display: none;">
+    <div id="loadingContainer" class="text-center" style="padding: 50px;">
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card">
@@ -57,6 +72,26 @@
     </div>
 
     <div id="reporteContent" style="display: none;"></div>
+
+    <div class="modal fade" id="detalleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalTitulo">Detalle de Visitas</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalBodyContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @push('js')
@@ -70,23 +105,28 @@
                     if (p > 90) p = 90;
                     $('#progressBar').css('width', p + '%').text(Math.floor(p) + '%');
                 }
-                if (p < 30) $('#loadingMessage').text('Consultando punteros...');
-                else if (p < 60) $('#loadingMessage').text('Cruzando con votos cargados...');
-                else if (p < 80) $('#loadingMessage').text('Procesando resultados...');
+                if (p < 30) $('#loadingMessage').text('Consultando visitas...');
+                else if (p < 60) $('#loadingMessage').text('Agrupando datos por puntero...');
+                else if (p < 80) $('#loadingMessage').text('Generando gráficos...');
                 else $('#loadingMessage').text('Preparando reporte...');
             }, 200);
             return interval;
         }
 
-        function loadReport(miembroId) {
+        function loadReport() {
             let interval = startProgress();
             $('#loadingContainer').show();
             $('#reporteContent').hide().empty();
 
             $.ajax({
-                url: '{{ route("reportes.carga-votos.data") }}',
+                url: '{{ route("reportes.visitas.data") }}',
                 type: 'GET',
-                data: { miembro_id: miembroId },
+                data: {
+                    equipo_id: $('#equipo_id').val(),
+                    puntero_id: $('#puntero_id').val(),
+                    fecha_desde: $('#fecha_desde').val(),
+                    fecha_hasta: $('#fecha_hasta').val()
+                },
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
@@ -126,26 +166,20 @@
             let punteroId = $(this).data('puntero');
             let tipo = $(this).data('tipo');
             let nombre = $(this).data('nombre');
-            let label = tipo === 'votaron' ? 'Votaron' : 'No Votaron';
+            let label = tipo === 'todas' ? 'Todas' : (tipo === 'positivas' ? 'Positivas' : 'Negativas');
 
             $('#modalTitulo').text(label + ' - ' + nombre);
             $('#modalBodyContent').html(`
                 <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Cargando...</span>
-                    </div>
+                    <div class="spinner-border text-primary" role="status"></div>
                 </div>
             `);
             $('#detalleModal').modal('show');
 
             $.ajax({
-                url: '{{ route("reportes.carga-votos.detalle") }}',
+                url: '{{ route("reportes.visitas.detalle") }}',
                 type: 'GET',
-                data: {
-                    puntero_id: punteroId,
-                    tipo: tipo,
-                    miembro_id: $('#miembro_id').val()
-                },
+                data: { puntero_id: punteroId, tipo: tipo },
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
@@ -162,16 +196,14 @@
 
         $('#filterForm').on('submit', function(e) {
             e.preventDefault();
-            loadReport($('#miembro_id').val());
+            loadReport();
         });
 
         $('#btnRefresh').on('click', function() {
-            if ($('#reporteContent').is(':visible')) {
-                loadReport($('#miembro_id').val());
-            }
+            loadReport();
         });
 
-        loadReport('');
+        loadReport();
     });
 </script>
 @endpush

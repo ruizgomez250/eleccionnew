@@ -62,7 +62,7 @@
                         <th>Teléfonos</th>
                         <th>Monto</th>
                         <th>Pagos</th>
-                        <th>Equipo</th>
+                        <th>Colegio electoral</th>
                         <th style="min-width:220px">Punteros</th>
                     </tr>
                 </thead>

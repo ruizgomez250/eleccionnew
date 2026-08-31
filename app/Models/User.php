@@ -44,7 +44,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        // 'password' => 'hashed', // Deshabilitado: los controladores ya usan Hash::make() manualmente
     ];
     // Dentro del modelo Usuario (o User)
     public function archivosDocumentos()

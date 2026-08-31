@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Equipos')
+@section('title', 'Colegios electorales')
 
 @section('content_header')
     <h1 class="m-0">
-        <i class="fas fa-users text-primary"></i> Gestión de Equipos
+        <i class="fas fa-users text-primary"></i> Gestión de colegios electorales
     </h1>
 @stop
 
@@ -14,15 +14,15 @@
     @can('Guardar Equipos')
         <div class="card mb-4">
             <div class="card-header bg-primary">
-                <strong><i class="fas fa-plus-circle"></i> Nuevo Equipo</strong>
+                <strong><i class="fas fa-plus-circle"></i> Nuevo Colegio electoral</strong>
             </div>
 
             <form action="{{ route('equipo.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
                     <div class="row">
-                        <x-adminlte-input name="descripcion" label="Descripción del Equipo"
-                            placeholder="Ej: Equipo Central" fgroup-class="col-md-3" required>
+                        <x-adminlte-input name="descripcion" label="Descripción del Colegio electoral"
+                            placeholder="Ej: Colegio electoral Central" fgroup-class="col-md-3" required>
                             <x-slot name="prependSlot">
                                 <div class="input-group-text">
                                     <i class="fas fa-users"></i>
@@ -66,7 +66,7 @@
                         <i class="fas fa-search text-white"></i>
                     </span>
                 </div>
-                <input type="text" id="buscadorEquipo" class="form-control" placeholder="Buscar equipo ">
+                <input type="text" id="buscadorEquipo" class="form-control" placeholder="Buscar colegio electoral ">
             </div>
         </div>
     </div>
@@ -99,7 +99,7 @@
             btn.addEventListener('click', function() {
                 let form = this.closest('.form-delete');
                 Swal.fire({
-                    title: '¿Eliminar equipo?',
+                    title: '¿Eliminar colegio electoral?',
                     text: "Si tiene dirigentes o punteros asociados no se podra eliminar",
                     icon: 'warning',
                     showCancelButton: true,

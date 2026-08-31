@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Editar Equipo')
+@section('title', 'Editar colegio electoral')
 
 @section('content_header')
-    <h1><i class="fas fa-edit"></i> Editar Equipo</h1>
+    <h1><i class="fas fa-edit"></i> Editar Colegio electoral</h1>
 @stop
 
 @section('content')
@@ -17,7 +17,7 @@
                 <div class="row">
 
                     {{-- Descripción --}}
-                    <x-adminlte-input name="descripcion" label="Descripción del Equipo" placeholder="Descripción"
+                    <x-adminlte-input name="descripcion" label="Descripción del Colegio electoral" placeholder="Descripción"
                         value="{{ $equipo->descripcion }}" fgroup-class="col-md-3" required>
                         <x-slot name="prependSlot">
                             <div class="input-group-text">

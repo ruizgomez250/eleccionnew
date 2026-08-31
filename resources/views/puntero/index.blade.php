@@ -6,7 +6,7 @@
         {{-- FILTRO EQUIPO --}}
         <div class="col-md-4">
             <label for="equipo_id" class="form-label fw-bold">
-                Equipos
+                Colegios electorales
             </label>
 
             <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrar()">
@@ -58,7 +58,7 @@
                         <th>Teléfono</th>
                         <th>Barrio</th>
                         <th>Dirigente</th>
-                        <th>Equipo</th>
+                        <th>Colegio electoral</th>
                         <th>Votantes</th>
                         <th width="15%">Acciones</th>
                     </tr>
@@ -412,7 +412,7 @@
                         extend: 'excelHtml5',
                         className: 'btn btn-info',
                         text: '<i class="fas fa-file-excel"></i> Excel',
-                        title: 'Lista de Punteros del equipo ' + equipoNombre,
+                        title: 'Lista de Punteros del colegio electoral ' + equipoNombre,
                         filename: 'punteros_' + equipoNombre.replace(/\s+/g, '_') +
                             '_{{ date('Y-m-d_H-i-s') }}',
                         exportOptions: {
@@ -423,7 +423,7 @@
                         extend: 'pdfHtml5',
                         className: 'btn btn-danger',
                         text: '<i class="fas fa-file-pdf"></i> PDF',
-                        title: 'Lista de Punteros del equipo ' + equipoNombre,
+                        title: 'Lista de Punteros del colegio electoral ' + equipoNombre,
                         filename: 'punteros_' + equipoNombre.replace(/\s+/g, '_') +
                             '_{{ date('Y-m-d_H-i-s') }}',
                         exportOptions: {

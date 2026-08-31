@@ -61,6 +61,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'sistema' => $sistema,
+            'idusuario' => Auth::id(),
         ]);
         $user->syncRoles($request->roles);
         return redirect('users')->with('status', 'Usuario creado exitosamente');

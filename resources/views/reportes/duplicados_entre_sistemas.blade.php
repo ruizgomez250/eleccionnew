@@ -312,7 +312,7 @@
                                     <th>Teléfono</th>
                                     <th>Registros</th>
                                     <th>Sistemas donde está duplicado</th>
-                                    <th>Equipos involucrados</th>
+                                    <th>Colegios electorales involucrados</th>
                                 </tr>
                             </thead>
                             <tbody>

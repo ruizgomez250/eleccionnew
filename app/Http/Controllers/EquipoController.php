@@ -72,7 +72,7 @@ class EquipoController extends Controller
 
         return redirect()
             ->route('equipo.index')
-            ->with('success', 'Equipo actualizado correctamente');
+            ->with('success', 'Colegio electoral actualizado correctamente');
     }
 
     public function destroy($id)
@@ -83,7 +83,7 @@ class EquipoController extends Controller
 
         $equipo->delete();
 
-        return back()->with('success', 'Equipo eliminado correctamente');
+        return back()->with('success', 'Colegio electoral eliminado correctamente');
     }
 
     public function store(Request $request)
@@ -103,6 +103,6 @@ class EquipoController extends Controller
 
         return redirect()
             ->route('equipo.index')
-            ->with('success', 'Equipo creado correctamente');
+            ->with('success', 'Colegio electoral creado correctamente');
     }
 }

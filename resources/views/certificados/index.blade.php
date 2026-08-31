@@ -574,7 +574,7 @@
                         });
                         $mesa.prop('disabled', false);
                     } else {
-                        $mesa.empty().append('<option value="">Sin mesas — vincule equipo a mesas</option>');
+                        $mesa.empty().append('<option value="">Sin mesas — vincule colegio electoral a mesas</option>');
                     }
                 });
             } else {

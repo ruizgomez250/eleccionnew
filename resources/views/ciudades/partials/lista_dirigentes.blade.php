@@ -5,7 +5,7 @@
 
             {{-- Cambiar a un select simple para mejor control --}}
             <div class="input-group">
-                <label class="form-label fw-bold">Equipos: </label>
+                <label class="form-label fw-bold">Colegios electorales: </label>
                 <select name="equipo_id_dir" id="equipo_id_dir" class="form-control" onchange="filtrarDirigentes()">
                     <option value="">Todos</option>
                     @foreach ($equipos as $eq)
@@ -76,7 +76,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="fas fa-search"></i> Buscar Equipo
+                    <i class="fas fa-search"></i> Buscar colegio electoral
                 </h5>
                 <button type="button" class="close text-white" onclick="cerrarmodalequipo()">&times;</button>
             </div>
@@ -189,7 +189,7 @@
                     <th>Nombre</th>
                     <th>Teléfono</th>
                     <th>Barrio</th>
-                    <th>Equipo</th>
+                    <th>Colegio electoral</th>
                     <th>Punteros</th>
                     <th>Votantes</th>
                     <th>Acciones</th>
@@ -445,7 +445,7 @@
                 pageLength: 10,
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                    search: "Buscar equipo:",
+                    search: "Buscar colegio electoral:",
                     searchPlaceholder: "Nombre, descripción..."
                 },
                 lengthMenu: [

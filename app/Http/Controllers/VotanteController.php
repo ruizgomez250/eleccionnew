@@ -23,9 +23,8 @@ class VotanteController extends Controller
             'cedula' => 'required'
         ]);
 
-        $votante = DB::table('padroncoopluque9062026')
-            ->select('NRO', 'SOCIO NRO', 'CI NRO', 'NOMBRE Y APELLIDO', 'SITUACION', 'Mesa', 'Orden')
-            ->where('CI NRO', $request->cedula)
+        $votante = DB::table('padron')
+            ->where('cedula', $request->cedula)
             ->first();
 
         if (!$votante) {
@@ -37,15 +36,15 @@ class VotanteController extends Controller
         return response()->json([
             'encontrado' => true,
             'data' => [
-                'cedula'             => $votante->{'CI NRO'} ?? '',
-                'nombre'             => $votante->{'NOMBRE Y APELLIDO'} ?? '',
-                'apellido'           => '',
-                'local_interna'      => '',
-                'local_generales'    => '',
-                'direccion'          => '',
-                'mesa'               => $votante->Mesa ?? '0',
-                'orden'              => $votante->Orden ?? ($votante->NRO ?? '0'),
-                'afiliaciones'       => $votante->SITUACION ?? '',
+                'cedula'             => $votante->cedula ?? '',
+                'nombre'             => $votante->nombre ?? '',
+                'apellido'           => $votante->apellido ?? '',
+                'local_interna'      => $votante->local_interna ?? '',
+                'local_generales'    => $votante->local_generales ?? '',
+                'direccion'          => $votante->direccion ?? '',
+                'mesa'               => $votante->mesa ?? '0',
+                'orden'              => $votante->orden ?? '0',
+                'afiliaciones'       => $votante->afiliaciones ?? '',
             ]
         ]);
     }
@@ -72,7 +71,7 @@ class VotanteController extends Controller
         }
 
         // Seleccionamos solo columnas necesarias
-        $query = DB::table('prepadron')->select('cedula', 'local_interna', 'local_generales', 'nombre', 'apellido', 'direccion', 'afiliaciones');
+        $query = DB::table('padron')->select('cedula', 'local_interna', 'local_generales', 'nombre', 'apellido', 'direccion', 'afiliaciones');
 
         if (!empty($cedula)) {
             $query->where('cedula', 'like', "{$cedula}"); // más rápido que '%...%'
@@ -100,8 +99,8 @@ class VotanteController extends Controller
 
     public function buscarPorCedula($cedula)
     {
-        $votante = DB::table('padroncoopluque9062026')
-            ->where('CI NRO', $cedula)
+        $votante = DB::table('padron')
+            ->where('cedula', $cedula)
             ->first();
 
         if (!$votante) {
@@ -111,15 +110,15 @@ class VotanteController extends Controller
         }
 
         $data = [
-            'cedula'       => $votante->{'CI NRO'} ?? '',
-            'nombre'       => $votante->{'NOMBRE Y APELLIDO'} ?? '',
-            'direccion'    => '',
-            'mesa'         => $votante->Orden ?? '0',
-            'orden'        => $votante->Mesa ?? ($votante->NRO ?? '0'),
-            'partido'      => $votante->SITUACION ?? '',
-            'escuela'      => '',
-            'ciudad'       => '',
-            'departamento' => '',
+            'cedula'       => $votante->cedula ?? '',
+            'nombre'       => trim(($votante->nombre ?? '') . ' ' . ($votante->apellido ?? '')),
+            'direccion'    => $votante->direccion ?? '',
+            'mesa'         => $votante->mesa ?? '0',
+            'orden'        => $votante->orden ?? '0',
+            'partido'      => $votante->afiliaciones ?? '',
+            'escuela'      => $votante->local_generales ?? '',
+            'ciudad'       => $votante->distrito_nombre ?? '',
+            'departamento' => $votante->departamento_nombre ?? '',
         ];
 
         return response()->json([
@@ -149,12 +148,12 @@ class VotanteController extends Controller
             /* ===========================
            VERIFICAR QUE EXISTA EN PADRÓN
         ============================ */
-            $existeEnPadronCoop = DB::table('padroncoopluque9062026')
-                ->where('CI NRO', $cedula)
-                ->exists();
+            $personaPadron = DB::table('padron')
+                ->where('cedula', $cedula)
+                ->first();
 
-            if (!$existeEnPadronCoop) {
-                throw new \Exception("La cédula {$cedula} no existe en el padrón de la cooperativa.");
+            if (!$personaPadron) {
+                throw new \Exception("La cédula {$cedula} no existe en el padrón electoral.");
             }
 
             /* ===========================
@@ -180,9 +179,9 @@ class VotanteController extends Controller
                 'mesa'          => $request->mesa,
                 'orden'         => $request->orden,
                 'partido'       => $request->partido,
-                'escuela'       => $request->escuela,
-                'ciudad'        => $request->ciudad,
-                'departamento'  => $request->departamento,
+                'escuela'       => $personaPadron->local_generales ?? $request->escuela,
+                'ciudad'        => $personaPadron->distrito_nombre ?? $request->ciudad,
+                'departamento'  => $personaPadron->departamento_nombre ?? $request->departamento,
                 'observacion'   => $request->observacion,
             ]);
 
@@ -281,14 +280,14 @@ class VotanteController extends Controller
             $idPuntero = $request->idpuntero;
 
             /* =========================== VERIFICAR QUE EXISTA EN PADRÓN COOPERATIVA ============================ */
-            $existeEnPadronCoop = DB::table('padroncoopluque9062026')
-                ->where('CI NRO', $cedula)
-                ->exists();
+            $personaPadron = DB::table('padron')
+                ->where('cedula', $cedula)
+                ->first();
 
-            if (!$existeEnPadronCoop) {
+            if (!$personaPadron) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Error: la cédula {$cedula} no existe en el padrón de la cooperativa."
+                    'message' => "Error: la cédula {$cedula} no existe en el padrón electoral."
                 ], 422);
             }
 
@@ -314,9 +313,9 @@ class VotanteController extends Controller
                 'mesa' => $request->mesa,
                 'orden' => $request->orden,
                 'partido' => $request->partido,
-                'escuela' => $request->escuela,
-                'ciudad' => $request->ciudad,
-                'departamento' => $request->departamento,
+                'escuela' => $personaPadron->local_generales ?? $request->escuela,
+                'ciudad' => $personaPadron->distrito_nombre ?? $request->ciudad,
+                'departamento' => $personaPadron->departamento_nombre ?? $request->departamento,
                 'observacion' => $request->observacion,
             ]);
 

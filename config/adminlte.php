@@ -299,7 +299,7 @@ return [
 
     'menu' => [
         [
-            'text'       => 'Equipo y Candidatos',
+            'text'       => 'Colegios electorales y candidatos',
             'icon'       => 'fas fa-map-marker-alt',
             'icon_color' => 'primary',
             'classes'    => 'custom-icon-box custom-icon-box-primary',
@@ -314,7 +314,7 @@ return [
             'url'        => '/arbol',    // Usando el nombre de la ruta en lugar de la URL directa
         ],
         [
-            'text'       => 'Equipo',
+            'text'       => 'Colegio electoral',
             'icon'       => 'fas fa-users',
             'icon_color' => 'info',
             'classes'    => 'custom-icon-box custom-icon-box-blue',
@@ -341,6 +341,14 @@ return [
             'content'    => '<i class="fas fa-user-friends"></i>',
             'can'        => 'Menu Puntero',
             'url'        => '/puntero/create',
+        ],
+        [
+            'text'       => 'Visitas Punteros',
+            'icon'       => 'fas fa-clipboard-check',
+            'icon_color' => 'success',
+            'classes'    => 'custom-icon-box custom-icon-box-dark',
+            'content'    => '<i class="fas fa-clipboard-check"></i>',
+            'url'        => '/visita-puntero',
         ],
         [
             'text'       => 'Reportes',
@@ -379,6 +387,12 @@ return [
                 [
                     'text' => 'Todos los Vehiculos',
                     'url'  => '/vehiculosporsistema',
+                ],
+                [
+                    'text' => 'Visitas de Punteros',
+                    'url'  => '/reportes/visitas',
+                    'icon' => 'fas fa-clipboard-check',
+                    'icon_color' => 'success',
                 ],
                 'separator' => true, // Línea separadora
                 [

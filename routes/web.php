@@ -7,6 +7,7 @@ use App\Http\Controllers\DirigenteController;
 use App\Http\Controllers\DuplicadosEntreSistemasController;
 use App\Http\Controllers\EfectividadController;
 use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\MesaEntradaController;
 use App\Http\Controllers\MiembroDeMesaController;
 use App\Http\Controllers\PadronCoopController;
 use App\Http\Controllers\PermissionController;
@@ -21,9 +22,14 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\VehiculoPunteroController;
 use App\Http\Controllers\VotanteController;
+use App\Http\Controllers\VisitaPunteroController;
 use App\Http\Controllers\VotantesDuplicadosController;
 use App\Http\Controllers\VotosController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
 // Ruta para cargar votos (la que necesita tu link)
 Route::get('/cargarvotos/{cedula_encriptada}', [VotosController::class, 'cargarVotos'])->name('cargar.votos');
@@ -295,17 +301,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/puntero/{id}/editar-ajax', [PunteroController::class, 'editAjax'])->name('puntero.editar.ajax');
     Route::put('/puntero/{id}', [PunteroController::class, 'updateAjax'])->name('puntero.update.ajax');
     // routes/web.php
-Route::get('/manual/carga-votos', function () {
-    $path = public_path('manuales/manual_carga_votos.png');
-    
-    if (!file_exists($path)) {
-        // Imagen por defecto o mensaje
-        return response()->json(['error' => 'Manual no disponible'], 404);
-    }
-    
-    return response()->file($path, [
-        'Content-Type' => 'image/png',
-        'Cache-Control' => 'public, max-age=86400'
-    ]);
-})->name('manual.carga');
+    // Rutas de Visitas de Punteros
+    Route::resource('visita-puntero', VisitaPunteroController::class)->except(['show']);
+    Route::get('/reportes/visitas', [VisitaPunteroController::class, 'reporteVisitas'])->name('reportes.visitas');
+    Route::get('/reportes/visitas-data', [VisitaPunteroController::class, 'reporteVisitasData'])->name('reportes.visitas.data');
+    Route::get('/reportes/visitas-detalle', [VisitaPunteroController::class, 'reporteVisitasDetalle'])->name('reportes.visitas.detalle');
+
+    // routes/web.php
+    Route::get('/manual/carga-votos', function () {
+        $path = public_path('manuales/manual_carga_votos.png');
+        
+        if (!file_exists($path)) {
+            return response()->json(['error' => 'Manual no disponible'], 404);
+        }
+        
+        return response()->file($path, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=86400'
+        ]);
+    })->name('manual.carga');
 });

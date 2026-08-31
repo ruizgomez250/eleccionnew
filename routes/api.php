@@ -2,8 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\PrePadronController;
 use App\Http\Controllers\Api\VotoController;
+use App\Http\Controllers\Api\VisitaPunteroApiController;
+use App\Http\Controllers\Api\UserApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +18,32 @@ use App\Http\Controllers\Api\VotoController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// =============================================
+// TEST DE CONEXIÓN
+// =============================================
+Route::get('/ping', function () {
+    $db = DB::select('SELECT 1');
+    $userCount = \App\Models\User::count();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Conexión exitosa',
+        'servidor' => [
+            'php_version' => phpversion(),
+            'laravel_version' => app()->version(),
+            'entorno' => config('app.env'),
+            'url' => config('app.url'),
+            'hora_servidor' => now()->toDateTimeString(),
+            'timezone' => config('app.timezone'),
+        ],
+        'base_datos' => [
+            'conexion' => count($db) > 0 ? 'OK' : 'FALLA',
+            'driver' => config('database.default'),
+            'usuarios_registrados' => $userCount,
+        ],
+    ]);
+})->name('api.ping');
 
 // =============================================
 // RUTAS EXISTENTES (Prepádron)
@@ -60,13 +89,41 @@ Route::prefix('efectividad')->group(function () {
 });
 
 // =============================================
+// RUTAS DE AUTENTICACIÓN (Login)
+// =============================================
+Route::post('/login', [UserApiController::class, 'login']);
+
+// =============================================
 // RUTAS PROTEGIDAS (requieren autenticación)
 // =============================================
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    
-    // Si quieres proteger las rutas de votos, muévelas dentro de este grupo
-    // y agrega el middleware 'auth:sanctum' al grupo de v1
+
+    // Logout
+    Route::post('/logout', [UserApiController::class, 'logout']);
+
+    // === Rutas de Usuarios API (para APK) ===
+    Route::prefix('v1')->group(function () {
+        Route::get('/usuarios', [UserApiController::class, 'index']);
+        Route::post('/usuarios', [UserApiController::class, 'store']);
+        Route::get('/usuarios/{id}', [UserApiController::class, 'show']);
+        Route::put('/usuarios/{id}', [UserApiController::class, 'update']);
+        Route::delete('/usuarios/{id}', [UserApiController::class, 'destroy']);
+        Route::get('/sistemas', [UserApiController::class, 'sistemas']);
+        Route::get('/roles', [UserApiController::class, 'roles']);
+    });
+
+    // Rutas de Visitas de Punteros
+    Route::prefix('v1')->group(function () {
+        Route::get('/visitas', [VisitaPunteroApiController::class, 'index']);
+        Route::get('/mis-punteros', [VisitaPunteroApiController::class, 'misPunteros']);
+        Route::post('/visitas', [VisitaPunteroApiController::class, 'store']);
+        Route::get('/visitas/estadisticas', [VisitaPunteroApiController::class, 'estadisticas']);
+        Route::get('/visitas/por-puntero/{id}', [VisitaPunteroApiController::class, 'porPuntero']);
+        Route::get('/visitas/{id}', [VisitaPunteroApiController::class, 'show']);
+        Route::put('/visitas/{id}', [VisitaPunteroApiController::class, 'update']);
+        Route::delete('/visitas/{id}', [VisitaPunteroApiController::class, 'destroy']);
+    });
 });

@@ -7,7 +7,7 @@
     <div class="row mb-2">
         <div class="col-md-6">
             <div class="input-group">
-                <label class="form-label fw-bold">Equipos: </label>
+                <label class="form-label fw-bold">Colegios electorales: </label>
                 <select name="equipo_punteros" id="equipo_punteros" class="form-control"
                     onchange="filtrarPunterosPorEquipo()">
                     <option value="">Todos</option>
@@ -106,7 +106,7 @@
                     <th>Teléfono</th>
                     <th>Barrio</th>
                     <th>Dirigente</th>
-                    <th>Equipo</th>
+                    <th>Colegio electoral</th>
                     <th>Votantes</th>
                     <th>Acciones</th>
                 </tr>
@@ -166,7 +166,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="fas fa-search"></i> Buscar Equipo
+                    <i class="fas fa-search"></i> Buscar colegio electoral
                 </h5>
                 <button type="button" class="close text-white" onclick="cerrarequipopunteros()">&times;</button>
             </div>
@@ -221,7 +221,7 @@
                                 <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Cédula</th>
-                                <th>Equipo</th>
+                                <th>Colegio electoral</th>
                                 <th>Acción</th>
                         </thead>
                         <tbody>
@@ -258,7 +258,7 @@
         //         dropdownParent: $('#modalPunterosLista'),
         //         allowClear: true,
         //         minimumResultsForSearch: 1,
-        //         placeholder: 'Selecciona un equipo...',
+        //         placeholder: 'Selecciona un colegio electoral...',
         //         language: {
         //             noResults: function() {
         //                 return "No se encontraron resultados";
@@ -383,7 +383,7 @@
                 pageLength: 10,
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                    search: "Buscar equipo:",
+                    search: "Buscar colegio electoral:",
                     searchPlaceholder: "Nombre, descripción..."
                 },
                 lengthMenu: [

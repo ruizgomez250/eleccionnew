@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="ua-header">
         <div>
-            <label class="form-label fw-bold">Equipos</label>
+            <label class="form-label fw-bold">Colegios electorales</label>
             <div style="min-width: 280px; display: inline-block; vertical-align: middle;">
                 <x-adminlte-select2 name="equipo_id" id="equipo_id" onchange="filtrarMiembros()" enable-old-support>
                     <option value="">Todos</option>
@@ -34,7 +34,7 @@
                         <th>Teléfono</th>
                         <th>Función</th>
                         <th>Mesa</th>
-                        <th>Equipo</th>
+                        <th>Colegio electoral</th>
                         <th>Cédula Proponente</th>
                         <th>Proponente</th>
                         <th>Tel. Proponente</th>
@@ -407,7 +407,7 @@
                     mesaSelect.append(`<option value="${i}" ${selected}>Mesa ${i}</option>`);
                 }
             }).fail(function() {
-                toastr.error('Error al cargar las mesas del equipo');
+                toastr.error('Error al cargar las mesas del colegio electoral');
             });
         }
 
@@ -521,8 +521,8 @@
                             if (!equipoSeleccionado) {
                                 Swal.fire({
                                     icon: 'warning',
-                                    title: 'Debe seleccionar un equipo',
-                                    text: 'Seleccione un equipo antes de agregar un miembro',
+                                    title: 'Debe seleccionar un colegio electoral',
+                                    text: 'Seleccione un colegio electoral antes de agregar un miembro',
                                     confirmButtonColor: '#3085d6',
                                 });
                                 return;
