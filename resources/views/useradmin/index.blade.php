@@ -146,6 +146,7 @@
                     </button>
                 </div>
                 <div class="card-body">
+                    <div class="table-responsive ua-table-wrap">
                     <table class="table ua-table" id="usuarios-table">
                         <thead>
                             <tr>
@@ -194,6 +195,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
