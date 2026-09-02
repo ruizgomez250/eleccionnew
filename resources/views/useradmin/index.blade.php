@@ -55,6 +55,16 @@
 @section('content')
     <div class="row">
 
+        @if (session('error'))
+            <div class="col-12">
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error</h5>
+                    <pre style="white-space:pre-wrap; margin:0;">{{ session('error') }}</pre>
+                </div>
+            </div>
+        @endif
+
         {{-- Sección de sistemas --}}
         <div class="col-md-6">
             <div class="card ua-card">

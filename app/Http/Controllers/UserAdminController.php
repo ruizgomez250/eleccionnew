@@ -21,32 +21,40 @@ class UserAdminController extends Controller
     {
         $userId = Auth::id();
         if (!in_array($userId, [1, 4])) {
-            $roles = Role::pluck('name', 'name')->all();
-            $users = User::with('sistemaRelacion')
-                ->where('idusuario', $userId)  // Directo, sin whereHas
-                ->get();
-            $user = User::with('sistemaRelacion')->find($userId);
-            $sistemas = Sistema::where('id', $user->sistema)->get();
-            //$ciudades = CiudadElectoral::orderBy('descripcion')->get();
-            return view('useradmin.solouser', compact('users', 'roles', 'sistemas'));
+            try {
+                $roles = Role::pluck('name', 'name')->all();
+                $users = User::with('sistemaRelacion')
+                    ->where('idusuario', $userId)  // Directo, sin whereHas
+                    ->get();
+                $user = User::with('sistemaRelacion')->find($userId);
+                $sistemas = Sistema::where('id', $user->sistema)->get();
+                //$ciudades = CiudadElectoral::orderBy('descripcion')->get();
+                return view('useradmin.solouser', compact('users', 'roles', 'sistemas'));
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Error al cargar la vista de usuarios: ' . $e->getMessage());
+            }
         }
     }
 
     public function index()
     {
-        if ($resp = $this->verificarPermiso()) {
-            return $resp;
+        try {
+            if ($resp = $this->verificarPermiso()) {
+                return $resp;
+            }
+
+            $roles = Role::pluck('name', 'name')->all();
+            $users = User::with('sistemaRelacion')->get();
+
+            // 👇 Cargar la relación 'usuario' junto con los sistemas
+            $sistemas = Sistema::with('usuario', 'ciudad')->get();
+
+            $ciudades = CiudadElectoral::orderBy('descripcion')->get();
+
+            return view('useradmin.index', compact('users', 'sistemas', 'roles', 'ciudades'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error al cargar la vista de usuarios: ' . $e->getMessage());
         }
-
-        $roles = Role::pluck('name', 'name')->all();
-        $users = User::with('sistemaRelacion')->get();
-
-        // 👇 Cargar la relación 'usuario' junto con los sistemas
-        $sistemas = Sistema::with('usuario')->get();
-
-        $ciudades = CiudadElectoral::orderBy('descripcion')->get();
-
-        return view('useradmin.index', compact('users', 'sistemas', 'roles', 'ciudades'));
     }
 
     public function store(Request $request)
@@ -174,11 +182,15 @@ class UserAdminController extends Controller
 
     public function destroy($id)
     {
-        $this->verificarPermiso(); // 🔹 Verificar permiso antes de eliminar
+        try {
+            $this->verificarPermiso(); // 🔹 Verificar permiso antes de eliminar
 
-        $user = User::findOrFail($id);
-        $user->delete();
+            $user = User::findOrFail($id);
+            $user->delete();
 
-        return back()->with('success', 'Usuario eliminado correctamente');
+            return back()->with('success', 'Usuario eliminado correctamente');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error al eliminar usuario: ' . $e->getMessage());
+        }
     }
 }
