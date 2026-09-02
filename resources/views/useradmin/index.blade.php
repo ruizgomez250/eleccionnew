@@ -97,7 +97,7 @@
                                         </span>
                                         <span class="ua-badge ua-badge-muted ml-1">{{ $sistema->tipo }}</span>
                                     </td>
-                                    <td>{{ $sistema->ciudad->descripcion }}</td>
+                                    <td>{{ $sistema->ciudad?->descripcion ?? 'Sin ciudad' }}</td>
                                     <td>
                                         @if ($sistema->usuario)
                                             <span class="ua-badge ua-badge-teal">
