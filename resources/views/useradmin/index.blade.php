@@ -4,6 +4,16 @@
 
 @section('css')
     @include('useradmin._dark_theme')
+    <style>
+        .ua-table-wrap {
+            border: 1px solid rgba(139, 92, 246, .15);
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        .ua-table-wrap .dataTables_scrollBody {
+            max-height: 380px !important;
+        }
+    </style>
 @stop
 
 @section('content_header')
@@ -55,6 +65,7 @@
                     </button>
                 </div>
                 <div class="card-body">
+                    <div class="table-responsive ua-table-wrap">
                     <table class="table ua-table" id="sistemas-table">
                         <thead>
                             <tr>
@@ -110,6 +121,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -672,7 +684,9 @@
                 responsive: true,
                 paging: false,
                 info: false,
-                searching: true
+                searching: true,
+                scrollY: '400px',
+                scrollCollapse: true
             });
         });
 
