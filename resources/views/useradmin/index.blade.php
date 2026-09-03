@@ -10,9 +10,6 @@
             border-radius: 12px;
             overflow-x: auto;
         }
-        .ua-table-wrap .dataTables_scrollBody {
-            max-height: 380px !important;
-        }
     </style>
 @stop
 
@@ -693,12 +690,11 @@
             });
 
             $('#sistemas-table').DataTable({
-                responsive: true,
+                responsive: false,
                 paging: false,
                 info: false,
                 searching: true,
-                scrollY: '400px',
-                scrollCollapse: true
+                scrollX: true
             });
         });
 
