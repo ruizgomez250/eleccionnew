@@ -50,7 +50,9 @@ Route::prefix('votos')->name('votos.')->group(function () {
 
 
 
-Route::get('/efectividad', [EfectividadController::class, 'index'])->name('efectividad.index');
+Route::get('/efectividad', [EfectividadController::class, 'index'])
+    ->middleware(['auth', \App\Http\Middleware\AccesoEfectividadElectoral::class])
+    ->name('efectividad.index');
 
 Route::get('votante/buscador', [VotanteController::class, 'buscador']);
 Route::get('/votantes/datatables', [VotanteController::class, 'datatables'])->name('votantes.datatables');
@@ -160,6 +162,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reportes/participacion-general/pdf', [\App\Http\Controllers\ParticipacionGeneralController::class, 'pdf'])->name('reportes.participacion-general.pdf');
     Route::get('/reportes/carga-votos-data', [ReportesController::class, 'getCargaVotosData'])->name('reportes.carga-votos.data');
     Route::get('/reportes/carga-votos-detalle', [ReportesController::class, 'getCargaVotosDetalle'])->name('reportes.carga-votos.detalle');
+    Route::get('/reportes/efectividad-puntero', [EfectividadController::class, 'puntero'])->name('reportes.efectividad-puntero');
+    Route::get('/reportes/efectividad-puntero-data', [EfectividadController::class, 'punteroData'])->name('reportes.efectividad-puntero.data');
     Route::resource('vehiculo', VehiculoController::class);
     Route::get('/vehiculos/contrato/{vehiculo}', [VehiculoController::class, 'generarContratoPDF'])
         ->name('vehiculo.contrato');

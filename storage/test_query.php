@@ -5,35 +5,61 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
 
-$db = DB::connection()->getDatabaseName();
+function norm($s) {
+    $texto = mb_strtoupper(trim((string)$s), 'UTF-8');
+    return strtr($texto, ['Á'=>'A','É'=>'E','Í'=>'I','Ó'=>'O','Ú'=>'U','Ü'=>'U','Ñ'=>'N']);
+}
 
-// ¿socios tiene escuela/mesa que conecte con mesas/equipo?
-echo "=== socios ejemplo con mesa<>0 ===\n";
-$rows = DB::table('socios')->where('mesa', '>', 0)->take(10)->get(['id','cedula','nombre','ciudad','mesa','numero_socio','estado']);
-foreach ($rows as $r) echo "  " . json_encode($r, JSON_UNESCAPED_UNICODE) . "\n";
-echo "socios con mesa>0: " . DB::table('socios')->where('mesa','>',0)->count() . "\n";
-echo "socios total: " . DB::table('socios')->count() . "\n";
+// Simulación del cálculo para candidato id=5 (Francisca Franco, concejal)
+$candidatoId = 5;
 
-echo "\n=== puntero: relación con equipo ===\n";
-$p = DB::table('puntero as p')->leftJoin('equipo as e','p.id_equipo','=','e.id')->leftJoin('dirigente as d','p.id_dirigente','=','d.id')
-    ->select('p.id','p.nombre','p.cedula','p.id_equipo','e.descripcion as equipo_desc','e.sist','e.colegio','d.nombre as dirigente')
-    ->take(8)->get();
-foreach ($p as $r) echo "  " . json_encode($r, JSON_UNESCAPED_UNICODE) . "\n";
-echo "punteros sin equipo: " . DB::table('puntero')->whereNull('id_equipo')->count() . " / con equipo: " . DB::table('puntero')->whereNotNull('id_equipo')->count() . "\n";
+$votosCedulas = DB::table('votos as v')->select('v.cedula')->where('v.cedula','<>','')->distinct()->pluck('cedula')->flip();
+echo "cedulas en votos: " . count($votosCedulas) . "\n";
 
-echo "\n=== mesas/equipo ===\n";
-$m = DB::table('mesas as m')->leftJoin('equipo as e','m.equipo_id','=','e.id')->select('m.id','m.numero_mesa','m.codigo_mesa','m.equipo_id','e.colegio','e.descripcion','e.sist')->take(8)->get();
-foreach ($m as $r) echo "  " . json_encode($r, JSON_UNESCAPED_UNICODE) . "\n";
-echo "mesas total: " . DB::table('mesas')->count() . "\n";
+$colegioToEquipo = [];
+DB::table('equipo as e')->join('mesas as m','m.equipo_id','=','e.id')->distinct()->select('e.id','e.colegio')->get()
+    ->each(function ($row) use (&$colegioToEquipo) { $colegioToEquipo[norm($row->colegio)] = (int)$row->id; });
+echo "colegios->equipo con mesas: " . count($colegioToEquipo) . "\n";
 
-echo "\n=== dirigente ===\n";
-$d = DB::table('dirigente')->select('id','nombre','id_equipo')->take(8)->get();
-foreach ($d as $r) echo "  " . json_encode($r, JSON_UNESCAPED_UNICODE) . "\n";
-echo "dirigente total: " . DB::table('dirigente')->count() . "\n";
+$mesaByEquipoNum = [];
+DB::table('mesas')->get(['id','equipo_id','numero_mesa'])->each(function ($row) use (&$mesaByEquipoNum) {
+    $mesaByEquipoNum[(int)$row->equipo_id][(string)$row->numero_mesa] = (int)$row->id;
+});
 
-echo "\n=== sistemas tabla ===\n";
-echo "columns: \n";
-foreach (DB::select("SHOW COLUMNS FROM sistemas") as $c) echo "  {$c->Field}: {$c->Type}\n";
+$votosCand = DB::table('votos_mesa')->where('candidato_id',$candidatoId)->where('cargo','Concejal Municipal')
+    ->select('mesa_id', DB::raw('SUM(cantidad_votos) total'))->groupBy('mesa_id')->pluck('total','mesa_id');
+echo "mesas con votos del candidato $candidatoId: " . count($votosCand) . ", total votos: " . array_sum($votosCand->all()) . "\n";
 
-echo "\n=== existe 'votante' como vista? ===\n";
-print_r(DB::select("SELECT TABLE_NAME, TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME IN ('votante','votos','votos_mesa','socios','puntero_votante')", [$db]));
+$votantes = DB::table('votante as vt')->join('puntero as p','vt.idpuntero','=','p.id')
+    ->leftJoin('dirigente as d','p.id_dirigente','=','d.id')
+    ->where('vt.cedula','<>','')
+    ->select('p.id as puntero_id','p.nombre as puntero_nombre','d.nombre as dirigente_nombre','vt.cedula as cedula','vt.escuela','vt.mesa')
+    ->get()->groupBy('puntero_id');
+echo "punteros con votantes: " . count($votantes) . "\n";
+
+$punteros = [];
+foreach ($votantes as $pid => $filas) {
+    $total=0; $seFueron=0; $mesas=[];
+    foreach ($filas as $f){
+        $total++;
+        if (isset($votosCedulas[$f->cedula])) $seFueron++;
+        $eid = $colegioToEquipo[norm($f->escuela)] ?? null;
+        $nm = trim((string)$f->mesa);
+        if ($eid!==null && $nm!=='' && isset($mesaByEquipoNum[$eid][$nm])) $mesas[$mesaByEquipoNum[$eid][$nm]]=true;
+    }
+    $votosReales=0;
+    foreach (array_keys($mesas) as $mId) $votosReales += (int)($votosCand[$mId] ?? 0);
+    $debio = $seFueron;
+    $efect = $debio>0 ? round(100*$votosReales/$debio,1) : 0;
+    $punteros[]=['nombre'=>$filas[0]->puntero_nombre,'dirigente'=>$filas[0]->dirigente_nombre ?? '','anotados'=>$total,'se_fueron'=>$seFueron,'mesas'=>count($mesas),'debio_tener'=>$debio,'votos_reales'=>$votosReales,'efectividad'=>$efect];
+}
+usort($punteros, fn($a,$b)=>$b['efectividad']<=>$a['efectividad']);
+echo "\nTop 10 punteros por efectividad (candidato $candidatoId):\n";
+foreach (array_slice($punteros,0,10) as $p) {
+    echo "  {$p['nombre']} (dir {$p['dirigente']}) anot={$p['anotados']} seFueron={$p['se_fueron']} mesas={$p['mesas']} debio={$p['debio_tener']} reales={$p['votos_reales']} ef={$p['efectividad']}%\n";
+}
+$sumDebio = array_sum(array_column($punteros,'debio_tener'));
+$sumReal = array_sum(array_column($punteros,'votos_reales'));
+echo "\nResumen: punteros=" . count($punteros) . " anotados=" . array_sum(array_column($punteros,'anotados'))
+    . " se_fueron=" . array_sum(array_column($punteros,'se_fueron'))
+    . " debio=$sumDebio reales=$sumReal efectividad_gral=" . ($sumDebio>0?round(100*$sumReal/$sumDebio,1):0) . "%\n";

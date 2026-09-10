@@ -22,6 +22,9 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::define('Ver Efectividad Electoral', fn (User $user): bool =>
+            in_array((int) $user->id, [1, 2, 3, 4], true) && $user->can('Carga Certificados'));
+
         // Compatibilidad con nombres de permisos cargados manualmente en hosting.
         // La misma habilidad se utiliza en el menu y en el middleware de certificados.
         Gate::define('Carga Certificados', function (User $user): bool {

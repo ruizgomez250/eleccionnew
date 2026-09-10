@@ -327,7 +327,6 @@ return [
             'icon_color' => 'primary',
             'classes'    => 'custom-icon-box custom-icon-box-dark',
             'content'    => '<i class="fas fa-user-friends"></i>',
-            'can'        => 'Reportes',
             'submenu'    => [
                 [
                     'text' => 'Votantes por Dirigente',
@@ -348,8 +347,13 @@ return [
                     'icon_color' => 'warning',
                     'classes'    => 'custom-icon-box custom-icon-box-dark',
                     'content'    => '<i class="fas fa-chart-bar"></i>',
-                    'can'        => 'Carga Certificados',
+                    'can'        => 'Ver Efectividad Electoral',
                     'url'        => '/efectividad',
+                ],
+                [
+                    'text' => 'Efectividad del Puntero por Candidato',
+                    'icon' => 'fas fa-bullseye',
+                    'url'  => '/reportes/efectividad-puntero',
                 ],
                 [
                     'text' => 'Votantes vs Carga de Votos',
@@ -359,7 +363,6 @@ return [
                     'text' => 'Participación general',
                     'url' => '/reportes/participacion-general',
                     'icon' => 'fas fa-chart-pie',
-                    'can' => 'Reportes',
                 ],
                 [
                     'text' => 'Todos los Vehiculos',

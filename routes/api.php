@@ -76,7 +76,7 @@ Route::prefix('v1')->group(function () {
 // =============================================
 // RUTAS PARA ANÁLISIS DE EFECTIVIDAD ELECTORAL
 // =============================================
-Route::prefix('efectividad')->group(function () {
+Route::prefix('efectividad')->middleware(['web', 'auth', \App\Http\Middleware\AccesoEfectividadElectoral::class])->group(function () {
     Route::get('/resumen', [App\Http\Controllers\EfectividadController::class, 'resumen']);
     Route::get('/mesa/{id}', [App\Http\Controllers\EfectividadController::class, 'mesa']);
     Route::get('/ranking', [App\Http\Controllers\EfectividadController::class, 'ranking']);
