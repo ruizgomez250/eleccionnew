@@ -111,14 +111,13 @@ class ParticipacionGeneralReportTest extends TestCase
     public function test_errors_have_a_reference_without_exposing_sql(): void
     {
         $this->loginWithReportPermission(true);
-        Cache::flush();
+        Cache::shouldReceive('remember')->once()->andReturnUsing(fn ($key, $ttl, $build) => $build());
         $report = Mockery::mock(ParticipacionGeneralReport::class);
         $report->shouldReceive('generate')->once()->with(1)->andThrow(new \RuntimeException('Private SQL details'));
         $this->app->instance(ParticipacionGeneralReport::class, $report);
         Log::shouldReceive('error')->once()->withArgs(fn ($message, $context) =>
             $message === 'Error en participacion-general' && isset($context['referencia']));
         $response = $this->getJson('/reportes/participacion-general/data');
-        $response->dump();
         $response->assertStatus(500);
         $this->assertStringStartsWith('No se pudo generar el reporte. Referencia:', $response->json('message'));
         $response->assertDontSee('Private SQL details');

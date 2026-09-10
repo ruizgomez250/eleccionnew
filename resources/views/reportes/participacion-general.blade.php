@@ -56,7 +56,7 @@
                     <div id="panel-{{ $key }}" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-{{ $key }}">
                         <p class="text-muted">La barra azul muestra la proporción con participación registrada. Podés buscar y ordenar los grupos.</p>
                         <table id="tabla-{{ $key }}" class="table table-striped table-bordered w-100">
-                            <thead><tr><th>{{ $label }}</th>@if($key === 'punteros')<th>Dirigente</th>@endif<th>Personas únicas</th><th>Con registro</th><th>Sin registro</th><th>Participación</th></tr></thead>
+                            <thead><tr><th>{{ $label }}</th>@if($key === 'punteros')<th>Dirigente</th>@endif<th>Votantes Registrados</th><th>Voto</th><th>No Voto</th><th>Participación</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
