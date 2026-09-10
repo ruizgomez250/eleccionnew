@@ -1,0 +1,4 @@
+SHOW INDEX votos                                  0.06s
+DISTINCT cedula hoy                               0.41s
+3: votaron por puntero en PHP                     2.17s
+DONE

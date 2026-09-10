@@ -157,6 +157,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reportes/carga-votos', [ReportesController::class, 'cargaVotos'])->name('reportes.carga-votos');
     Route::get('/reportes/participacion-general', [\App\Http\Controllers\ParticipacionGeneralController::class, 'index'])->name('reportes.participacion-general');
     Route::get('/reportes/participacion-general/data', [\App\Http\Controllers\ParticipacionGeneralController::class, 'data'])->name('reportes.participacion-general.data');
+    Route::get('/reportes/participacion-general/pdf', [\App\Http\Controllers\ParticipacionGeneralController::class, 'pdf'])->name('reportes.participacion-general.pdf');
     Route::get('/reportes/carga-votos-data', [ReportesController::class, 'getCargaVotosData'])->name('reportes.carga-votos.data');
     Route::get('/reportes/carga-votos-detalle', [ReportesController::class, 'getCargaVotosDetalle'])->name('reportes.carga-votos.detalle');
     Route::resource('vehiculo', VehiculoController::class);
@@ -228,6 +229,18 @@ Route::middleware('auth')->group(function () {
     Route::resource('ciudades_electorales', CiudadElectoralController::class);
 
     Route::get('certificados', [CertificadoController::class, 'index'])->name('certificados.index');
+    Route::prefix('certificados-internas')->name('certificados-internas.')->controller(\App\Http\Controllers\CertificadoInternaController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/candidatos', 'getCandidatos')->name('candidatos');
+        Route::get('/data', 'data')->name('data');
+        Route::get('/locales', 'getLocales')->name('locales');
+        Route::get('/mesas', 'getMesas')->name('mesas');
+        Route::get('/formulario', 'getFormularioCarga')->name('formulario');
+        Route::get('/exportar-pdf', 'exportPdf')->name('exportar.pdf');
+        Route::post('/guardar', 'guardarResultados')->name('guardar');
+        Route::put('/{id}', 'update')->whereNumber('id')->name('update');
+        Route::delete('/{id}', 'destroy')->whereNumber('id')->name('destroy');
+    });
     Route::delete('certificados/{id}', [CertificadoController::class, 'destroy'])->name('certificados.destroy');
     Route::get('certificados/candidatos', [CertificadoController::class, 'getCandidatos'])->name('certificados.candidatos');
     Route::get('certificados/data', [CertificadoController::class, 'data'])->name('certificados.data');

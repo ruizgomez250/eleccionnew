@@ -359,115 +359,100 @@ class ReportesController extends Controller
     public function getCargaVotosData(Request $request)
     {
         try {
-            $miembroId = $request->input('miembro_id');
-            $userId = Auth::id();
-            $esSuperAdmin = $userId >= 1 && $userId <= 4;
-            $candidatoId = $request->input('candidato_id');
-
-            $sistemaFiltro = null;
-            if (!$esSuperAdmin) {
-                $sistemaFiltro = Auth::user()->sistema;
-            } elseif ($candidatoId) {
-                $sistemaFiltro = $candidatoId;
-            }
-
-            $votosSub = DB::table('votos')
-                ->select('cedula')
-                ->whereIn('id', function ($query) use ($miembroId, $sistemaFiltro) {
-                    $query->select(DB::raw('MIN(id)'))
-                        ->from('votos')
-                        ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
-                        ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                            $q->whereIn('idmiembrodemesa', function ($q2) use ($sistemaFiltro) {
-                                $q2->select('m.id')
-                                    ->from('miembros_de_mesa as m')
-                                    ->join('equipo as e', 'e.id', '=', 'm.idequipo')
-                                    ->where('e.sist', $sistemaFiltro);
-                            });
-                        })
-                        ->groupBy('cedula');
-                });
-
-            $punters = DB::table('puntero as p')
-                ->join('dirigente as d', 'p.id_dirigente', '=', 'd.id')
-                ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
-                ->leftJoin('votante as vt', 'vt.idpuntero', '=', 'p.id')
-                ->leftJoinSub($votosSub, 'v', function ($join) {
-                    $join->on(DB::raw('vt.cedula COLLATE utf8mb4_unicode_ci'), '=', DB::raw('v.cedula COLLATE utf8mb4_unicode_ci'));
-                })
-                ->when($sistemaFiltro, fn($q) => $q->where('e.sist', $sistemaFiltro))
-                ->select(
-                    'd.nombre as dirigente_nombre',
-                    'p.id as puntero_id',
-                    'p.nombre as puntero_nombre',
-                    DB::raw('COUNT(DISTINCT vt.id) as total_votantes'),
-                    DB::raw('COUNT(DISTINCT CASE WHEN v.cedula IS NOT NULL THEN vt.id END) as votaron')
-                )
-                ->groupBy('d.nombre', 'p.id', 'p.nombre')
-                ->orderBy('d.nombre')
-                ->orderBy('p.nombre')
-                ->get();
-
-            $totalGeneral = DB::table('votos')
-                ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
-                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                    $q->whereIn('idmiembrodemesa', function ($q2) use ($sistemaFiltro) {
-                        $q2->select('m.id')
-                            ->from('miembros_de_mesa as m')
-                            ->join('equipo as e', 'e.id', '=', 'm.idequipo')
-                            ->where('e.sist', $sistemaFiltro);
-                    });
-                })
-                ->count();
-
-            $sistemasChart = Sistema::select('id', 'nombre', 'tipo')
-                ->whereRaw('LOWER(tipo) IN (?, ?)', ['intendente', 'concejal'])
-                ->when($sistemaFiltro, fn($q) => $q->where('id', $sistemaFiltro))
-                ->orderBy('tipo')
-                ->orderBy('nombre')
-                ->get();
-
-            $votantesPorSistema = DB::table('votante as vt')
-                ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
-                ->join('dirigente as d', 'p.id_dirigente', '=', 'd.id')
-                ->join('equipo as e', 'd.id_equipo', '=', 'e.id')
-                ->when($sistemaFiltro, fn($q) => $q->where('e.sist', $sistemaFiltro))
-                ->select('e.sist', DB::raw('COUNT(DISTINCT vt.id) as total_votantes'))
-                ->groupBy('e.sist')
-                ->pluck('total_votantes', 'e.sist');
-
-            $votosPorSistema = DB::table('votos')
-                ->join('miembros_de_mesa as m', 'm.id', '=', 'votos.idmiembrodemesa')
-                ->join('equipo as e', 'e.id', '=', 'm.idequipo')
-                ->when($sistemaFiltro, fn($q) => $q->where('e.sist', $sistemaFiltro))
-                ->select('e.sist', DB::raw('COUNT(DISTINCT votos.cedula) as votaron'))
-                ->groupBy('e.sist')
-                ->pluck('votaron', 'e.sist');
-
-            $porCandidato = $sistemasChart->map(function ($s) use ($votantesPorSistema, $votosPorSistema) {
-                return [
-                    'nombre' => $s->nombre,
-                    'tipo' => $s->tipo,
-                    'votantes' => (int) ($votantesPorSistema[$s->id] ?? 0),
-                    'votaron' => (int) ($votosPorSistema[$s->id] ?? 0),
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'html' => view('reportes.cargavotos-content', compact(
-                    'punters',
-                    'totalGeneral',
-                    'porCandidato'
-                ))->render()
-            ]);
+            $data = $this->cargarDatosCargaVotos($request);
+            return response()->json($data);
         } catch (\Exception $e) {
             Log::error('Error en getCargaVotosData: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'message' => 'Error al generar el reporte: ' . $e->getMessage()
+                'message' => 'No se pudo generar el reporte de carga de votos.'
             ], 500);
         }
+    }
+
+    protected function cargarDatosCargaVotos(Request $request): array
+    {
+        $miembroId = $request->input('miembro_id');
+        $userId = Auth::id();
+        $esSuperAdmin = $userId >= 1 && $userId <= 4;
+        $candidatoId = $request->input('candidato_id');
+
+        $sistemaFiltro = null;
+        if (!$esSuperAdmin) {
+            $sistemaFiltro = Auth::user()->sistema;
+        } elseif ($candidatoId) {
+            $sistemaFiltro = $candidatoId;
+        }
+
+        $votosCedulas = DB::table('votos as v')
+            ->select('v.cedula')
+            ->where('v.cedula', '<>', '')
+            ->when($miembroId, fn($q) => $q->where('v.idmiembrodemesa', $miembroId))
+            ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
+                $idsMiembros = DB::table('miembros_de_mesa as m')
+                    ->join('equipo as e', 'e.id', '=', 'm.idequipo')
+                    ->where('e.sist', $sistemaFiltro)
+                    ->pluck('m.id');
+                $q->whereIn('v.idmiembrodemesa', $idsMiembros);
+            })
+            ->distinct()
+            ->pluck('cedula')
+            ->flip();
+
+        $punters = DB::table('votante as vt')
+            ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
+            ->join('dirigente as d', 'p.id_dirigente', '=', 'd.id')
+            ->when($sistemaFiltro, fn($q) => $q
+                ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
+                ->where('e.sist', $sistemaFiltro))
+            ->where('vt.cedula', '<>', '')
+            ->select(
+                'p.id as puntero_id',
+                'p.nombre as puntero_nombre',
+                'd.nombre as dirigente_nombre',
+                'vt.id as votante_id',
+                'vt.cedula as votante_cedula'
+            )
+            ->get()
+            ->groupBy('puntero_id');
+
+        $punteros = $punters->map(function ($filas) use ($votosCedulas) {
+            $votaronIds = [];
+            $totalIds = [];
+            $nombre = $filas[0]->puntero_nombre;
+            $dirigente = $filas[0]->dirigente_nombre;
+            foreach ($filas as $fila) {
+                $totalIds[$fila->votante_id] = true;
+                if (isset($votosCedulas[$fila->votante_cedula])) {
+                    $votaronIds[$fila->votante_id] = true;
+                }
+            }
+            $total = count($totalIds);
+            $votaron = count($votaronIds);
+            return [
+                'puntero_id' => (int) $filas[0]->puntero_id,
+                'nombre' => $nombre,
+                'dirigente' => $dirigente,
+                'total' => $total,
+                'votaron' => $votaron,
+                'sin_voto' => $total - $votaron,
+                'porcentaje' => $total > 0 ? round(100 * $votaron / $total, 1) : 0,
+            ];
+        })->sortBy('nombre')->values();
+
+        $sumaTotal = $punteros->sum('total');
+        $sumaVotaron = $punteros->sum('votaron');
+        $sumaNoVotaron = $sumaTotal - $sumaVotaron;
+
+        return [
+            'punteros' => $punteros->all(),
+            'resumen' => [
+                'total' => $sumaTotal,
+                'votaron' => $sumaVotaron,
+                'sin_voto' => $sumaNoVotaron,
+                'porcentaje' => $sumaTotal > 0 ? round(100 * $sumaVotaron / $sumaTotal, 1) : 0,
+            ],
+            'generado_en' => now()->toIso8601String(),
+        ];
     }
 
     public function getCargaVotosDetalle(Request $request)
@@ -487,38 +472,33 @@ class ReportesController extends Controller
                 $sistemaFiltro = $candidatoId;
             }
 
-            $votosSub = DB::table('votos')
-                ->select('cedula')
-                ->whereIn('id', function ($query) use ($miembroId, $sistemaFiltro) {
-                    $query->select(DB::raw('MIN(id)'))
-                        ->from('votos')
-                        ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
-                        ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                            $q->whereIn('idmiembrodemesa', function ($q2) use ($sistemaFiltro) {
-                                $q2->select('m.id')
-                                    ->from('miembros_de_mesa as m')
-                                    ->join('equipo as e', 'e.id', '=', 'm.idequipo')
-                                    ->where('e.sist', $sistemaFiltro);
-                            });
-                        })
-                        ->groupBy('cedula');
-                });
-
-            $query = DB::table('votante as vt')
-                ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
-                ->leftJoinSub($votosSub, 'v', function ($join) {
-                    $join->on(DB::raw('vt.cedula COLLATE utf8mb4_unicode_ci'), '=', DB::raw('v.cedula COLLATE utf8mb4_unicode_ci'));
+            $votosCedulas = DB::table('votos as v')
+                ->select('v.cedula')
+                ->where('v.cedula', '<>', '')
+                ->when($miembroId, fn($q) => $q->where('v.idmiembrodemesa', $miembroId))
+                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
+                    $idsMiembros = DB::table('miembros_de_mesa as m')
+                        ->join('equipo as e', 'e.id', '=', 'm.idequipo')
+                        ->where('e.sist', $sistemaFiltro)
+                        ->pluck('m.id');
+                    $q->whereIn('v.idmiembrodemesa', $idsMiembros);
                 })
+                ->distinct()
+                ->pluck('cedula')
+                ->flip();
+
+            $votantes = DB::table('votante as vt')
                 ->where('vt.idpuntero', $punteroId)
-                ->select('vt.cedula', 'vt.nombre', 'vt.mesa', 'vt.escuela', 'vt.ciudad');
-
-            if ($tipo === 'votaron') {
-                $query->whereNotNull('v.cedula');
-            } else {
-                $query->whereNull('v.cedula');
-            }
-
-            $votantes = $query->orderBy('vt.nombre')->get();
+                ->where('vt.cedula', '<>', '')
+                ->select('vt.cedula', 'vt.nombre', 'vt.mesa', 'vt.escuela', 'vt.ciudad')
+                ->get()
+                ->filter(function ($v) use ($tipo, $votosCedulas) {
+                    $voto = isset($votosCedulas[$v->cedula]);
+                    return $tipo === 'votaron' ? $voto : !$voto;
+                })
+                ->values()
+                ->sortBy('nombre')
+                ->values();
 
             $titulo = $tipo === 'votaron' ? 'Votaron' : 'No Votaron';
 

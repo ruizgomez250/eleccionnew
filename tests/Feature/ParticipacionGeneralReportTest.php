@@ -25,6 +25,12 @@ class ParticipacionGeneralReportTest extends TestCase
         // En MySQL las tablas temporales sólo existen en esta conexión de prueba.
         $create = $mysql ? 'CREATE TEMPORARY TABLE ' : 'CREATE TABLE ';
         DB::statement($create.'equipo (id INTEGER, sist INTEGER)');
+        DB::statement($create.'sistemas (id INTEGER, nombre TEXT, tipo TEXT)');
+        DB::table('sistemas')->insert([
+            ['id' => 1, 'nombre' => 'Candidato A', 'tipo' => 'intendente'],
+            ['id' => 2, 'nombre' => 'Candidato B', 'tipo' => 'concejal'],
+            ['id' => 3, 'nombre' => 'Otro sistema', 'tipo' => 'otro'],
+        ]);
         DB::statement($create.'dirigente (id INTEGER, id_equipo INTEGER, nombre TEXT)');
         DB::statement($create.'puntero (id INTEGER, id_dirigente INTEGER, nombre TEXT)');
         DB::statement($create.'votante (idpuntero INTEGER, cedula TEXT)');
@@ -49,10 +55,10 @@ class ParticipacionGeneralReportTest extends TestCase
         DB::table('votos')->insert([['cedula' => '100001'], ['cedula' => '100001'], ['cedula' => '999999']]);
     }
 
-    private function loginWithReportPermission(bool $allowed): void
+    private function loginWithReportPermission(bool $allowed, int $userId = 10): void
     {
         $user = Mockery::mock(User::class)->makePartial();
-        $user->id = 10;
+        $user->id = $userId;
         $user->sistema = 1;
         $user->shouldReceive('checkPermissionTo')->with('Reportes', null)->andReturn($allowed);
         $this->actingAs($user);
@@ -86,6 +92,7 @@ class ParticipacionGeneralReportTest extends TestCase
         $this->loginWithReportPermission(false);
         $this->get('/reportes/participacion-general')->assertForbidden();
         $this->getJson('/reportes/participacion-general/data')->assertForbidden();
+        $this->getJson('/reportes/participacion-general/pdf')->assertForbidden();
     }
 
     public function test_data_uses_assigned_system_and_reuses_cached_aggregates(): void
@@ -121,5 +128,54 @@ class ParticipacionGeneralReportTest extends TestCase
         $response->assertStatus(500);
         $this->assertStringStartsWith('No se pudo generar el reporte. Referencia:', $response->json('message'));
         $response->assertDontSee('Private SQL details');
+    }
+
+    public function test_only_users_one_to_four_can_select_another_candidate(): void
+    {
+        $this->fixtures();
+        Cache::shouldReceive('remember')->andReturnUsing(fn ($key, $ttl, $build) => $build());
+        foreach ([1, 2, 3, 4, 0, 5, 10] as $id) {
+            $this->loginWithReportPermission(true, $id);
+            $eligible = $id >= 1 && $id <= 4;
+            $this->getJson('/reportes/participacion-general/data?candidato_id=2')
+                ->assertOk()->assertJsonPath('resumen.total', $eligible ? 1 : 2);
+            $this->assertSame(1, auth()->user()->sistema);
+            $request = \Illuminate\Http\Request::create('/reportes/participacion-general');
+            $request->setUserResolver(fn () => auth()->user());
+            $view = app(\App\Http\Controllers\ParticipacionGeneralController::class)->index($request);
+            $this->assertSame($eligible, $view->getData()['puedeSeleccionarCandidato']);
+            $this->assertCount($eligible ? 2 : 0, $view->getData()['candidatos']);
+        }
+    }
+
+    public function test_selected_candidate_is_validated_and_default_remains_assigned_system(): void
+    {
+        $this->fixtures();
+        $this->loginWithReportPermission(true, 1);
+        Cache::shouldReceive('remember')->andReturnUsing(fn ($key, $ttl, $build) => $build());
+        $this->getJson('/reportes/participacion-general/data?candidato_id=invalid')->assertUnprocessable();
+        $this->getJson('/reportes/participacion-general/data?candidato_id=999')->assertNotFound();
+        $this->getJson('/reportes/participacion-general/data?candidato_id=3')->assertNotFound();
+        $this->getJson('/reportes/participacion-general/data')->assertOk()->assertJsonPath('resumen.total', 2);
+    }
+
+    public function test_pdf_download_respects_candidate_permissions(): void
+    {
+        $this->fixtures();
+        Cache::shouldReceive('remember')->andReturnUsing(fn ($key, $ttl, $build) => $build());
+        foreach ([1, 4, 5] as $id) {
+            $this->loginWithReportPermission(true, $id);
+            $system = $id <= 4 ? 2 : 1;
+            $pdf = Mockery::mock(\App\Reports\ParticipacionGeneralPdf::class);
+            $pdf->shouldReceive('render')->once()->withArgs(fn ($data, $name) =>
+                $data['resumen']['total'] === ($system === 2 ? 1 : 2)
+                && $name === ($system === 2 ? 'Candidato B' : 'Candidato A'))
+                ->andReturn('%PDF-1.4 test');
+            $this->app->instance(\App\Reports\ParticipacionGeneralPdf::class, $pdf);
+            $response = $this->get('/reportes/participacion-general/pdf?candidato_id=2')
+                ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+            $response->assertHeader('Content-Disposition', 'attachment; filename="participacion-general-'.$system.'.pdf"');
+            $this->assertStringStartsWith('%PDF-', $response->getContent());
+        }
     }
 }

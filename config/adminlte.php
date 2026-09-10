@@ -413,6 +413,12 @@ return [
             'can'        => 'Carga Certificados',
             'url'        => '/certificados',
         ],
+        [
+            'text' => 'Certificados de internas',
+            'icon' => 'fas fa-file-signature',
+            'can' => 'Carga Certificados',
+            'url' => '/certificados-internas',
+        ],
 
 
 

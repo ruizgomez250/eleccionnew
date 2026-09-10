@@ -8,9 +8,19 @@
 @stop
 
 @section('content')
-    <p class="text-muted">Resumen del sistema asignado a tu usuario. Sólo muestra cifras agrupadas, sin detalle de votantes.</p>
+    <p class="text-muted">{{ $puedeSeleccionarCandidato ? 'Resumen del candidato seleccionado.' : 'Resumen del sistema asignado a tu usuario.' }} Sólo muestra cifras agrupadas, sin detalle de votantes.</p>
     <div class="d-flex align-items-center flex-wrap mb-3">
+        @if($puedeSeleccionarCandidato)
+            <label for="candidato_id" class="mr-2 mb-0">Candidato:</label>
+            <select id="candidato_id" class="form-control w-auto mr-3" aria-label="Candidato del reporte">
+                <option value="">Sistema asignado a mi usuario</option>
+                @foreach($candidatos as $candidato)
+                    <option value="{{ $candidato->id }}">{{ $candidato->nombre }} ({{ ucfirst($candidato->tipo) }})</option>
+                @endforeach
+            </select>
+        @endif
         <button id="actualizar" class="btn btn-primary mr-3" type="button"><i class="fas fa-sync-alt" aria-hidden="true"></i> Actualizar</button>
+        <button id="exportar-pdf" class="btn btn-danger mr-3" type="button" disabled><i class="fas fa-file-pdf" aria-hidden="true"></i> Exportar PDF</button>
         <span id="estado" role="status" aria-live="polite">Cargando resumen…</span>
     </div>
     <div id="error-reporte" class="alert alert-danger" role="alert" hidden></div>
@@ -101,11 +111,15 @@ $(function () {
             pageLength:10, lengthMenu:[10,25,50], deferRender:true, scrollX:true, order:[[0,'asc']]});
     }
     async function cargar() {
-        $('#actualizar').prop('disabled', true);
+        $('#exportar-pdf').prop('disabled', true);
+        $('#actualizar, #candidato_id').prop('disabled', true);
         $('#estado').text('Cargando resumen…');
         $('#error-reporte').prop('hidden', true);
         try {
-            const response = await fetch(@json(route('reportes.participacion-general.data')), {headers:{Accept:'application/json'}, credentials:'same-origin'});
+            const url = new URL(@json(route('reportes.participacion-general.data')), window.location.origin);
+            const candidatoId = $('#candidato_id').val();
+            if (candidatoId) url.searchParams.set('candidato_id', candidatoId);
+            const response = await fetch(url, {headers:{Accept:'application/json'}, credentials:'same-origin'});
             if (!response.ok) {
                 const detalle = await response.json().catch(() => ({}));
                 const mensaje = response.status === 403 ? 'No tenés permiso Reportes o un sistema asignado.'
@@ -125,14 +139,43 @@ $(function () {
             tabla('dirigentes', data.dirigentes);
             tabla('punteros', data.punteros);
             $('#estado').text('Datos al '+new Date(data.generado_en).toLocaleString('es-PY'));
+            $('#exportar-pdf').prop('disabled', false);
         } catch (error) {
             $('#reporte').prop('hidden', true);
             $('#error-reporte').text(error.message).prop('hidden', false);
             $('#estado').text('Carga incompleta');
-        } finally { $('#actualizar').prop('disabled', false); }
+        } finally { $('#actualizar, #candidato_id').prop('disabled', false); }
     }
     $('a[data-toggle="tab"]').on('shown.bs.tab', function () { Object.values(tablas).forEach(t => t.columns.adjust()); });
     $('#actualizar').on('click', cargar);
+    $('#candidato_id').on('change', cargar);
+    $('#exportar-pdf').on('click', async function () {
+        $('#exportar-pdf, #actualizar, #candidato_id').prop('disabled', true);
+        $('#exportar-pdf').text('Generando PDF…');
+        $('#error-reporte').prop('hidden', true);
+        try {
+            const url = new URL(@json(route('reportes.participacion-general.pdf')), window.location.origin);
+            const candidatoId = $('#candidato_id').val();
+            if (candidatoId) url.searchParams.set('candidato_id', candidatoId);
+            const response = await fetch(url, {headers:{Accept:'application/pdf, application/json'}, credentials:'same-origin'});
+            if (!response.ok || !(response.headers.get('Content-Type') || '').includes('application/pdf')) {
+                throw new Error('No se pudo exportar el PDF. Verificá tu sesión e intentá nuevamente.');
+            }
+            const blobUrl = URL.createObjectURL(await response.blob());
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'participacion-general.pdf';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        } catch (error) {
+            $('#error-reporte').text(error.message).prop('hidden', false);
+        } finally {
+            $('#exportar-pdf').html('<i class="fas fa-file-pdf" aria-hidden="true"></i> Exportar PDF');
+            $('#exportar-pdf, #actualizar, #candidato_id').prop('disabled', false);
+        }
+    });
     cargar();
 });
 </script>

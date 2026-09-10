@@ -173,7 +173,7 @@ return [
          * The cache key used to store all permissions.
          */
 
-        'key' => 'spatie.permission.cache',
+        'key' => env('PERMISSION_CACHE_KEY', 'spatie.permission.cache.'.env('DB_DATABASE', 'default')),
 
         /*
          * You may optionally indicate a specific cache driver to use for permission and
