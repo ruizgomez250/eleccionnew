@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Reports\ParticipacionGeneralReport;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Mockery;
 use Tests\TestCase;
 
@@ -13,15 +14,21 @@ class ParticipacionGeneralReportTest extends TestCase
 {
     private function fixtures(): void
     {
-        config(['database.default' => 'report_test', 'database.connections.report_test' => [
-            'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
-        ]]);
-        DB::purge('report_test');
-        DB::statement('CREATE TABLE equipo (id INTEGER, sist INTEGER)');
-        DB::statement('CREATE TABLE dirigente (id INTEGER, id_equipo INTEGER, nombre TEXT)');
-        DB::statement('CREATE TABLE puntero (id INTEGER, id_dirigente INTEGER, nombre TEXT)');
-        DB::statement('CREATE TABLE votante (idpuntero INTEGER, cedula TEXT)');
-        DB::statement('CREATE TABLE votos (cedula TEXT)');
+        $mysql = getenv('PARTICIPACION_TEST_MYSQL') === '1';
+        if (!$mysql) {
+            config(['database.default' => 'report_test', 'database.connections.report_test' => [
+                'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
+            ]]);
+        }
+        DB::purge();
+        $this->assertSame($mysql ? 'mysql' : 'sqlite', DB::connection()->getDriverName());
+        // En MySQL las tablas temporales sólo existen en esta conexión de prueba.
+        $create = $mysql ? 'CREATE TEMPORARY TABLE ' : 'CREATE TABLE ';
+        DB::statement($create.'equipo (id INTEGER, sist INTEGER)');
+        DB::statement($create.'dirigente (id INTEGER, id_equipo INTEGER, nombre TEXT)');
+        DB::statement($create.'puntero (id INTEGER, id_dirigente INTEGER, nombre TEXT)');
+        DB::statement($create.'votante (idpuntero INTEGER, cedula TEXT)');
+        DB::statement($create.'votos (cedula '.($mysql ? 'VARCHAR(20) CHARACTER SET latin1 COLLATE latin1_swedish_ci' : 'TEXT').')');
         DB::table('equipo')->insert([['id' => 1, 'sist' => 1], ['id' => 2, 'sist' => 2]]);
         DB::table('dirigente')->insert([
             ['id' => 1, 'id_equipo' => 1, 'nombre' => 'Dirigente A'],
@@ -89,5 +96,31 @@ class ParticipacionGeneralReportTest extends TestCase
         $this->getJson('/reportes/participacion-general/data?sistema_id=2')->assertOk()->assertJsonPath('resumen.total', 2);
         DB::table('votos')->insert(['cedula' => '100002']);
         $this->getJson('/reportes/participacion-general/data')->assertOk()->assertJsonPath('resumen.registrados', 1);
+    }
+
+    public function test_shared_person_across_dirigentes_is_not_added_twice_to_summary(): void
+    {
+        $this->fixtures();
+        DB::table('votante')->insert(['idpuntero' => 4, 'cedula' => '100001']);
+        $data = app(ParticipacionGeneralReport::class)->generate(1);
+        $this->assertSame(2, $data['resumen']['total']);
+        $this->assertSame(1, $data['resumen']['registrados']);
+        $this->assertSame(3, array_sum(array_column($data['dirigentes'], 'total')));
+    }
+
+    public function test_errors_have_a_reference_without_exposing_sql(): void
+    {
+        $this->loginWithReportPermission(true);
+        Cache::flush();
+        $report = Mockery::mock(ParticipacionGeneralReport::class);
+        $report->shouldReceive('generate')->once()->with(1)->andThrow(new \RuntimeException('Private SQL details'));
+        $this->app->instance(ParticipacionGeneralReport::class, $report);
+        Log::shouldReceive('error')->once()->withArgs(fn ($message, $context) =>
+            $message === 'Error en participacion-general' && isset($context['referencia']));
+        $response = $this->getJson('/reportes/participacion-general/data');
+        $response->dump();
+        $response->assertStatus(500);
+        $this->assertStringStartsWith('No se pudo generar el reporte. Referencia:', $response->json('message'));
+        $response->assertDontSee('Private SQL details');
     }
 }

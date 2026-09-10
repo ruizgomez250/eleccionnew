@@ -106,7 +106,13 @@ $(function () {
         $('#error-reporte').prop('hidden', true);
         try {
             const response = await fetch(@json(route('reportes.participacion-general.data')), {headers:{Accept:'application/json'}, credentials:'same-origin'});
-            if (!response.ok) throw new Error(response.status === 403 ? 'No tenés permiso Reportes o un sistema asignado.' : 'No se pudo cargar el reporte. Intentá nuevamente.');
+            if (!response.ok) {
+                const detalle = await response.json().catch(() => ({}));
+                const mensaje = response.status === 403 ? 'No tenés permiso Reportes o un sistema asignado.'
+                    : (typeof detalle.message === 'string' && detalle.message.startsWith('No se pudo generar el reporte. Referencia:')
+                        ? detalle.message : 'No se pudo cargar el reporte (HTTP '+response.status+'). Intentá nuevamente.');
+                throw new Error(mensaje);
+            }
             const data = await response.json();
             Object.entries(data.resumen).forEach(([key,value]) => $('#metrica-'+key).text(numero.format(value)+(key === 'porcentaje' ? '%' : '')));
             const porcentaje = Math.max(0, Math.min(100, Number(data.resumen.porcentaje) || 0));
