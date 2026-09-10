@@ -356,6 +356,12 @@ return [
                     'url'  => '/reportes/carga-votos',
                 ],
                 [
+                    'text' => 'Participación general',
+                    'url' => '/reportes/participacion-general',
+                    'icon' => 'fas fa-chart-pie',
+                    'can' => 'Reportes',
+                ],
+                [
                     'text' => 'Todos los Vehiculos',
                     'url'  => '/vehiculosporsistema',
                 ],

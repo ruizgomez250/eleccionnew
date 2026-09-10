@@ -155,6 +155,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reportes/resultados-mesa-data', [ReportesController::class, 'getResultadosMesaData'])->name('reportes.resultados.mesa.data');
     Route::get('/reportes/resultados-mesa-pdf', [ReportesController::class, 'exportarResultadosMesaPDF'])->name('reportes.resultados.mesa.pdf');
     Route::get('/reportes/carga-votos', [ReportesController::class, 'cargaVotos'])->name('reportes.carga-votos');
+    Route::get('/reportes/participacion-general', [\App\Http\Controllers\ParticipacionGeneralController::class, 'index'])->name('reportes.participacion-general');
+    Route::get('/reportes/participacion-general/data', [\App\Http\Controllers\ParticipacionGeneralController::class, 'data'])->name('reportes.participacion-general.data');
     Route::get('/reportes/carga-votos-data', [ReportesController::class, 'getCargaVotosData'])->name('reportes.carga-votos.data');
     Route::get('/reportes/carga-votos-detalle', [ReportesController::class, 'getCargaVotosDetalle'])->name('reportes.carga-votos.detalle');
     Route::resource('vehiculo', VehiculoController::class);
