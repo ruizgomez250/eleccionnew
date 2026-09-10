@@ -12,6 +12,19 @@
     <div class="card mb-3">
         <div class="card-body">
             <form id="filterForm" class="form-inline">
+                @if($esSuperAdmin)
+                    <div class="form-group mr-3">
+                        <label class="mr-2"><strong>Candidato:</strong></label>
+                        <select name="candidato_id" id="candidato_id" class="form-control">
+                            <option value="">Todos los candidatos</option>
+                            @foreach($candidatos as $candidato)
+                                <option value="{{ $candidato->id }}">
+                                    {{ $candidato->nombre }} ({{ ucfirst($candidato->tipo) }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <div class="form-group mr-3">
                     <label class="mr-2"><strong>Filtrar por carga:</strong></label>
                     <select name="miembro_id" id="miembro_id" class="form-control">
@@ -78,15 +91,18 @@
             return interval;
         }
 
-        function loadReport(miembroId) {
+        function loadReport() {
             let interval = startProgress();
             $('#loadingContainer').show();
             $('#reporteContent').hide().empty();
 
+            let miembroId = $('#miembro_id').val();
+            let candidatoId = $('#candidato_id').length ? $('#candidato_id').val() : '';
+
             $.ajax({
                 url: '{{ route("reportes.carga-votos.data") }}',
                 type: 'GET',
-                data: { miembro_id: miembroId },
+                data: { miembro_id: miembroId, candidato_id: candidatoId },
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
@@ -144,7 +160,8 @@
                 data: {
                     puntero_id: punteroId,
                     tipo: tipo,
-                    miembro_id: $('#miembro_id').val()
+                    miembro_id: $('#miembro_id').val(),
+                    candidato_id: $('#candidato_id').length ? $('#candidato_id').val() : ''
                 },
                 dataType: 'json',
                 success: function(response) {
@@ -162,16 +179,16 @@
 
         $('#filterForm').on('submit', function(e) {
             e.preventDefault();
-            loadReport($('#miembro_id').val());
+            loadReport();
         });
 
         $('#btnRefresh').on('click', function() {
             if ($('#reporteContent').is(':visible')) {
-                loadReport($('#miembro_id').val());
+                loadReport();
             }
         });
 
-        loadReport('');
+        loadReport();
     });
 </script>
 @endpush

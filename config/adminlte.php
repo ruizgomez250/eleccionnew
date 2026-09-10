@@ -314,35 +314,6 @@ return [
             'url'        => '/arbol',    // Usando el nombre de la ruta en lugar de la URL directa
         ],
         [
-            'text'       => 'Colegio electoral',
-            'icon'       => 'fas fa-users',
-            'icon_color' => 'info',
-            'classes'    => 'custom-icon-box custom-icon-box-blue',
-            'content'    => '<i class="fas fa-users"></i>',
-            'can'        => 'Menu Equipo',
-            'url'        => 'equipo',
-        ],
-
-        [
-            'text'       => 'Dirigente',
-            'icon'       => 'fas fa-user-tie',
-            'icon_color' => 'warning',
-            'classes'    => 'custom-icon-box custom-icon-box-warning',
-            'content'    => '<i class="fas fa-user-tie"></i>',
-            'can'        => 'Menu Dirigente',
-            'url'        => '/dirigente/create',
-        ],
-
-        [
-            'text'       => 'Puntero',
-            'icon'       => 'fas fa-user-friends',
-            'icon_color' => 'light',
-            'classes'    => 'custom-icon-box custom-icon-box-dark',
-            'content'    => '<i class="fas fa-user-friends"></i>',
-            'can'        => 'Menu Puntero',
-            'url'        => '/puntero/create',
-        ],
-        [
             'text'       => 'Visitas Punteros',
             'icon'       => 'fas fa-clipboard-check',
             'icon_color' => 'success',

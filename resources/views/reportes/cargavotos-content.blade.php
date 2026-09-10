@@ -26,6 +26,10 @@
     $dirigentesVotaron = collect($dirigentesData)->pluck('votaron');
     $dirigentesNoVotaron = collect($dirigentesData)->pluck('no_votaron');
     $totalDirigentes = count($dirigentesData);
+
+    $candNombres = collect($porCandidato)->pluck('nombre')->map(fn($n) => strlen($n) > 25 ? substr($n, 0, 25).'...' : $n);
+    $candVotantes = collect($porCandidato)->pluck('votantes');
+    $candVotaron = collect($porCandidato)->pluck('votaron');
 @endphp
 
 <div class="row mb-3">
@@ -69,6 +73,11 @@
             <li class="nav-item">
                 <a class="nav-link" id="detalle-tab" data-toggle="tab" href="#detalle" role="tab">
                     <i class="fas fa-list"></i> Detalle por Puntero
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="candidato-tab" data-toggle="tab" href="#votantes-candidato" role="tab">
+                    <i class="fas fa-chart-bar"></i> Votantes por Candidato
                 </a>
             </li>
         </ul>
@@ -218,6 +227,62 @@
                 </div>
             </div>
 
+            {{-- ===== TAB: VOTANTES POR CANDIDATO ===== --}}
+            <div class="tab-pane fade" id="votantes-candidato" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card card-outline card-info">
+                            <div class="card-header">
+                                <h6 class="card-title"><i class="fas fa-chart-bar"></i> Votantes vs. Votaron por Candidato</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chartVotantesCandidato" height="420"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @if(count($porCandidato) > 0)
+                <div class="row mt-1">
+                    <div class="col-md-12">
+                        <div class="card card-outline card-secondary">
+                            <div class="card-header">
+                                <h6 class="card-title"><i class="fas fa-table"></i> Detalle por Candidato</h6>
+                            </div>
+                            <div class="card-body table-responsive p-0">
+                                <table class="table table-bordered table-striped table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Candidato</th>
+                                            <th>Tipo</th>
+                                            <th class="text-center">Votantes</th>
+                                            <th class="text-center">Votaron</th>
+                                            <th class="text-center">% Votaron</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($porCandidato as $cand)
+                                            @php
+                                                $pct = $cand['votantes'] > 0 ? round($cand['votaron'] / $cand['votantes'] * 100, 1) : 0;
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $cand['nombre'] }}</td>
+                                                <td>{{ ucfirst($cand['tipo']) }}</td>
+                                                <td class="text-center">{{ number_format($cand['votantes'], 0, ',', '.') }}</td>
+                                                <td class="text-center">{{ number_format($cand['votaron'], 0, ',', '.') }}</td>
+                                                <td class="text-center">
+                                                    <span class="badge badge-info">{{ $pct }}%</span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </div>
+
         </div>
     </div>
 </div>
@@ -321,6 +386,42 @@
             });
         }
 
+        var chartCandidatos = null;
+        var ctx4 = document.getElementById('chartVotantesCandidato');
+        if (ctx4) {
+            chartCandidatos = new Chart(ctx4.getContext('2d'), {
+                type: 'horizontalBar',
+                data: {
+                    labels: {!! $candNombres->toJson() !!},
+                    datasets: [
+                        {
+                            label: 'Votantes',
+                            data: {!! $candVotantes->toJson() !!},
+                            backgroundColor: 'rgba(23, 162, 184, 0.7)',
+                            borderColor: 'rgba(23, 162, 184, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Votaron',
+                            data: {!! $candVotaron->toJson() !!},
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    legend: { position: 'bottom' },
+                    scales: {
+                        xAxes: [{ ticks: { beginAtZero: true } }],
+                        yAxes: [{ ticks: { autoSkip: false } }]
+                    }
+                }
+            });
+        }
+
         var table = $('#tabla-punteros');
         if (table.length && !$.fn.DataTable.isDataTable(table)) {
             table.DataTable({
@@ -342,6 +443,9 @@
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
             if ($(e.target).attr('href') === '#detalle' && $.fn.DataTable.isDataTable('#tabla-punteros')) {
                 $('#tabla-punteros').DataTable().columns.adjust().responsive.recalc();
+            }
+            if ($(e.target).attr('href') === '#votantes-candidato' && chartCandidatos) {
+                chartCandidatos.resize();
             }
         });
     });

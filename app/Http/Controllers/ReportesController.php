@@ -332,28 +332,59 @@ class ReportesController extends Controller
     // En ReportesController.php, agrega este método
     public function cargaVotos()
     {
+        $userId = Auth::id();
+        $esSuperAdmin = $userId >= 1 && $userId <= 4;
+
         $miembros = MiembroDeMesa::with('equipo')
-            ->whereHas('equipo', function ($q) {
-                $q->where('sist', Auth::user()->sistema);
+            ->when(!$esSuperAdmin, function ($q) {
+                $q->whereHas('equipo', function ($q2) {
+                    $q2->where('sist', Auth::user()->sistema);
+                });
             })
             ->orderBy('nombre')
             ->get();
 
-        return view('reportes.cargavotos-loading', compact('miembros'));
+        $candidatos = collect();
+        if ($esSuperAdmin) {
+            $candidatos = Sistema::select('id', 'nombre', 'tipo')
+                ->whereRaw('LOWER(tipo) IN (?, ?)', ['intendente', 'concejal'])
+                ->orderBy('tipo')
+                ->orderBy('nombre')
+                ->get();
+        }
+
+        return view('reportes.cargavotos-loading', compact('miembros', 'candidatos', 'esSuperAdmin'));
     }
 
     public function getCargaVotosData(Request $request)
     {
         try {
             $miembroId = $request->input('miembro_id');
-            $sistemaId = Auth::user()->sistema;
+            $userId = Auth::id();
+            $esSuperAdmin = $userId >= 1 && $userId <= 4;
+            $candidatoId = $request->input('candidato_id');
+
+            $sistemaFiltro = null;
+            if (!$esSuperAdmin) {
+                $sistemaFiltro = Auth::user()->sistema;
+            } elseif ($candidatoId) {
+                $sistemaFiltro = $candidatoId;
+            }
 
             $votosSub = DB::table('votos')
                 ->select('cedula')
-                ->whereIn('id', function ($query) use ($miembroId) {
+                ->whereIn('id', function ($query) use ($miembroId, $sistemaFiltro) {
                     $query->select(DB::raw('MIN(id)'))
                         ->from('votos')
                         ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
+                        ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
+                            $q->whereIn('idmiembrodemesa', function ($q2) use ($sistemaFiltro) {
+                                $q2->select('m.id')
+                                    ->from('miembros_de_mesa as m')
+                                    ->join('equipo as e', 'e.id', '=', 'm.idequipo')
+                                    ->where('e.sist', $sistemaFiltro);
+                            });
+                        })
                         ->groupBy('cedula');
                 });
 
@@ -364,7 +395,7 @@ class ReportesController extends Controller
                 ->leftJoinSub($votosSub, 'v', function ($join) {
                     $join->on(DB::raw('vt.cedula COLLATE utf8mb4_unicode_ci'), '=', DB::raw('v.cedula COLLATE utf8mb4_unicode_ci'));
                 })
-                ->where('e.sist', $sistemaId)
+                ->when($sistemaFiltro, fn($q) => $q->where('e.sist', $sistemaFiltro))
                 ->select(
                     'd.nombre as dirigente_nombre',
                     'p.id as puntero_id',
@@ -379,13 +410,55 @@ class ReportesController extends Controller
 
             $totalGeneral = DB::table('votos')
                 ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
+                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
+                    $q->whereIn('idmiembrodemesa', function ($q2) use ($sistemaFiltro) {
+                        $q2->select('m.id')
+                            ->from('miembros_de_mesa as m')
+                            ->join('equipo as e', 'e.id', '=', 'm.idequipo')
+                            ->where('e.sist', $sistemaFiltro);
+                    });
+                })
                 ->count();
+
+            $sistemasChart = Sistema::select('id', 'nombre', 'tipo')
+                ->whereRaw('LOWER(tipo) IN (?, ?)', ['intendente', 'concejal'])
+                ->when($sistemaFiltro, fn($q) => $q->where('id', $sistemaFiltro))
+                ->orderBy('tipo')
+                ->orderBy('nombre')
+                ->get();
+
+            $votantesPorSistema = DB::table('votante as vt')
+                ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
+                ->join('dirigente as d', 'p.id_dirigente', '=', 'd.id')
+                ->join('equipo as e', 'd.id_equipo', '=', 'e.id')
+                ->when($sistemaFiltro, fn($q) => $q->where('e.sist', $sistemaFiltro))
+                ->select('e.sist', DB::raw('COUNT(DISTINCT vt.id) as total_votantes'))
+                ->groupBy('e.sist')
+                ->pluck('total_votantes', 'e.sist');
+
+            $votosPorSistema = DB::table('votos')
+                ->join('miembros_de_mesa as m', 'm.id', '=', 'votos.idmiembrodemesa')
+                ->join('equipo as e', 'e.id', '=', 'm.idequipo')
+                ->when($sistemaFiltro, fn($q) => $q->where('e.sist', $sistemaFiltro))
+                ->select('e.sist', DB::raw('COUNT(DISTINCT votos.cedula) as votaron'))
+                ->groupBy('e.sist')
+                ->pluck('votaron', 'e.sist');
+
+            $porCandidato = $sistemasChart->map(function ($s) use ($votantesPorSistema, $votosPorSistema) {
+                return [
+                    'nombre' => $s->nombre,
+                    'tipo' => $s->tipo,
+                    'votantes' => (int) ($votantesPorSistema[$s->id] ?? 0),
+                    'votaron' => (int) ($votosPorSistema[$s->id] ?? 0),
+                ];
+            });
 
             return response()->json([
                 'success' => true,
                 'html' => view('reportes.cargavotos-content', compact(
                     'punters',
-                    'totalGeneral'
+                    'totalGeneral',
+                    'porCandidato'
                 ))->render()
             ]);
         } catch (\Exception $e) {
@@ -403,13 +476,31 @@ class ReportesController extends Controller
             $punteroId = $request->input('puntero_id');
             $tipo = $request->input('tipo'); // 'votaron' o 'no_votaron'
             $miembroId = $request->input('miembro_id');
+            $userId = Auth::id();
+            $esSuperAdmin = $userId >= 1 && $userId <= 4;
+            $candidatoId = $request->input('candidato_id');
+
+            $sistemaFiltro = null;
+            if (!$esSuperAdmin) {
+                $sistemaFiltro = Auth::user()->sistema;
+            } elseif ($candidatoId) {
+                $sistemaFiltro = $candidatoId;
+            }
 
             $votosSub = DB::table('votos')
                 ->select('cedula')
-                ->whereIn('id', function ($query) use ($miembroId) {
+                ->whereIn('id', function ($query) use ($miembroId, $sistemaFiltro) {
                     $query->select(DB::raw('MIN(id)'))
                         ->from('votos')
                         ->when($miembroId, fn($q) => $q->where('idmiembrodemesa', $miembroId))
+                        ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
+                            $q->whereIn('idmiembrodemesa', function ($q2) use ($sistemaFiltro) {
+                                $q2->select('m.id')
+                                    ->from('miembros_de_mesa as m')
+                                    ->join('equipo as e', 'e.id', '=', 'm.idequipo')
+                                    ->where('e.sist', $sistemaFiltro);
+                            });
+                        })
                         ->groupBy('cedula');
                 });
 
