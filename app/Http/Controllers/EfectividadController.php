@@ -102,6 +102,8 @@ class EfectividadController extends Controller
                 ->groupBy('vm.mesa_id')
                 ->pluck('total', 'mesa_id');
 
+            $tieneCarga = (int) array_sum($votosCandidatoPorMesa->all()) > 0;
+
             // Votantes por puntero con su escuela y mesa.
             $votantes = DB::table('votante as vt')
                 ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
@@ -316,6 +318,10 @@ class EfectividadController extends Controller
                 'punteros' => $punteros,
                 'resumen' => $resumen,
                 'mesas_compartidas' => $mesasCompartidas,
+                'tiene_carga' => $tieneCarga,
+                'mensaje_sin_carga' => $tieneCarga
+                    ? null
+                    : 'El candidato «' . $candidato->nombre_completo . '» aún no tiene votos cargados en votos_mesa para el cargo Concejal Municipal. La columna Votos Reales saldrá en 0; cargá los votos para ver la efectividad.',
                 'generado_en' => now()->toIso8601String(),
             ])->header('Cache-Control', 'private, no-store');
         } catch (\Throwable $e) {

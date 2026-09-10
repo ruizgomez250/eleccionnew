@@ -38,6 +38,8 @@
 
     <div id="error-reporte" class="alert alert-danger" role="alert" hidden></div>
 
+    <div id="aviso-sin-carga" class="alert alert-warning" role="alert" hidden></div>
+
     <div id="reporte" hidden>
         <div class="row">
             <div class="col-sm-6 col-xl-3">
@@ -342,6 +344,8 @@ $(function () {
             $('#metrica-mesas_compartidas').text(numero.format(r.mesas_compartidas));
 
             $('#reporte').prop('hidden', false);
+            $('#aviso-sin-carga').prop('hidden', data.tiene_carga)
+                .text(data.tiene_carga ? '' : (data.mensaje_sin_carga || ''));
             buildTabla(data.punteros);
             buildTablaMesas(data.mesas_compartidas || []);
             $('[data-toggle=tooltip]').tooltip();
