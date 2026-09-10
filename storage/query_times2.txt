@@ -1,5 +1,0 @@
-votosCedulas distinct                             2.66s
-punters (votante join puntero)                    0.84s
-votosCedulas con sistema=7                        45.01s
-punters con sistema=7                             1.15s
-DONE

@@ -351,7 +351,7 @@ return [
                     'url'        => '/efectividad',
                 ],
                 [
-                    'text' => 'Efectividad del Puntero por Candidato',
+                    'text' => 'Votó vs No Votó por Puntero',
                     'icon' => 'fas fa-bullseye',
                     'url'  => '/reportes/efectividad-puntero',
                 ],

@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Efectividad del Puntero por Candidato')
+@section('title', 'Votó vs No Votó por Puntero')
 @section('plugins.Datatables', true)
 
 @section('content_header')
-    <h1><i class="fas fa-bullseye"></i> Efectividad del Puntero por Candidato</h1>
+    <h1><i class="fas fa-bullseye"></i> Votó vs No Votó por Puntero</h1>
 @stop
 
 @section('content')
@@ -45,14 +45,6 @@
             <div class="col-sm-6 col-xl-3">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-punteros">0</h3>
-                        <p>Punteros</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="small-box bg-white border shadow-sm">
-                    <div class="inner">
                         <h3 id="metrica-anotados">0</h3>
                         <p>Votantes Anotados</p>
                     </div>
@@ -61,60 +53,35 @@
             <div class="col-sm-6 col-xl-3">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-se_fueron">0</h3>
-                        <p>Se Fueron a Votar</p>
+                        <h3 id="metrica-votaron">0</h3>
+                        <p>Votó (cédula en votos)</p>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-no_se_fueron">0</h3>
-                        <p>No Se Fueron</p>
+                        <h3 id="metrica-no_votaron">0</h3>
+                        <p>No Votó</p>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-votos_reales">0</h3>
-                        <p>Votos Reales del Candidato</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="small-box bg-white border shadow-sm">
-                    <div class="inner">
-                        <h3 id="metrica-debio_tener">0</h3>
-                        <p>Debió Haber Tenido (Se Fueron)</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="small-box bg-white border shadow-sm">
-                    <div class="inner">
-                        <h3 id="metrica-efectividad">0%</h3>
-                        <p>Efectividad General</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="small-box bg-white border shadow-sm">
-                    <div class="inner">
-                        <h3 id="metrica-fallas_reiteradas">0</h3>
-                        <p>Punteros con Fallas Reiteradas</p>
+                        <h3 id="metrica-participacion">0%</h3>
+                        <p>Participación</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="alert alert-light border">
-            <strong>Interpretación:</strong> para cada puntero, <em>Debió Tener</em> = la cantidad de sus votantes que se fueron a votar.
-            <em>Votos Reales</em> = votos que obtuvo el candidato en las mesas donde votan esos votantes.
-            La <strong>efectividad</strong> es Votos Reales / Debió Tener. El puntero con mayor efectividad se marca en <span class="badge badge-success">verde</span>.
-            <br><strong>Fallas:</strong> una mesa falla cuando el puntero movilizó votantes ahí pero el candidato sacó <em>menos</em> votos que los que movilizó ese puntero.
-            Se marcan como <strong>reiteradas</strong> cuando el puntero falla en la mayoría de sus mesas con gente movilizada.
-            <br><strong>Mesas Compartidas:</strong> mesas con votantes de 2 o más punteros, donde se compara cuántos votos obtuvo el candidato vs. la movilización de cada puntero.
+            <strong>Cómo se calcula:</strong> se compara por <em>número de cédula</em>.
+            Un votante anotado <strong>Votó</strong> si su cédula aparece en la tabla <code>votos</code> de un colegio donde el candidato compite
+            (mesas del candidato → colegios → cédulas cargadas por los miembros de mesa).
+            El puntero con mayor participación se marca en <span class="badge badge-success">verde</span>.
+            <br><strong>Mesas Compartidas:</strong> mesas donde votan votantes de 2 o más punteros, comparando cuántos de cada puntero votaron ahí.
         </div>
 
         <div class="card">
@@ -125,13 +92,10 @@
                             <th>Puntero</th>
                             <th>Dirigente</th>
                             <th>Anotados</th>
-                            <th>Se Fueron</th>
-                            <th>No Se Fueron</th>
+                            <th>Votó</th>
+                            <th>No Votó</th>
                             <th>Mesas</th>
-                            <th>Debió Tener</th>
-                            <th>Votos Reales</th>
-                            <th>Fallas</th>
-                            <th>Efectividad</th>
+                            <th>Participación</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -151,7 +115,6 @@
                         <tr>
                             <th>Mesa</th>
                             <th>Colegio</th>
-                            <th>Votos del Candidato</th>
                             <th>Punteros</th>
                             <th>Comparación por Puntero</th>
                         </tr>
@@ -165,9 +128,9 @@
 
 @push('css')
 <style>
-    .efectividad-barrera { min-width:110px; height:12px; background:#dee2e6; border-radius:6px; overflow:hidden; }
-    .efectividad-barrera span { display:block; height:100%; background:#28a745; }
-    .mejor-efectividad { font-weight: bold; }
+    .participacion-barrera { min-width:110px; height:12px; background:#dee2e6; border-radius:6px; overflow:hidden; }
+    .participacion-barrera span { display:block; height:100%; background:#28a745; }
+    .mejor-participacion { font-weight: bold; }
 </style>
 @endpush
 
@@ -191,7 +154,7 @@ $(function () {
         emptyTable: 'No hay mesas compartidas'
     });
 
-    function badgeEfectividad(valor, esMejor) {
+    function badgeParticipacion(valor, esMejor) {
         if (esMejor) {
             return '<span class="badge badge-success badge-pill">' + numero.format(valor) + '%</span>';
         }
@@ -199,32 +162,19 @@ $(function () {
         return '<span class="badge ' + clase + ' badge-pill">' + numero.format(valor) + '%</span>';
     }
 
-    function buildDetalleFallas(row) {
-        var fallas = Number(row.fallas) || 0;
-        if (fallas === 0) {
-            return '<span class="badge badge-success badge-pill">0</span>';
-        }
-        var detalle = (row.mesas_falladas || []).map(function (m) {
-            return m.codigo + ' (' + m.colegio + '): fueron ' + m.se_fueron + ', votos ' + m.votos;
-        }).join('\n');
-        var icono = row.fallas_reiteradas ? ' <i class="fas fa-exclamation-triangle" data-toggle="tooltip" title="Fallas reiteradas"></i>' : '';
-        return '<span class="badge badge-danger badge-pill" data-toggle="tooltip" title="' + detalle + '">'
-            + numero.format(fallas) + '</span>' + icono;
-    }
-
     function buildComparacion(punteros) {
         return punteros.map(function (p) {
-            var icono = p.cubrio
+            var icono = p.movilizo
                 ? '<i class="fas fa-check-circle text-success"></i>'
                 : '<i class="fas fa-times-circle text-danger"></i>';
-            var color = p.cubrio ? 'success' : 'danger';
+            var color = p.movilizo ? 'success' : 'danger';
             return '<div class="mb-1">' + icono + ' <strong>' + texto(p.nombre) + '</strong> '
                 + '<span class="badge badge-info badge-pill" data-toggle="tooltip" title="Votantes en esta mesa">'
                 + numero.format(p.votantes) + '</span> '
-                + '<span class="badge badge-primary badge-pill" data-toggle="tooltip" title="Se fueron a votar en esta mesa">'
-                + numero.format(p.se_fueron) + '</span> '
-                + ' (movilizó ' + numero.format(p.se_fueron) + ', candidato obtuvo <strong>' + numero.format(p.votos_candidato) + '</strong>) '
-                + '<span class="badge badge-' + color + ' badge-pill">' + numero.format(p.efectividad_mesa) + '%</span></div>';
+                + '<span class="badge badge-primary badge-pill" data-toggle="tooltip" title="De ellos, votaron en esta mesa">'
+                + numero.format(p.votaron) + '</span> '
+                + '<span class="badge badge-' + color + ' badge-pill" data-toggle="tooltip" title="¿Movilizó votantes que votaron en esta mesa?">'
+                + (p.movilizo ? 'movilizó' : 'sin voto') + '</span></div>';
         }).join('');
     }
 
@@ -233,34 +183,28 @@ $(function () {
             {data:'nombre', render: function (value, type, row) {
                 if (type !== 'display') return value;
                 return row.es_mejor
-                    ? '<span class="text-success mejor-efectividad">' + texto(value) + ' <i class="fas fa-trophy"></i></span>'
+                    ? '<span class="text-success mejor-participacion">' + texto(value) + ' <i class="fas fa-trophy"></i></span>'
                     : texto(value);
             }},
             {data:'dirigente', render: texto},
-            {data:'anotados'},
-            {data:'se_fueron', render: function (value, type, row) {
-                if (type !== 'display') return value;
-                return '<span class="badge badge-info badge-pill">' + numero.format(value) + '</span>';
-            }},
-            {data:'no_se_fueron', render: function (value, type) {
+            {data:'anotados', render: function (value, type) {
                 if (type !== 'display') return value;
                 return '<span class="badge badge-secondary badge-pill">' + numero.format(value) + '</span>';
             }},
-            {data:'mesas'},
-            {data:'debio_tener', render: function (value, type) {
-                if (type !== 'display') return value;
-                return '<span class="badge badge-primary badge-pill">' + numero.format(value) + '</span>';
-            }},
-            {data:'votos_reales', render: function (value, type) {
+            {data:'votaron', render: function (value, type) {
                 if (type !== 'display') return value;
                 return '<span class="badge badge-success badge-pill">' + numero.format(value) + '</span>';
             }},
-            {data:'fallas', render: buildDetalleFallas},
-            {data:'efectividad', render: function (value, type, row) {
-                var n = Math.max(0, Number(value) || 0);
+            {data:'no_votaron', render: function (value, type) {
+                if (type !== 'display') return value;
+                return '<span class="badge badge-danger badge-pill">' + numero.format(value) + '</span>';
+            }},
+            {data:'mesas'},
+            {data:'participacion', render: function (value, type, row) {
+                var n = Math.max(0, Math.min(100, Number(value) || 0));
                 if (type !== 'display') return n;
-                return '<span class="efectividad-barrera"><span style="width:' + Math.min(100, n) + '%"></span></span> '
-                    + badgeEfectividad(n, row.es_mejor);
+                return '<span class="participacion-barrera"><span style="width:' + n + '%"></span></span> '
+                    + badgeParticipacion(n, row.es_mejor);
             }}
         ];
 
@@ -271,7 +215,7 @@ $(function () {
         tabla = $('#tabla-punteros').DataTable({
             data: filas, columns: columnas, language: idioma,
             pageLength: 25, lengthMenu: [10, 25, 50, 100],
-            deferRender: true, scrollX: true, order: [[9, 'desc']]
+            deferRender: true, scrollX: true, order: [[6, 'desc']]
         });
     }
 
@@ -281,10 +225,6 @@ $(function () {
                 return '<span class="font-weight-bold">' + texto(value) + '</span>';
             }},
             {data:'colegio', render: texto},
-            {data:'votos_candidato', render: function (value, type) {
-                if (type !== 'display') return value;
-                return '<span class="badge badge-success badge-pill">' + numero.format(value) + '</span>';
-            }},
             {data:'num_punteros', render: function (value, type) {
                 if (type !== 'display') return value;
                 return '<span class="badge badge-secondary badge-pill">' + numero.format(value) + '</span>';
@@ -302,7 +242,7 @@ $(function () {
         tablaMesas = $('#tabla-mesas-compartidas').DataTable({
             data: mesas, columns: columnas, language: idiomaMesas,
             pageLength: 10, lengthMenu: [10, 25, 50, 100],
-            deferRender: true, scrollX: true, order: [[3, 'desc']]
+            deferRender: true, scrollX: true, order: [[2, 'desc']]
         });
     }
 
@@ -333,14 +273,10 @@ $(function () {
             var data = await response.json();
             var r = data.resumen;
 
-            $('#metrica-punteros').text(numero.format(r.punteros));
             $('#metrica-anotados').text(numero.format(r.anotados));
-            $('#metrica-se_fueron').text(numero.format(r.se_fueron));
-            $('#metrica-no_se_fueron').text(numero.format(r.no_se_fueron));
-            $('#metrica-votos_reales').text(numero.format(r.votos_reales));
-            $('#metrica-debio_tener').text(numero.format(r.debio_tener));
-            $('#metrica-efectividad').text(numero.format(r.efectividad) + '%');
-            $('#metrica-fallas_reiteradas').text(numero.format(r.fallas_reiteradas_punteros));
+            $('#metrica-votaron').text(numero.format(r.votaron));
+            $('#metrica-no_votaron').text(numero.format(r.no_votaron));
+            $('#metrica-participacion').text(numero.format(r.participacion) + '%');
             $('#metrica-mesas_compartidas').text(numero.format(r.mesas_compartidas));
 
             $('#reporte').prop('hidden', false);

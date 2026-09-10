@@ -1,6 +1,0 @@
-idx votos                                         0.22s
-idx miembros_de_mesa                              0.04s
-idx equipo                                        0s
-JOIN directo votos->miembro->equipo sist=7        43.38s
-whereIn directo sistema=7                         2.21s
-DONE
