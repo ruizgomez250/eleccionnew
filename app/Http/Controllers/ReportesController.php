@@ -335,15 +335,6 @@ class ReportesController extends Controller
         $userId = Auth::id();
         $esSuperAdmin = $userId >= 1 && $userId <= 4;
 
-        $miembros = MiembroDeMesa::with('equipo')
-            ->when(!$esSuperAdmin, function ($q) {
-                $q->whereHas('equipo', function ($q2) {
-                    $q2->where('sist', Auth::user()->sistema);
-                });
-            })
-            ->orderBy('nombre')
-            ->get();
-
         $candidatos = collect();
         if ($esSuperAdmin) {
             $candidatos = Sistema::select('id', 'nombre', 'tipo')
@@ -353,7 +344,7 @@ class ReportesController extends Controller
                 ->get();
         }
 
-        return view('reportes.cargavotos-loading', compact('miembros', 'candidatos', 'esSuperAdmin'));
+        return view('reportes.cargavotos-loading', compact('candidatos', 'esSuperAdmin'));
     }
 
     public function getCargaVotosData(Request $request)
@@ -371,7 +362,6 @@ class ReportesController extends Controller
 
     protected function cargarDatosCargaVotos(Request $request): array
     {
-        $miembroId = $request->input('miembro_id');
         $userId = Auth::id();
         $esSuperAdmin = $userId >= 1 && $userId <= 4;
         $candidatoId = $request->input('candidato_id');
@@ -383,17 +373,9 @@ class ReportesController extends Controller
             $sistemaFiltro = $candidatoId;
         }
 
-        $votosCedulas = DB::table('votos as v')
-            ->select('v.cedula')
-            ->where('v.cedula', '<>', '')
-            ->when($miembroId, fn($q) => $q->where('v.idmiembrodemesa', $miembroId))
-            ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                $idsMiembros = DB::table('miembros_de_mesa as m')
-                    ->join('equipo as e', 'e.id', '=', 'm.idequipo')
-                    ->where('e.sist', $sistemaFiltro)
-                    ->pluck('m.id');
-                $q->whereIn('v.idmiembrodemesa', $idsMiembros);
-            })
+        $votosCedulas = DB::table('votos')
+            ->select('cedula')
+            ->where('cedula', '<>', '')
             ->distinct()
             ->pluck('cedula')
             ->flip();
@@ -460,7 +442,6 @@ class ReportesController extends Controller
         try {
             $punteroId = $request->input('puntero_id');
             $tipo = $request->input('tipo'); // 'votaron' o 'no_votaron'
-            $miembroId = $request->input('miembro_id');
             $userId = Auth::id();
             $esSuperAdmin = $userId >= 1 && $userId <= 4;
             $candidatoId = $request->input('candidato_id');
@@ -472,17 +453,9 @@ class ReportesController extends Controller
                 $sistemaFiltro = $candidatoId;
             }
 
-            $votosCedulas = DB::table('votos as v')
-                ->select('v.cedula')
-                ->where('v.cedula', '<>', '')
-                ->when($miembroId, fn($q) => $q->where('v.idmiembrodemesa', $miembroId))
-                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                    $idsMiembros = DB::table('miembros_de_mesa as m')
-                        ->join('equipo as e', 'e.id', '=', 'm.idequipo')
-                        ->where('e.sist', $sistemaFiltro)
-                        ->pluck('m.id');
-                    $q->whereIn('v.idmiembrodemesa', $idsMiembros);
-                })
+            $votosCedulas = DB::table('votos')
+                ->select('cedula')
+                ->where('cedula', '<>', '')
                 ->distinct()
                 ->pluck('cedula')
                 ->flip();
@@ -490,6 +463,11 @@ class ReportesController extends Controller
             $votantes = DB::table('votante as vt')
                 ->where('vt.idpuntero', $punteroId)
                 ->where('vt.cedula', '<>', '')
+                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
+                    $q->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
+                        ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
+                        ->where('e.sist', $sistemaFiltro);
+                })
                 ->select('vt.cedula', 'vt.nombre', 'vt.mesa', 'vt.escuela', 'vt.ciudad')
                 ->get()
                 ->filter(function ($v) use ($tipo, $votosCedulas) {

@@ -24,17 +24,6 @@
                         </select>
                     </div>
                 @endif
-                <div class="form-group mr-3">
-                    <label class="mr-2"><strong>Filtrar por carga:</strong></label>
-                    <select name="miembro_id" id="miembro_id" class="form-control">
-                        <option value="">Todas las cargas</option>
-                        @foreach($miembros as $miembro)
-                            <option value="{{ $miembro->id }}">
-                                {{ $miembro->nombre }} ({{ $miembro->equipo->descripcion ?? 'Sin colegio electoral' }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> Generar
                 </button>
@@ -187,7 +176,6 @@ $(function () {
 
     function getFilters() {
         return {
-            miembro_id: $('#miembro_id').val() || '',
             candidato_id: $('#candidato_id').length ? ($('#candidato_id').val() || '') : ''
         };
     }
@@ -245,7 +233,6 @@ $(function () {
         var params = {
             puntero_id: punteroId,
             tipo: tipo,
-            miembro_id: $('#miembro_id').val() || '',
             candidato_id: $('#candidato_id').length ? ($('#candidato_id').val() || '') : ''
         };
 
