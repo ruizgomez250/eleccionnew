@@ -1349,7 +1349,7 @@
                     'Accept': 'application/json'
                 },
                 success: function(data) {
-                    // Construir tabla - AHORA CON 6 COLUMNAS (sin Tipo Votante)
+                    // Construir tabla - con Voto Interna
                     let contenido = `
                 <div class="table-responsive">
                     <table id="votantes-table" class="table table-striped table-bordered" style="width:100%">
@@ -1361,6 +1361,7 @@
                                 <th>Escuela</th>
                                 <th>Mesa</th>
                                 <th>Orden</th>
+                                <th class="text-center" title="Comparado con la tabla de votos por cédula">Voto Interna</th>
                                 <th>Observación</th>
                                 <th style="width:10%">Acciones</th>
                             </tr>
@@ -1371,7 +1372,7 @@
                     if (data.length === 0) {
                         contenido += `
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             <i class="fas fa-info-circle fa-2x mb-2"></i>
                             <p>No hay votantes registrados para este puntero</p>
                         </td>
@@ -1388,6 +1389,11 @@
                             <td>${v.escuela || ''}</td>
                             <td class="text-center">${v.mesa || ''}</td>
                             <td class="text-center">${v.orden || ''}</td>
+                            <td class="text-center">
+                                <span class="badge badge-${v.ya_voto ? 'success' : 'danger'}" style="font-size:1.1rem;" title="${v.ya_voto ? 'Registró su voto' : 'No registró voto'}">
+                                    ${v.ya_voto ? '✓' : '✗'}
+                                </span>
+                            </td>
                             <td class="text-center" style="max-width:200px;">
                                 <span id="obs_text_${v.id}" style="word-break:break-word;display:${obs ? 'inline' : 'none'};">${obs}</span>
                                 <span id="obs_empty_${v.id}" class="text-muted" style="display:${obs ? 'none' : 'inline'};">—</span>
@@ -1426,7 +1432,7 @@
                                         text: '<i class="fas fa-copy"></i> Copiar',
                                         exportOptions: {
                                             columns: [0, 1, 2, 3, 4,
-                                                5, 6
+                                                5, 6, 7
                                             ]
                                         }
                                     },
@@ -1435,7 +1441,7 @@
                                         className: 'btn btn-success btn-sm',
                                         text: '<i class="fas fa-file-excel"></i> Excel',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6]
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
                                         },
                                         title: `Votantes_${nombrePuntero.replace(/\s/g, '_')}`,
                                         filename: function() {
@@ -1449,7 +1455,7 @@
                                         orientation: 'portrait',
                                         pageSize: 'A4',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5]
+                                            columns: [0, 1, 2, 3, 4, 5, 6]
                                         },
                                         title: `Votantes del Puntero: ${nombrePuntero}`,
                                         filename: function() {
@@ -1461,10 +1467,10 @@
                                             doc.styles.tableHeader.fillColor =
                                                 '#4CAF50';
                                             doc.styles.tableHeader.color = 'white';
-                                            // Columnas: #, Cédula, Nombre, Escuela, Mesa, Orden
-                                            doc.content[1].table.widths = ['8%',
-                                                '15%', '32%', '20%', '12%',
-                                                '13%'
+                                            // Columnas: #, Cédula, Nombre, Escuela, Mesa, Orden, Voto Interna
+                                            doc.content[1].table.widths = ['6%',
+                                                '14%', '29%', '18%', '11%',
+                                                '11%', '11%'
                                             ];
 
                                             // Centrar columnas numéricas
@@ -1476,6 +1482,8 @@
                                                     'center'; // Mesa
                                                 body[i][5].alignment =
                                                     'center'; // Orden
+                                                body[i][6].alignment =
+                                                    'center'; // Voto Interna
                                             }
 
                                             // Agregar título con nombre del puntero
@@ -1501,7 +1509,7 @@
                                         className: 'btn btn-info btn-sm',
                                         text: '<i class="fas fa-print"></i> Imprimir',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6]
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
                                         },
                                         customize: function(win) {
                                             $(win.document.body).find('table')
@@ -1514,10 +1522,10 @@
 
                                             // Centrar columnas numéricas
                                             $(win.document.body).find(
-                                                'td:nth-child(1), td:nth-child(5), td:nth-child(6)'
+                                                'td:nth-child(1), td:nth-child(5), td:nth-child(6), td:nth-child(7)'
                                             ).css('text-align', 'center');
                                             $(win.document.body).find(
-                                                'th:nth-child(1), th:nth-child(5), th:nth-child(6)'
+                                                'th:nth-child(1), th:nth-child(5), th:nth-child(6), th:nth-child(7)'
                                             ).css('text-align', 'center');
 
                                             // Agregar fecha
@@ -1558,11 +1566,16 @@
                                     }, // Orden
                                     {
                                         targets: [6],
+                                        className: 'text-center',
+                                        orderable: true
+                                    }, // Voto Interna
+                                    {
+                                        targets: [7],
                                         orderable: true,
                                         searchable: true
                                     }, // Observación
                                     {
-                                        targets: [7],
+                                        targets: [8],
                                         orderable: false,
                                         searchable: false
                                     } // Acciones

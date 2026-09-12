@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Votante extends Model
 {
@@ -50,7 +51,7 @@ class Votante extends Model
      */
     public static function porPuntero($idpuntero)
     {
-        return self::where('idpuntero', $idpuntero)
+        $votantes = self::where('idpuntero', $idpuntero)
             ->orderBy('id', 'desc')
             ->get([
                 'cedula',
@@ -69,6 +70,30 @@ class Votante extends Model
         'departamento',
         'observacion'
             ]);
+
+        $cedulasVotantes = $votantes->pluck('cedula')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $cedulasVotos = [];
+        if ($cedulasVotantes->isNotEmpty()) {
+            $cedulasVotos = DB::table('votos')
+                ->whereIn('cedula', $cedulasVotantes->all())
+                ->distinct()
+                ->pluck('cedula')
+                ->map(function ($cedula) {
+                    return (string) $cedula;
+                })
+                ->flip()
+                ->all();
+        }
+
+        foreach ($votantes as $votante) {
+            $votante->ya_voto = isset($cedulasVotos[(string) $votante->cedula]);
+        }
+
+        return $votantes;
     }
     
     
