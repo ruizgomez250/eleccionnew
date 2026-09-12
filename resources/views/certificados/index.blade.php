@@ -505,6 +505,28 @@
         .small-box { border-radius: 0.5rem; }
         .small-box>.inner h3 { font-size: 2rem; }
         #cargaContainer .card-body { min-height: 100px; }
+
+        /* Selector distrito → local → mesa del CERTIFICADO: garantiza texto legible
+           (el texto ya no queda blanco sobre blanco al seleccionar). */
+        #distritoSelect, #localSelect, #mesaSelect, #cargoSelect { color: #e6edf7 !important; }
+        #distritoSelect option, #localSelect option, #mesaSelect option, #cargoSelect option {
+            background: #141d2f !important;
+            color: #e6edf7 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { color: #e6edf7 !important; }
+        .select2-dropdown,
+        .select2-container .select2-dropdown { background: #ffffff !important; }
+        .select2-container--default .select2-results__option { color: #1f2937 !important; }
+        .select2-container--default .select2-results__option--highlighted[aria-selected],
+        .select2-container--default .select2-results__option[aria-selected="true"] {
+            background: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
     </style>
     @include('useradmin._dark_pages')
 @stop

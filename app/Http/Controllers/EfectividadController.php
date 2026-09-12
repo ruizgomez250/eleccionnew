@@ -15,9 +15,16 @@ class EfectividadController extends Controller
 {
     public function puntero()
     {
+        // Solo candidatos que tienen certificado de resultados cargado (votos_mesa):
+        // la efectividad se calcula contra los votos reales del certificado.
         $candidatos = Candidato::where('cargo', 'Concejal Municipal')
             ->activos()
             ->with('partido')
+            ->whereIn('id', DB::table('votos_mesa')
+                ->where('cargo', 'Concejal Municipal')
+                ->whereNotNull('candidato_id')
+                ->distinct()
+                ->pluck('candidato_id'))
             ->orderBy('partido_id')
             ->orderBy('numero_orden')
             ->get();
@@ -39,20 +46,16 @@ class EfectividadController extends Controller
             }
 
             $userId = (int) Auth::id();
-            $esSuperAdmin = $userId >= 1 && $userId <= 4;
-            $sistemaFiltro = $esSuperAdmin ? null : (int) Auth::user()->sistema;
 
-            // Cédulas que registraron voto (asistencia real por miembro de mesa).
-            // Se comparan por número de cédula contra el padrón de cada puntero:
-            // si la cédula está en votos, el votante votó. (votos no guarda
-            // candidato ni fecha; por eso cualquier cédula presente cuenta como voto.)
+            // Cédulas que registraron voto (asistencia real en la tabla voto).
+            // Se comparan por número de cédula: si la cédula está en votos, votó.
             $votosCedulas = DB::table('votos as v')
                 ->where('v.cedula', '<>', '')
                 ->distinct()
                 ->pluck('cedula')
                 ->flip();
 
-            // Mapa: colegio normalizado -> equipo_id (solo colegios que tienen mesas)
+            // Mapa: colegio normalizado -> equipo_id (solo colegios que tienen mesas).
             $colegioToEquipo = [];
             DB::table('equipo as e')
                 ->join('mesas as m', 'm.equipo_id', '=', 'e.id')
@@ -63,14 +66,14 @@ class EfectividadController extends Controller
                     $colegioToEquipo[$this->normalizarLocal($row->colegio)] = (int) $row->id;
                 });
 
-            // Mapa: (equipo_id, numero_mesa) -> mesa_id
+            // Mapa: (equipo_id, numero_mesa) -> mesa_id.
             $mesaByEquipoNum = [];
             DB::table('mesas')->get(['id', 'equipo_id', 'numero_mesa'])
                 ->each(function ($row) use (&$mesaByEquipoNum) {
                     $mesaByEquipoNum[(int) $row->equipo_id][(string) $row->numero_mesa] = (int) $row->id;
                 });
 
-            // Metadatos de mesas (código, colegio) para las comparaciones.
+            // Metadatos de mesas (código, colegio) para mostrar.
             $mesaInfo = [];
             DB::table('mesas as m')
                 ->join('equipo as e', 'e.id', '=', 'm.equipo_id')
@@ -84,166 +87,209 @@ class EfectividadController extends Controller
                     ];
                 });
 
-            // Votos reales del candidato por mesa (informativo, cuando hay carga).
+            // Votos reales del candidato por mesa = certificado de resultados (V_C,M).
             $votosCandidatoPorMesa = DB::table('votos_mesa as vm')
                 ->where('vm.candidato_id', $candidatoId)
                 ->where('vm.cargo', 'Concejal Municipal')
-                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                    $q->join('mesas as m', 'm.id', '=', 'vm.mesa_id')
-                        ->join('equipo as e', 'e.id', '=', 'm.equipo_id')
-                        ->where('e.sist', $sistemaFiltro);
-                })
                 ->select('vm.mesa_id', DB::raw('SUM(vm.cantidad_votos) as total'))
                 ->groupBy('vm.mesa_id')
                 ->pluck('total', 'mesa_id');
 
             $tieneCarga = (int) array_sum($votosCandidatoPorMesa->all()) > 0;
 
-            // Votantes por puntero con su escuela y mesa.
+            // Estructura del usuario logueado: punteros de su sistema
+            // (equipo.sist = usuario.sistema) más los punteros con votantes
+            // asignados a su usuario (votante.idusuario).
+            $userSistema = Auth::user()->sistema ?? null;
+            $punterosUsuario = collect();
+
+            if (!is_null($userSistema) && $userSistema !== '' && $userSistema !== 0) {
+                $punterosUsuario = DB::table('puntero as p')
+                    ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
+                    ->where('e.sist', $userSistema)
+                    ->distinct()
+                    ->pluck('p.id');
+            }
+
+            $punterosUsuario = $punterosUsuario->merge(
+                DB::table('votante as vt')
+                    ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
+                    ->where('vt.idusuario', $userId)
+                    ->where('vt.cedula', '<>', '')
+                    ->distinct()
+                    ->pluck('p.id')
+            )->unique()->values();
+
             $votantes = DB::table('votante as vt')
                 ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
                 ->leftJoin('dirigente as d', 'p.id_dirigente', '=', 'd.id')
-                ->when($sistemaFiltro, function ($q) use ($sistemaFiltro) {
-                    $q->join('equipo as e', 'p.id_equipo', '=', 'e.id')
-                        ->where('e.sist', $sistemaFiltro);
-                })
+                ->whereIn('p.id', $punterosUsuario)
                 ->where('vt.cedula', '<>', '')
                 ->select(
                     'p.id as puntero_id',
                     'p.nombre as puntero_nombre',
                     'd.nombre as dirigente_nombre',
+                    'vt.id as votante_id',
                     'vt.cedula as cedula',
-                    'vt.escuela',
-                    'vt.mesa'
+                    DB::raw("COALESCE(NULLIF(vt.nombre, ''), CONCAT_WS(' ', NULLIF(vt.padron_nombre, ''), NULLIF(vt.padron_apellido, '')), vt.cedula) as votante_nombre"),
+                    'vt.direccion as direccion',
+                    'vt.escuela as escuela',
+                    'vt.mesa as nro_mesa'
                 )
                 ->get()
                 ->groupBy('puntero_id');
 
-            $punteros = [];
-            $puntMesas = [];
-            $punteroMeta = [];
+            // ── Paso 1: agrupar la estructura por mesa ──
+            // mesas[mesaId]  -> ['n' => votantes de la estructura, 'f' => cuáles votaron, 'v_cm' => votos reales del candidato]
+            // punteroMesas[punteroId][mesaId] -> ['n','f']
+            $mesas = [];
+            $punteroMesas = [];
+            $sinMesa = [];
+
             foreach ($votantes as $punteroId => $filas) {
-                $total = 0;
-                $votaron = 0;
-                $mesas = [];
-
                 foreach ($filas as $fila) {
-                    $total++;
-                    // Comparación por cédula: si está en votos, votó.
-                    if (isset($votosCedulas[$fila->cedula])) {
-                        $votaron++;
-                    }
-
+                    $fila->mesa_id = null;
                     $eid = $colegioToEquipo[$this->normalizarLocal($fila->escuela)] ?? null;
-                    $numMesa = trim((string) $fila->mesa);
+                    $numMesa = trim((string) $fila->nro_mesa);
                     if ($eid !== null && $numMesa !== '' && isset($mesaByEquipoNum[$eid][$numMesa])) {
                         $mesaId = (int) $mesaByEquipoNum[$eid][$numMesa];
-                        $mesas[$mesaId] = true;
-                        $puntMesas[$punteroId][$mesaId]['total'] = ($puntMesas[$punteroId][$mesaId]['total'] ?? 0) + 1;
-                        if (isset($votosCedulas[$fila->cedula])) {
-                            $puntMesas[$punteroId][$mesaId]['votaron'] = ($puntMesas[$punteroId][$mesaId]['votaron'] ?? 0) + 1;
+                        $fila->mesa_id = $mesaId;
+
+                        $fue = isset($votosCedulas[$fila->cedula]);
+
+                        $mesas[$mesaId]['n'] = ($mesas[$mesaId]['n'] ?? 0) + 1;
+                        if ($fue) {
+                            $mesas[$mesaId]['f'] = ($mesas[$mesaId]['f'] ?? 0) + 1;
                         }
+
+                        $punteroMesas[$punteroId][$mesaId]['n'] = ($punteroMesas[$punteroId][$mesaId]['n'] ?? 0) + 1;
+                        if ($fue) {
+                            $punteroMesas[$punteroId][$mesaId]['f'] = ($punteroMesas[$punteroId][$mesaId]['f'] ?? 0) + 1;
+                        }
+                    } else {
+                        $sinMesa[$punteroId] = ($sinMesa[$punteroId] ?? 0) + 1;
                     }
+                }
+            }
+
+            // ── Paso 2: Tasa de conversión por mesa (Tasa_M) ──
+            // Tasa_M = min(1, V_est_C,M / F_C,M), con V_est_C,M = V_C,M
+            // (toda la estructura del usuario en la mesa pertenece a su candidato).
+            foreach ($mesas as $mesaId => &$info) {
+                $vCM = (int) ($votosCandidatoPorMesa[$mesaId] ?? 0);
+                $f = (int) ($info['f'] ?? 0);
+                $info['v_cm'] = $vCM;
+                $info['tasa'] = $f > 0 ? min(1, $vCM / $f) : 0;
+            }
+            unset($info);
+
+            // ── Paso 3: indicadores de efectividad por puntero ──
+            $punteros = [];
+            foreach ($votantes as $punteroId => $filas) {
+                $NP = count($filas);
+                $FP = 0;
+                foreach ($filas as $fila) {
+                    if (isset($votosCedulas[$fila->cedula])) {
+                        $FP++;
+                    }
+                }
+
+                // Votos efectivos del puntero = Σ por mesa de (F_P,M × Tasa_M)
+                $efectivos = 0;
+                foreach (($punteroMesas[$punteroId] ?? []) as $mesaId => $info) {
+                    $tasa = $mesas[$mesaId]['tasa'] ?? 0;
+                    $efectivos += (int) ($info['f'] ?? 0) * $tasa;
+                }
+
+                $perdidos = $FP - $efectivos;
+                $ausentes = $NP - $FP;
+
+                $efMov = $NP > 0 ? $FP / $NP : 0;
+                $efReal = $NP > 0 ? $efectivos / $NP : 0;
+                $tasaFuga = $FP > 0 ? $perdidos / $FP : 0;
+                $ieg = 100 * $efMov * $efReal;
+
+                // Detalle por votante: probabilidad de fidelidad y fuga.
+                $votantesDetalle = [];
+                foreach ($filas as $fila) {
+                    $fue = isset($votosCedulas[$fila->cedula]);
+                    $mesaId = $fila->mesa_id;
+                    $tasa = $mesaId !== null ? ($mesas[$mesaId]['tasa'] ?? 0) : 0;
+                    $pFid = $tasa * ($fue ? 1 : 0);
+                    $pFuga = ($fue ? 1 : 0) * (1 - $tasa);
+
+                    if (!$fue) {
+                        $clas = 'Ausente';
+                    } elseif ($mesaId === null) {
+                        $clas = 'Sin mesa';
+                    } elseif ($pFid >= 0.7) {
+                        $clas = 'Fiel probable';
+                    } elseif ($pFid >= 0.4) {
+                        $clas = 'Dudoso';
+                    } else {
+                        $clas = 'Probable fuga';
+                    }
+
+                    $votantesDetalle[] = [
+                        'nombre' => $this->normalizarTexto($fila->votante_nombre) ?: $fila->cedula,
+                        'cedula' => $fila->cedula,
+                        'mesa' => $mesaId !== null ? ($mesaInfo[$mesaId]['codigo'] ?? '') : '',
+                        'escuela' => (string) $fila->escuela,
+                        'voto' => $fue,
+                        'tasa' => round($tasa, 4),
+                        'p_fidelidad' => round($pFid, 4),
+                        'p_fuga' => round($pFuga, 4),
+                        'clasificacion' => $clas,
+                    ];
                 }
 
                 $punteros[] = [
                     'puntero_id' => (int) $punteroId,
                     'nombre' => $filas[0]->puntero_nombre,
                     'dirigente' => $filas[0]->dirigente_nombre ?? '',
-                    'anotados' => $total,
-                    'votaron' => $votaron,
-                    'no_votaron' => $total - $votaron,
-                    'mesas' => count($mesas),
-                    'participacion' => $total > 0 ? round(100 * $votaron / $total, 1) : 0,
-                ];
-
-                $punteroMeta[$punteroId] = [
-                    'nombre' => $filas[0]->puntero_nombre,
-                    'dirigente' => $filas[0]->dirigente_nombre ?? '',
-                ];
-            }
-
-            // Mesas compartidas: mesas donde votan votantes de 2 o más punteros,
-            // comparando cuántos votaron (por cédula en votos) por puntero.
-            $mesasCompartidas = [];
-            $mesaPunters = [];
-            foreach ($puntMesas as $punteroId => $mesas) {
-                foreach ($mesas as $mesaId => $info) {
-                    $mesaPunters[$mesaId][$punteroId] = $info;
-                }
-            }
-
-            foreach ($mesaPunters as $mesaId => $punters) {
-                if (count($punters) < 2) {
-                    continue;
-                }
-
-                $rows = [];
-                foreach ($punters as $punteroId => $info) {
-                    $votaronMesa = (int) ($info['votaron'] ?? 0);
-                    $rows[] = [
-                        'puntero_id' => (int) $punteroId,
-                        'nombre' => $punteroMeta[$punteroId]['nombre'] ?? '',
-                        'dirigente' => $punteroMeta[$punteroId]['dirigente'] ?? '',
-                        'votantes' => (int) ($info['total'] ?? 0),
-                        'votaron' => $votaronMesa,
-                        'movilizo' => $votaronMesa > 0,
-                    ];
-                }
-                usort($rows, fn ($a, $b) => $b['votaron'] <=> $a['votaron']);
-
-                $mesasCompartidas[] = [
-                    'mesa_id' => (int) $mesaId,
-                    'codigo' => $mesaInfo[$mesaId]['codigo'] ?? '',
-                    'colegio' => $mesaInfo[$mesaId]['colegio'] ?? '',
-                    'numero' => $mesaInfo[$mesaId]['numero'] ?? '',
-                    'num_punteros' => count($rows),
-                    'punteros' => $rows,
+                    'anotados' => $NP,
+                    'votaron' => $FP,
+                    'no_votaron' => $NP - $FP,
+                    'ausentes' => $ausentes,
+                    'sin_mesa' => $sinMesa[$punteroId] ?? 0,
+                    'mesas' => count($punteroMesas[$punteroId] ?? []),
+                    'votos_efectivos' => round($efectivos, 2),
+                    'votos_perdidos' => round($perdidos, 2),
+                    'ef_mov' => round($efMov, 4),
+                    'ef_real' => round($efReal, 4),
+                    'tasa_fuga' => round($tasaFuga, 4),
+                    'ieg' => round($ieg, 1),
+                    'color' => $ieg >= 80 ? 'success' : ($ieg >= 60 ? 'info' : ($ieg >= 40 ? 'warning' : 'danger')),
+                    'votantes' => $votantesDetalle,
                 ];
             }
-            usort($mesasCompartidas, fn ($a, $b) => $b['num_punteros'] <=> $a['num_punteros']);
 
-            usort($punteros, fn ($a, $b) => $b['participacion'] <=> $a['participacion']);
+            usort($punteros, fn ($a, $b) => $b['ieg'] <=> $a['ieg']);
 
-            $maxParticipacion = $punteros[0]['participacion'] ?? 0;
-
-            foreach ($punteros as &$puntero) {
-                if ($puntero['anotados'] > 0 && $puntero['participacion'] === $maxParticipacion && $maxParticipacion > 0) {
-                    $puntero['color'] = 'success';
-                } elseif ($puntero['participacion'] >= 80) {
-                    $puntero['color'] = 'success';
-                } elseif ($puntero['participacion'] >= 60) {
-                    $puntero['color'] = 'warning';
-                } else {
-                    $puntero['color'] = 'danger';
-                }
-                $puntero['es_mejor'] = $puntero['anotados'] > 0 && $maxParticipacion > 0
-                    && $puntero['participacion'] === $maxParticipacion;
-            }
-            unset($puntero);
-
-            $mesasGlobales = [];
-            foreach ($votantes as $filas) {
-                foreach ($filas as $fila) {
-                    $eid = $colegioToEquipo[$this->normalizarLocal($fila->escuela)] ?? null;
-                    $numMesa = trim((string) $fila->mesa);
-                    if ($eid !== null && $numMesa !== '' && isset($mesaByEquipoNum[$eid][$numMesa])) {
-                        $mesasGlobales[$mesaByEquipoNum[$eid][$numMesa]] = true;
-                    }
-                }
-            }
-
-            $votaronTotal = array_sum(array_column($punteros, 'votaron'));
-            $anotadosTotal = array_sum(array_column($punteros, 'anotados'));
+            // ── Resumen global ──
+            $totalN = array_sum(array_column($punteros, 'anotados'));
+            $totalF = array_sum(array_column($punteros, 'votaron'));
+            $totalEf = array_sum(array_column($punteros, 'votos_efectivos'));
+            $totalPer = array_sum(array_column($punteros, 'votos_perdidos'));
+            $totalSinMesa = array_sum(array_column($punteros, 'sin_mesa'));
+            $efMovG = $totalN > 0 ? $totalF / $totalN : 0;
+            $efRealG = $totalN > 0 ? $totalEf / $totalN : 0;
+            $iegG = 100 * $efMovG * $efRealG;
 
             $resumen = [
                 'punteros' => count($punteros),
-                'anotados' => $anotadosTotal,
-                'votaron' => $votaronTotal,
-                'no_votaron' => $anotadosTotal - $votaronTotal,
-                'mesas' => count($mesasGlobales),
-                'participacion' => $anotadosTotal > 0 ? round(100 * $votaronTotal / $anotadosTotal, 1) : 0,
-                'mesas_compartidas' => count($mesasCompartidas),
+                'anotados' => $totalN,
+                'votaron' => $totalF,
+                'no_votaron' => $totalN - $totalF,
+                'ausentes' => $totalN - $totalF,
+                'votos_efectivos' => round($totalEf, 2),
+                'votos_perdidos' => round($totalPer, 2),
+                'sin_mesa' => $totalSinMesa,
+                'mesas' => count($mesas),
+                'participacion' => $totalN > 0 ? round(100 * $totalF / $totalN, 1) : 0,
+                'ef_mov' => round($efMovG, 4),
+                'ef_real' => round($efRealG, 4),
+                'ieg' => round($iegG, 1),
             ];
 
             return response()->json([
@@ -255,11 +301,10 @@ class EfectividadController extends Controller
                 ],
                 'punteros' => $punteros,
                 'resumen' => $resumen,
-                'mesas_compartidas' => $mesasCompartidas,
                 'tiene_carga' => $tieneCarga,
                 'mensaje_sin_carga' => $tieneCarga
                     ? null
-                    : 'El candidato «' . $candidato->nombre_completo . '» aún no tiene votos cargados. La columna Votó saldrá en 0 por ahora; una vez cargados los votos se compararán las cédulas contra votos.',
+                    : 'El candidato «' . $candidato->nombre_completo . '» aún no tiene certificado de resultados cargado. Las tasas de conversión de mesa saldrán en 0 hasta que se carguen los votos reales por mesa.',
                 'generado_en' => now()->toIso8601String(),
             ])->header('Cache-Control', 'private, no-store');
         } catch (\Throwable $e) {
@@ -286,6 +331,11 @@ class EfectividadController extends Controller
         $texto = mb_strtoupper(trim((string) $local), 'UTF-8');
         $reemplazos = ['Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U', 'Ñ' => 'N'];
         return strtr($texto, $reemplazos);
+    }
+
+    private function normalizarTexto($texto): string
+    {
+        return trim(preg_replace('/[\t\r\n\x00-\x1F]+/', ' ', (string) $texto));
     }
 
     public function index()
