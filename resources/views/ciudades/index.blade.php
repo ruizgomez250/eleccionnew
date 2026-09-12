@@ -539,6 +539,11 @@
             max-width: 90%;
         }
 
+        /* SweetAlert siempre por encima de los modales apilados (Bootstrap 4) */
+        .swal2-container {
+            z-index: 2000 !important;
+        }
+
         @media (min-width: 1200px) {
             .modal-xl {
                 max-width: 1140px;
@@ -554,6 +559,57 @@
         // FUNCIONES GENERALES Y DE DISTRITOS
         // =============================================
         $(document).ready(function() {
+            // =============================================
+            // FIX: apilado de modales (Bootstrap 4.6)
+            // Evita que al cerrar un modal secundario el de
+            // atrás quede "congelado" y la página se desbloquee.
+            // =============================================
+            $(document).on('show.bs.modal', '.modal', function() {
+                let abiertos = $('.modal.show').length;
+                if (abiertos > 0) {
+                    $(this).css('z-index', 1050 + (abiertos * 30));
+                } else {
+                    $(this).css('z-index', '');
+                }
+            });
+
+            $(document).on('shown.bs.modal', '.modal', function() {
+                // Subir el backdrop del modal nuevo por encima del modal anterior
+                let $backdrops = $('.modal-backdrop');
+                if ($backdrops.length > 1) {
+                    let z = parseInt($(this).css('z-index')) || 1050;
+                    $backdrops.last().addClass('show').css('z-index', z - 5);
+                }
+            });
+
+            $(document).on('hidden.bs.modal', '.modal', function() {
+                // Quitar backdrops fantasma (invisibles) que bloquean los clics
+                $('.modal-backdrop').filter(function() {
+                    return !$(this).hasClass('show');
+                }).remove();
+
+                let $activos = $('.modal.show');
+                if ($activos.length) {
+                    // Todavía hay otro modal abierto: mantener scroll bloqueado
+                    document.body.classList.add('modal-open');
+                    // Dejar un único backdrop visible (el del modal superior)
+                    let $backdrops = $('.modal-backdrop');
+                    while ($backdrops.length > 1) {
+                        $backdrops.first().remove();
+                        $backdrops = $('.modal-backdrop');
+                    }
+                    $backdrops.last().addClass('show');
+                    $backdrops.last().css('z-index',
+                        (parseInt($activos.last().css('z-index')) || 1050) - 5
+                    );
+                    // Devolver el foco al modal que quedó visible
+                    let $top = $activos.last();
+                    $top.find('.modal-header button, .modal-body').first().focus();
+                } else {
+                    document.body.classList.remove('modal-open');
+                    $('.modal-backdrop').remove();
+                }
+            });
             mostrarBadgeNuevoManual();
             // === VOTANTES ===
             $('#formAgregarVotante').on('submit', function(e) {
@@ -1600,73 +1656,92 @@
             });
         };
 
+        // =============================================
+        // EDICIÓN DE OBSERVACIÓN EN LÍNEA (sin SweetAlert)
+        // Se edita directamente en la celda de la tabla para
+        // evitar conflictos de SweetAlert con los modales.
+        // =============================================
+        window.escaparHtml = function(texto) {
+            return String(texto == null ? '' : texto)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        };
+
+        window.renderCeldaObservacion = function(id, obs) {
+            obs = obs || '';
+            let $celda = $('#obs_text_' + id).closest('td');
+            $celda.html(`
+                <span id="obs_text_${id}" style="word-break:break-word;display:${obs ? 'inline' : 'none'};">${window.escaparHtml(obs)}</span>
+                <span id="obs_empty_${id}" class="text-muted" style="display:${obs ? 'none' : 'inline'};">—</span>
+                <button class="btn btn-sm btn-link p-0 ml-1" onclick="editarObservacion(${id})" title="Editar observación">
+                    <i class="fas fa-pen"></i>
+                </button>
+            `);
+        };
+
         window.editarObservacion = function(id) {
-            let currentObs = $('#obs_text_' + id).text();
-            $('#modalVotantes').modal('hide');
-            setTimeout(() => {
-                Swal.fire({
-                    title: 'Editar Observación',
-                    input: 'textarea',
-                    inputValue: currentObs && currentObs !== '—' ? currentObs : '',
-                    inputAttributes: {
-                        maxlength: 500,
-                        rows: 3
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: 'Guardar',
-                    cancelButtonText: 'Cancelar',
-                    didOpen: () => {
-                        setTimeout(() => {
-                            const input = Swal.getInput();
-                            if (input) input.focus();
-                        }, 100);
-                    }
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        let nuevaObs = result.value || '';
-                        $.ajax({
-                            url: "{{ url('votante') }}/" + id + "/observacion",
-                            type: 'PUT',
-                            data: {
-                                _token: "{{ csrf_token() }}",
-                                observacion: nuevaObs
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    if (nuevaObs) {
-                                        $('#obs_text_' + id).text(nuevaObs).show();
-                                        $('#obs_empty_' + id).hide();
-                                    } else {
-                                        $('#obs_text_' + id).hide();
-                                        $('#obs_empty_' + id).show();
-                                    }
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Observación actualizada',
-                                        timer: 1200,
-                                        showConfirmButton: false
-                                    }).then(() => {
-                                        let pid = $('#votante_id_puntero').val();
-                                        let n = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
-                                        if (pid) window.cargarVotantes(pid, n);
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: xhr.responseJSON?.message || 'No se pudo actualizar la observación'
-                                });
-                            }
+            let actual = $('#obs_text_' + id).text();
+            if (actual === '—') actual = '';
+            let $celda = $('#obs_text_' + id).closest('td');
+            $celda.data('obs-original', actual);
+            $celda.html(`
+                <textarea id="obs_edit_${id}" class="form-control form-control-sm" rows="2" maxlength="500" style="min-width:170px;">${window.escaparHtml(actual)}</textarea>
+                <div class="mt-1 text-center">
+                    <button class="btn btn-success btn-sm" onclick="guardarObservacion(${id})" title="Guardar">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="cancelarObservacion(${id})" title="Cancelar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `);
+            $('#obs_edit_' + id).focus();
+        };
+
+        window.guardarObservacion = function(id) {
+            let $celda = $('#obs_edit_' + id).closest('td');
+            let nuevaObs = $('#obs_edit_' + id).val().trim();
+            $.ajax({
+                url: "{{ url('votante') }}/" + id + "/observacion",
+                type: 'PUT',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    observacion: nuevaObs
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.renderCeldaObservacion(id, nuevaObs);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Observación actualizada',
+                            timer: 1200,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
                         });
-                    } else {
-                        let pid = $('#votante_id_puntero').val();
-                        let n = $('#tituloVotantes').text().replace('Votantes del Puntero: ', '').trim();
-                        if (pid) window.cargarVotantes(pid, n);
+                        if ($.fn.DataTable && $.fn.DataTable.isDataTable('#votantes-table')) {
+                            let dt = $('#votantes-table').DataTable();
+                            if ($celda.length) dt.row($celda.closest('tr')).invalidate().draw(false);
+                        }
                     }
-                });
-            }, 300);
+                },
+                error: function(xhr) {
+                    window.renderCeldaObservacion(id, $celda.data('obs-original') || '');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || 'No se pudo actualizar la observación'
+                    });
+                }
+            });
+        };
+
+        window.cancelarObservacion = function(id) {
+            let $celda = $('#obs_edit_' + id).closest('td');
+            let original = $celda.data('obs-original') || '';
+            window.renderCeldaObservacion(id, original);
         };
 
         window.eliminarVotante = function(id, nombre) {
