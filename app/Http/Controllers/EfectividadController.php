@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Candidato;
 use App\Models\Mesa;
 use App\Models\Partido;
+use App\Models\Sistema;
 use App\Models\VotosMesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,14 @@ class EfectividadController extends Controller
             ->orderBy('numero_orden')
             ->get();
 
-        return view('reportes.efectividad-puntero', compact('candidatos'));
+        // Los usuarios 1-4 (admin) pueden elegir contra qué sistema se consulta.
+        $userId = (int) Auth::id();
+        $esAdmin = in_array($userId, [1, 2, 3, 4]);
+        $sistemas = $esAdmin
+            ? Sistema::orderBy('nombre')->get(['id', 'nombre'])
+            : collect();
+
+        return view('reportes.efectividad-puntero', compact('candidatos', 'esAdmin', 'sistemas'));
     }
 
     public function punteroData(Request $request)
@@ -97,28 +105,46 @@ class EfectividadController extends Controller
 
             $tieneCarga = (int) array_sum($votosCandidatoPorMesa->all()) > 0;
 
-            // Estructura del usuario logueado: punteros de su sistema
-            // (equipo.sist = usuario.sistema) más los punteros con votantes
-            // asignados a su usuario (votante.idusuario).
-            $userSistema = Auth::user()->sistema ?? null;
-            $punterosUsuario = collect();
+            // Estructura a consultar.
+            // - Usuarios 1-4 (admin): el sistema a consultar lo eligen en el formulario.
+            // - Resto de usuarios: punteros de su sistema (equipo.sist = usuario.sistema)
+            //   más los punteros con votantes asignados a su usuario (votante.idusuario).
+            $esAdmin = in_array($userId, [1, 2, 3, 4]);
 
-            if (!is_null($userSistema) && $userSistema !== '' && $userSistema !== 0) {
+            if ($esAdmin) {
+                $sistemaSeleccionado = (int) $request->input('sistema_id');
+                if (!$sistemaSeleccionado) {
+                    return response()->json(['message' => 'Seleccioná un sistema para generar el reporte.'], 422);
+                }
+
                 $punterosUsuario = DB::table('puntero as p')
                     ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
-                    ->where('e.sist', $userSistema)
-                    ->distinct()
-                    ->pluck('p.id');
-            }
-
-            $punterosUsuario = $punterosUsuario->merge(
-                DB::table('votante as vt')
-                    ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
-                    ->where('vt.idusuario', $userId)
-                    ->where('vt.cedula', '<>', '')
+                    ->where('e.sist', $sistemaSeleccionado)
                     ->distinct()
                     ->pluck('p.id')
-            )->unique()->values();
+                    ->unique()
+                    ->values();
+            } else {
+                $userSistema = Auth::user()->sistema ?? null;
+                $punterosUsuario = collect();
+
+                if (!is_null($userSistema) && $userSistema !== '' && $userSistema !== 0) {
+                    $punterosUsuario = DB::table('puntero as p')
+                        ->join('equipo as e', 'p.id_equipo', '=', 'e.id')
+                        ->where('e.sist', $userSistema)
+                        ->distinct()
+                        ->pluck('p.id');
+                }
+
+                $punterosUsuario = $punterosUsuario->merge(
+                    DB::table('votante as vt')
+                        ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')
+                        ->where('vt.idusuario', $userId)
+                        ->where('vt.cedula', '<>', '')
+                        ->distinct()
+                        ->pluck('p.id')
+                )->unique()->values();
+            }
 
             $votantes = DB::table('votante as vt')
                 ->join('puntero as p', 'vt.idpuntero', '=', 'p.id')

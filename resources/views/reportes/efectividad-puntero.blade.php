@@ -22,6 +22,19 @@
                         @endforeach
                     </select>
                 </div>
+                @if($esAdmin)
+                    <div class="form-group mr-3">
+                        <label class="mr-2"><strong>Sistema:</strong></label>
+                        <select name="sistema_id" id="sistema_id" class="form-control select2" style="min-width: 260px;">
+                            <option value="">Seleccionar sistema</option>
+                            @foreach($sistemas as $sistema)
+                                <option value="{{ $sistema->id }}" @if((int) optional(auth()->user())->sistema === (int) $sistema->id) selected @endif>
+                                    {{ $sistema->nombre }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> Generar
                 </button>
@@ -31,7 +44,11 @@
             </form>
             <small class="text-muted d-block mt-2">
                 Solo se muestran candidatos con <strong>certificados de resultados cargados</strong> (tabla de votos por mesa).
-                El cálculo usa únicamente <strong>tus punteros y votantes</strong> (tu estructura), comparados contra los votos reales del certificado.
+                @if($esAdmin)
+                    Elegís contra qué <strong>sistema</strong> se consulta la estructura.
+                @else
+                    El cálculo usa únicamente <strong>tus punteros y votantes</strong> (tu estructura), comparados contra los votos reales del certificado.
+                @endif
             </small>
         </div>
     </div>
@@ -278,6 +295,8 @@ $(function () {
 
         try {
             var params = new URLSearchParams({ candidato_id: candidatoId });
+            var sistemaId = $('#sistema_id').val();
+            if (sistemaId) params.set('sistema_id', sistemaId);
             var response = await fetch('{{ route("reportes.efectividad-puntero.data") }}?' + params.toString(), {
                 headers: { Accept: 'application/json' },
                 credentials: 'same-origin'
