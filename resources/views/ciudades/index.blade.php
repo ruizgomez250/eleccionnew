@@ -1447,7 +1447,7 @@
                             <td class="text-center">${v.orden || ''}</td>
                             <td class="text-center">
                                 <span class="badge badge-${v.ya_voto ? 'success' : 'danger'}" style="font-size:1.1rem;" title="${v.ya_voto ? 'Registró su voto' : 'No registró voto'}">
-                                    ${v.ya_voto ? '✓' : '✗'}
+                                    ${v.ya_voto ? 'SI' : 'NO'}
                                 </span>
                             </td>
                             <td class="text-center" style="max-width:200px;">
@@ -1476,15 +1476,6 @@
                                 $('#votantes-table').DataTable().destroy();
                             }
 
-                            function formatoVoto(data, row, column, node) {
-                                if (column === 6) {
-                                    var txt = $(data).text().trim();
-                                    if (txt === '\u2713') return 'SI';
-                                    if (txt === '\u2717') return 'NO';
-                                }
-                                return data;
-                            }
-
                             // IMPORTANTE: DOM correcto con 'B' para botones
                             $('#votantes-table').DataTable({
                                 responsive: true,
@@ -1498,8 +1489,7 @@
                                         exportOptions: {
                                             columns: [0, 1, 2, 3, 4,
                                                 5, 6, 7
-                                            ],
-                                            format: { display: formatoVoto }
+                                            ]
                                         }
                                     },
                                     {
