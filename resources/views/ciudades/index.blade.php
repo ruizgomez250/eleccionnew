@@ -1489,7 +1489,8 @@
                                         exportOptions: {
                                             columns: [0, 1, 2, 3, 4,
                                                 5, 6, 7
-                                            ]
+                                            ],
+                                            format: { display: formatoVoto }
                                         }
                                     },
                                     {
@@ -1497,7 +1498,8 @@
                                         className: 'btn btn-success btn-sm',
                                         text: '<i class="fas fa-file-excel"></i> Excel',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7],
+                                            format: { display: formatoVoto }
                                         },
                                         title: `Votantes_${nombrePuntero.replace(/\s/g, '_')}`,
                                         filename: function() {
@@ -1511,7 +1513,8 @@
                                         orientation: 'portrait',
                                         pageSize: 'A4',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6]
+                                            columns: [0, 1, 2, 3, 4, 5, 6],
+                                            format: { display: formatoVoto }
                                         },
                                         title: `Votantes del Puntero: ${nombrePuntero}`,
                                         filename: function() {
@@ -1565,7 +1568,8 @@
                                         className: 'btn btn-info btn-sm',
                                         text: '<i class="fas fa-print"></i> Imprimir',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7],
+                                            format: { display: formatoVoto }
                                         },
                                         customize: function(win) {
                                             $(win.document.body).find('table')
