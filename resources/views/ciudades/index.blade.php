@@ -1476,6 +1476,15 @@
                                 $('#votantes-table').DataTable().destroy();
                             }
 
+                            function formatoVoto(data, row, column, node) {
+                                if (column === 6) {
+                                    var txt = $(data).text().trim();
+                                    if (txt === '\u2713') return 'SI';
+                                    if (txt === '\u2717') return 'NO';
+                                }
+                                return data;
+                            }
+
                             // IMPORTANTE: DOM correcto con 'B' para botones
                             $('#votantes-table').DataTable({
                                 responsive: true,
