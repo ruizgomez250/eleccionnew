@@ -1497,8 +1497,7 @@
                                         className: 'btn btn-success btn-sm',
                                         text: '<i class="fas fa-file-excel"></i> Excel',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6, 7],
-                                            format: { display: formatoVoto }
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
                                         },
                                         title: `Votantes_${nombrePuntero.replace(/\s/g, '_')}`,
                                         filename: function() {
@@ -1512,8 +1511,7 @@
                                         orientation: 'portrait',
                                         pageSize: 'A4',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6],
-                                            format: { display: formatoVoto }
+                                            columns: [0, 1, 2, 3, 4, 5, 6]
                                         },
                                         title: `Votantes del Puntero: ${nombrePuntero}`,
                                         filename: function() {
@@ -1567,8 +1565,7 @@
                                         className: 'btn btn-info btn-sm',
                                         text: '<i class="fas fa-print"></i> Imprimir',
                                         exportOptions: {
-                                            columns: [0, 1, 2, 3, 4, 5, 6, 7],
-                                            format: { display: formatoVoto }
+                                            columns: [0, 1, 2, 3, 4, 5, 6, 7]
                                         },
                                         customize: function(win) {
                                             $(win.document.body).find('table')
