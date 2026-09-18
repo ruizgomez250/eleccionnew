@@ -198,18 +198,17 @@ class EfectividadController extends Controller
                 }
             }
 
-            // ── Paso 2: Tasa de conversión por mesa (Tasa_M) ──
-            // Tasa_M = min(1, V_est_C,M / F_C,M), con V_est_C,M = V_C,M
-            // (toda la estructura del usuario en la mesa pertenece a su candidato).
+            // ── Paso 2: Rendimiento electoral por mesa (R_M) ──
+            // R_M = min(1, V_C,M / F_E,M), donde F_E,M = toda la estructura que fue a votar en esa mesa.
             foreach ($mesas as $mesaId => &$info) {
                 $vCM = (int) ($votosCandidatoPorMesa[$mesaId] ?? 0);
                 $f = (int) ($info['f'] ?? 0);
                 $info['v_cm'] = $vCM;
-                $info['tasa'] = $f > 0 ? min(1, $vCM / $f) : 0;
+                $info['rendimiento'] = $f > 0 ? min(1, $vCM / $f) : 0;
             }
             unset($info);
 
-            // ── Paso 3: indicadores de efectividad por puntero ──
+            // ── Paso 3: indicadores por puntero (modelo reformulado) ──
             $punteros = [];
             foreach ($votantes as $punteroId => $filas) {
                 $NP = count($filas);
@@ -220,41 +219,42 @@ class EfectividadController extends Controller
                     }
                 }
 
-                // Votos efectivos del puntero = Σ por mesa de (F_P,M × Tasa_M)
-                $efectivos = 0;
+                // Votos esperados del puntero = Σ por mesa de (F_P,M × R_M)
+                $votosEsperados = 0;
                 foreach (($punteroMesas[$punteroId] ?? []) as $mesaId => $info) {
-                    $tasa = $mesas[$mesaId]['tasa'] ?? 0;
-                    $efectivos += (int) ($info['f'] ?? 0) * $tasa;
+                    $rendimiento = $mesas[$mesaId]['rendimiento'] ?? 0;
+                    $votosEsperados += (int) ($info['f'] ?? 0) * $rendimiento;
                 }
 
-                $perdidos = $FP - $efectivos;
+                $brecha = $FP - $votosEsperados;
                 $ausentes = $NP - $FP;
 
-                $efMov = $NP > 0 ? $FP / $NP : 0;
-                $efReal = $NP > 0 ? $efectivos / $NP : 0;
-                $tasaFuga = $FP > 0 ? $perdidos / $FP : 0;
-                $ieg = 100 * $efMov * $efReal;
+                // MOV_P = F_P / N_P (Movilización)
+                $mov = $NP > 0 ? $FP / $NP : 0;
+                // REM_P = VE_P / F_P (Rendimiento Electoral estimado de Movilizados)
+                $rem = $FP > 0 ? $votosEsperados / $FP : 0;
+                // RGE_P = VE_P / N_P (Rendimiento Global Estimado)
+                $rge = $NP > 0 ? $votosEsperados / $NP : 0;
 
-                // Detalle por votante: probabilidad de fidelidad y fuga.
+                // Detalle por votante: aporte estadístico = R_M si asistió, 0 si no asistió.
+                // VE_i = P_i = min(1, V_C,M / F_E,M), observable sólo a nivel agregado de mesa.
                 $votantesDetalle = [];
                 foreach ($filas as $fila) {
                     $fue = isset($votosCedulas[$fila->cedula]);
                     $mesaId = $fila->mesa_id;
-                    $tasa = $mesaId !== null ? ($mesas[$mesaId]['tasa'] ?? 0) : 0;
-                    $pFid = $tasa * ($fue ? 1 : 0);
-                    $pFuga = ($fue ? 1 : 0) * (1 - $tasa);
+                    $rendimiento = $mesaId !== null ? ($mesas[$mesaId]['rendimiento'] ?? 0) : 0;
+                    $vCM = $mesaId !== null ? (int) ($mesas[$mesaId]['v_cm'] ?? 0) : 0;
+                    $fE = $mesaId !== null ? (int) ($mesas[$mesaId]['f'] ?? 0) : 0;
+                    $aporte = $rendimiento * ($fue ? 1 : 0);
+                    $saturado = $fE > 0 && $vCM >= $fE;
 
-                    if (!$fue) {
-                        $clas = 'Ausente';
-                    } elseif ($mesaId === null) {
-                        $clas = 'Sin mesa';
-                    } elseif ($pFid >= 0.7) {
-                        $clas = 'Fiel probable';
-                    } elseif ($pFid >= 0.4) {
-                        $clas = 'Dudoso';
-                    } else {
-                        $clas = 'Probable fuga';
-                    }
+                    // Si la mesa no tuvo ningún voto del candidato (V_C,M = 0), es determinista:
+                    // nadie de esa mesa votó por el candidato. No es una inferencia.
+                    $clas = !$fue
+                        ? 'Ausente'
+                        : ($mesaId === null
+                            ? 'Sin mesa'
+                            : ($vCM === 0 ? 'No votó por el candidato' : 'Asistió'));
 
                     $votantesDetalle[] = [
                         'nombre' => $this->normalizarTexto($fila->votante_nombre) ?: $fila->cedula,
@@ -262,9 +262,11 @@ class EfectividadController extends Controller
                         'mesa' => $mesaId !== null ? ($mesaInfo[$mesaId]['codigo'] ?? '') : '',
                         'escuela' => (string) $fila->escuela,
                         'voto' => $fue,
-                        'tasa' => round($tasa, 4),
-                        'p_fidelidad' => round($pFid, 4),
-                        'p_fuga' => round($pFuga, 4),
+                        'votos_candidato_mesa' => $vCM,
+                        'estructura_movilizada_mesa' => $fE,
+                        'rendimiento_mesa' => round($rendimiento, 4),
+                        'aporte_estadistico' => round($aporte, 4),
+                        'saturado' => $saturado,
                         'clasificacion' => $clas,
                     ];
                 }
@@ -279,28 +281,62 @@ class EfectividadController extends Controller
                     'ausentes' => $ausentes,
                     'sin_mesa' => $sinMesa[$punteroId] ?? 0,
                     'mesas' => count($punteroMesas[$punteroId] ?? []),
-                    'votos_efectivos' => round($efectivos, 2),
-                    'votos_perdidos' => round($perdidos, 2),
-                    'ef_mov' => round($efMov, 4),
-                    'ef_real' => round($efReal, 4),
-                    'tasa_fuga' => round($tasaFuga, 4),
-                    'ieg' => round($ieg, 1),
-                    'color' => $ieg >= 80 ? 'success' : ($ieg >= 60 ? 'info' : ($ieg >= 40 ? 'warning' : 'danger')),
+                    'votos_esperados' => round($votosEsperados, 2),
+                    'brecha' => round($brecha, 2),
+                    'mov' => round($mov, 4),
+                    'rem' => round($rem, 4),
+                    'rge' => round($rge * 100, 1),
+                    'color' => $rge >= 0.80 ? 'success' : ($rge >= 0.60 ? 'info' : ($rge >= 0.40 ? 'warning' : 'danger')),
                     'votantes' => $votantesDetalle,
                 ];
             }
 
-            usort($punteros, fn ($a, $b) => $b['ieg'] <=> $a['ieg']);
+            usort($punteros, fn ($a, $b) => $b['rge'] <=> $a['rge']);
 
             // ── Resumen global ──
             $totalN = array_sum(array_column($punteros, 'anotados'));
             $totalF = array_sum(array_column($punteros, 'votaron'));
-            $totalEf = array_sum(array_column($punteros, 'votos_efectivos'));
-            $totalPer = array_sum(array_column($punteros, 'votos_perdidos'));
+            $totalVE = array_sum(array_column($punteros, 'votos_esperados'));
+            $totalBrecha = array_sum(array_column($punteros, 'brecha'));
             $totalSinMesa = array_sum(array_column($punteros, 'sin_mesa'));
-            $efMovG = $totalN > 0 ? $totalF / $totalN : 0;
-            $efRealG = $totalN > 0 ? $totalEf / $totalN : 0;
-            $iegG = 100 * $efMovG * $efRealG;
+            $movG = $totalN > 0 ? $totalF / $totalN : 0;
+            $remG = $totalF > 0 ? $totalVE / $totalF : 0;
+            $rgeG = $totalN > 0 ? $totalVE / $totalN : 0;
+
+            // ── Detalle por mesa y votos externos ──
+            // Externos_M = max(0, V_C,M − F_E,M): votos del candidato que exceden a la
+            // estructura movilizada en esa mesa, por lo que no pudieron ser aportados por ella.
+            $mesasDetalle = [];
+            $votosCandidatoTotal = 0;
+            $votosEstructuraTotal = 0;
+            $votosExternosTotal = 0;
+
+            $mesaIds = collect(array_keys($votosCandidatoPorMesa->all()))
+                ->merge(array_keys($mesas))
+                ->unique();
+
+            foreach ($mesaIds as $mesaId) {
+                $vCM = (int) ($votosCandidatoPorMesa[$mesaId] ?? 0);
+                $fE = (int) ($mesas[$mesaId]['f'] ?? 0);
+                $estructura = min($vCM, $fE);
+                $externos = max(0, $vCM - $fE);
+
+                $votosCandidatoTotal += $vCM;
+                $votosEstructuraTotal += $estructura;
+                $votosExternosTotal += $externos;
+
+                $mesasDetalle[] = [
+                    'mesa' => $mesaInfo[$mesaId]['codigo'] ?? ('Mesa #' . $mesaId),
+                    'colegio' => $mesaInfo[$mesaId]['colegio'] ?? '',
+                    'votos_candidato' => $vCM,
+                    'estructura_movilizada' => $fE,
+                    'votos_estructura' => $estructura,
+                    'votos_externos' => $externos,
+                    'rendimiento' => $fE > 0 ? round(min(1, $vCM / $fE), 4) : 0,
+                ];
+            }
+
+            usort($mesasDetalle, fn ($a, $b) => $b['votos_externos'] <=> $a['votos_externos']);
 
             $resumen = [
                 'punteros' => count($punteros),
@@ -308,14 +344,16 @@ class EfectividadController extends Controller
                 'votaron' => $totalF,
                 'no_votaron' => $totalN - $totalF,
                 'ausentes' => $totalN - $totalF,
-                'votos_efectivos' => round($totalEf, 2),
-                'votos_perdidos' => round($totalPer, 2),
+                'votos_esperados' => round($totalVE, 2),
+                'brecha' => round($totalBrecha, 2),
                 'sin_mesa' => $totalSinMesa,
                 'mesas' => count($mesas),
-                'participacion' => $totalN > 0 ? round(100 * $totalF / $totalN, 1) : 0,
-                'ef_mov' => round($efMovG, 4),
-                'ef_real' => round($efRealG, 4),
-                'ieg' => round($iegG, 1),
+                'mov' => round($movG, 4),
+                'rem' => round($remG, 4),
+                'rge' => round($rgeG * 100, 1),
+                'votos_candidato' => $votosCandidatoTotal,
+                'votos_estructura' => $votosEstructuraTotal,
+                'votos_externos' => $votosExternosTotal,
             ];
 
             return response()->json([
@@ -327,10 +365,11 @@ class EfectividadController extends Controller
                 ],
                 'punteros' => $punteros,
                 'resumen' => $resumen,
+                'mesas_detalle' => $mesasDetalle,
                 'tiene_carga' => $tieneCarga,
                 'mensaje_sin_carga' => $tieneCarga
                     ? null
-                    : 'El candidato «' . $candidato->nombre_completo . '» aún no tiene certificado de resultados cargado. Las tasas de conversión de mesa saldrán en 0 hasta que se carguen los votos reales por mesa.',
+                    : 'El candidato «' . $candidato->nombre_completo . '» aún no tiene certificado de resultados cargado. El rendimiento de mesa saldrá en 0 hasta que se carguen los votos reales por mesa.',
                 'generado_en' => now()->toIso8601String(),
             ])->header('Cache-Control', 'private, no-store');
         } catch (\Throwable $e) {

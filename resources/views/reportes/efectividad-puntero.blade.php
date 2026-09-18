@@ -83,43 +83,62 @@
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
                         <h3 id="metrica-ausentes">0</h3>
-                        <p>No votaron / Ausentes</p>
+                        <p>Ausentes (AUS)</p>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-efectivos">0</h3>
-                        <p>Votos Efectivos estimados</p>
+                        <h3 id="metrica-votosesperados">0</h3>
+                        <p>Votos Estructura (VE)</p>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-perdidos">0</h3>
-                        <p>Votos Perdidos estimados</p>
+                        <h3 id="metrica-votoscandidato">0</h3>
+                        <p>Votos Candidato</p>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="small-box bg-white border shadow-sm">
                     <div class="inner">
-                        <h3 id="metrica-ieg">0</h3>
-                        <p>IEG global (0–100)</p>
+                        <h3 id="metrica-votosexternos">0</h3>
+                        <p>Votos Externos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <div class="small-box bg-white border shadow-sm">
+                    <div class="inner">
+                        <h3 id="metrica-brecha">0</h3>
+                        <p>Brecha Estimada</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <div class="small-box bg-white border shadow-sm">
+                    <div class="inner">
+                        <h3 id="metrica-rge">0</h3>
+                        <p>RGE global (0–100)</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="alert alert-light border">
-            <strong>Metodología (estimación probabilística, el voto es secreto):</strong>
+            <strong>Metodología (estimación agregada, el voto es secreto):</strong>
             <ul class="mb-0">
-                <li><strong>Tasa de conversión de la mesa</strong> <code>Tasa_M = min(1, V_C,M / F_C,M)</code>: votos reales del candidato en la mesa (certificado) entre la gente de tu estructura que fue a votar ahí.</li>
-                <li><strong>Votos efectivos del puntero</strong> = Σ(F_P,M × Tasa_M); <strong>votos perdidos</strong> = F_P − efectivos; <strong>ausentes</strong> = N_P − F_P.</li>
-                <li><strong>Ef. movilización</strong> = F_P / N_P &middot; <strong>Ef. real</strong> = Votos_efectivos / N_P.</li>
-                <li><strong>IEG</strong> = 100 × Ef. movilización × Ef. real (0–100). Clic en un puntero para ver la efectividad por votante.</li>
+                <li><strong>Rendimiento de mesa</strong> <code>R_M = min(1, V_C,M / F_E,M)</code>: votos reales del candidato en la mesa (certificado) entre la gente de toda la estructura que fue a votar ahí.</li>
+                <li><strong>Votos esperados del puntero</strong> (VE) = Σ(F_P,M × R_M); <strong>brecha estimada</strong> = F − VE; <strong>ausentes</strong> = N − F.</li>
+                <li><strong>Movilización (MOV)</strong> = F / N &middot; <strong>Rendimiento electoral de movilizados (REM)</strong> = VE / F &middot; <strong>Rendimiento global estimado (RGE)</strong> = VE / N.</li>
+                <li><strong>RGE = (MOV × REM) / 100</strong>. Clic en un puntero para ver el detalle por votante.</li>
+                <li><strong>Votos externos</strong> (EXT) = <code>max(0, V_C,M − F_E,M)</code>: votos del candidato en la mesa que exceden a la estructura movilizada, por lo que no pudieron ser aportados por tus electores. <strong>Votos de estructura</strong> = <code>min(V_C,M, F_E,M)</code>.</li>
+                <li><strong>Aporte individual</strong> (VE_i): cada votante movilizado hereda el coeficiente de su mesa; <code>VE_i = 0</code> si no asistió, <code>VE_i = R_M</code> si asistió. Así <code>VE_P = Σ VE_i</code>.</li>
+                <li><small class="text-muted">Si una mesa no tuvo ningún voto del candidato (<code>V_C,M = 0</code>), quienes asistieron a esa mesa se marcan como <strong>No votó por el candidato</strong>: es un hecho determinista, no una inferencia. En el resto de casos el aporte estadístico deriva de resultados agregados de mesa y no identifica ni determina el voto individual.</small></li>
             </ul>
         </div>
 
@@ -148,12 +167,11 @@
                             <th>Asignados</th>
                             <th>Fueron</th>
                             <th>Ausentes</th>
-                            <th>Efectivos</th>
-                            <th>Perdidos</th>
-                            <th>Ef. Mov.</th>
-                            <th>Ef. Real</th>
-                            <th>Tasa Fuga</th>
-                            <th>IEG</th>
+                            <th>Votos Esper.</th>
+                            <th>Brecha</th>
+                            <th>MOV</th>
+                            <th>REM</th>
+                            <th>RGE</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -163,7 +181,33 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-signal"></i> Interpretación del IEG</h3>
+                <h3 class="card-title"><i class="fas fa-layer-group"></i> Detalle por Mesa y Votos Externos</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light border py-2 mb-2">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Votos externos</strong> = <code>max(0, V_C,M − F_E,M)</code>: votos del candidato que exceden a la estructura movilizada en esa mesa, por lo que no pudieron ser aportados por tus electores.
+                </div>
+                <table id="tabla-mesas" class="table table-striped table-bordered w-100">
+                    <thead>
+                        <tr>
+                            <th>Mesa</th>
+                            <th>Colegio</th>
+                            <th>Votos candidato</th>
+                            <th>Estr. movilizada</th>
+                            <th>Votos estructura</th>
+                            <th>Votos externos</th>
+                            <th>Coef. (R_M)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-signal"></i> Interpretación del RGE</h3>
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm table-bordered mb-0">
@@ -171,11 +215,11 @@
                         <tr><th>Rango</th><th>Interpretación</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><span class="badge badge-success">80–100</span></td><td>Puntero estrella: moviliza y convence.</td></tr>
-                        <tr><td><span class="badge badge-info">60–79</span></td><td>Bueno: fiel, con algo de fuga.</td></tr>
-                        <tr><td><span class="badge badge-warning">40–59</span></td><td>Regular: moviliza pero no retiene.</td></tr>
-                        <tr><td><span class="badge badge-danger">20–39</span></td><td>Débil: poca movilización o mucha fuga.</td></tr>
-                        <tr><td><span class="badge badge-danger">0–19</span></td><td>Inefectivo: revisar si es voto prestado o abandono.</td></tr>
+                        <tr><td><span class="badge badge-success">80–100</span></td><td>Excelente: buena movilización y alto rendimiento electoral.</td></tr>
+                        <tr><td><span class="badge badge-info">60–79</span></td><td>Bueno: buen rendimiento global estimado.</td></tr>
+                        <tr><td><span class="badge badge-warning">40–59</span></td><td>Regular: rendimiento moderado, revisar movilización o rendimiento de mesas.</td></tr>
+                        <tr><td><span class="badge badge-danger">20–39</span></td><td>Débil: bajo rendimiento global estimado.</td></tr>
+                        <tr><td><span class="badge badge-danger">0–19</span></td><td>Inefectivo: revisar estructura y movilización.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -201,11 +245,12 @@
                                 <th>Cédula</th>
                                 <th>Mesa</th>
                                 <th>Escuela</th>
-                                <th>Votó</th>
-                                <th>Tasa_M</th>
-                                <th>P. Fidelidad</th>
-                                <th>P. Fuga</th>
-                                <th>Clasificación</th>
+                                <th>Asistió</th>
+                                <th>Votos cand.</th>
+                                <th>Estr. movilizada</th>
+                                <th>Coef. mesa (R_M)</th>
+                                <th>Aporte est. (VE_i)</th>
+                                <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -250,11 +295,12 @@
                                 <th>Cédula</th>
                                 <th>Mesa</th>
                                 <th>Escuela</th>
-                                <th>Votó</th>
-                                <th>Tasa_M</th>
-                                <th>P. Fidelidad</th>
-                                <th>P. Fuga</th>
-                                <th>Clasificación</th>
+                                <th>Asistió</th>
+                                <th>Votos cand.</th>
+                                <th>Estr. movilizada</th>
+                                <th>Coef. mesa (R_M)</th>
+                                <th>Aporte est. (VE_i)</th>
+                                <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -267,8 +313,8 @@
 
 @push('css')
 <style>
-    .ieg-barrera { min-width:90px; height:12px; background:#dee2e6; border-radius:6px; overflow:hidden; }
-    .ieg-barrera span { display:block; height:100%; }
+    .rge-barrera { min-width:90px; height:12px; background:#dee2e6; border-radius:6px; overflow:hidden; }
+    .rge-barrera span { display:block; height:100%; }
     .votante-col { min-width: 120px; }
     .tabla-detalle-puntero td { background-color: #e9ecef !important; font-weight: bold; }
 </style>
@@ -280,6 +326,7 @@ $(function () {
     var tabla = null;
     var tablaVotantes = null;
     var tablaDetalles = null;
+    var tablaMesas = null;
     var datosGlobales = null;
     var seleccionDetalles = {};
     var numero = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 1 });
@@ -291,24 +338,40 @@ $(function () {
         infoEmpty: 'Sin punteros', infoFiltered: '(de _MAX_ punteros)', zeroRecords: 'No se encontraron punteros',
         emptyTable: 'No hay punteros para mostrar', paginate: {first:'Primero', last:'Último', next:'Siguiente', previous:'Anterior'}
     };
+    var idiomaMesas = {
+        search: 'Buscar:', lengthMenu: 'Mostrar _MENU_ mesas', info: '_START_ a _END_ de _TOTAL_ mesas',
+        infoEmpty: 'Sin mesas', infoFiltered: '(de _MAX_ mesas)', zeroRecords: 'No se encontraron mesas',
+        emptyTable: 'No hay mesas para mostrar', paginate: {first:'Primero', last:'Último', next:'Siguiente', previous:'Anterior'}
+    };
 
     function badgePorcentaje(valor, max) {
         var n = Math.max(0, Math.min(max, Number(valor) || 0));
         var clase = n >= 0.8 * max ? 'badge-success'
             : (n >= 0.6 * max ? 'badge-info'
             : (n >= 0.4 * max ? 'badge-warning' : 'badge-danger'));
-        return '<span class="badge ' + clase + ' badge-pill">' + numero.format(n) + (max === 100 ? '' : '%') + '</span>';
+        return '<span class="badge ' + clase + ' badge-pill">' + numero.format(n) + '%</span>';
     }
 
-    function barraIEG(valor, color) {
+    function barraRGE(valor, color) {
         var n = Math.max(0, Math.min(100, Number(valor) || 0));
         var bg = color === 'success' ? '#28a745' : (color === 'info' ? '#17a2b8' : (color === 'warning' ? '#ffc107' : '#dc3545'));
-        return '<span class="ieg-barrera"><span style="width:' + n + '%;background:' + bg + '"></span></span> '
+        return '<span class="rge-barrera"><span style="width:' + n + '%;background:' + bg + '"></span></span> '
             + badgePorcentaje(n, 100);
     }
 
+    function estadoBadge(clas) {
+        var map = {
+            'Ausente': 'badge-secondary',
+            'Sin mesa': 'badge-dark',
+            'No votó por el candidato': 'badge-danger',
+            'Asistió': 'badge-info'
+        };
+        var clase = map[clas] || 'badge-light';
+        return '<span class="badge ' + clase + '">' + texto(clas) + '</span>';
+    }
+
     function buildChildRow(row) {
-        var html = '<td colspan="12" class="p-0">';
+        var html = '<td colspan="11" class="p-0">';
         if (!row.votantes || row.votantes.length === 0) {
             html += '<div class="p-3 text-muted">Sin votantes para este puntero.</div></td>';
             return html;
@@ -316,38 +379,34 @@ $(function () {
         html += '<div class="p-2"><table class="table table-sm table-bordered table-striped mb-0">'
             + '<thead class="thead-light"><tr>'
             + '<th>Votante</th><th>Cédula</th><th>Mesa</th><th>Escuela</th>'
-            + '<th>Votó</th><th>Tasa_M</th><th>P. Fidelidad</th><th>P. Fuga</th><th>Clasificación</th>'
+            + '<th>Asistió</th><th>Votos cand.</th><th>Estr. movilizada</th>'
+            + '<th>Coef. mesa (R_M)</th><th>Aporte est. (VE_i)</th><th>Estado</th>'
             + '</tr></thead><tbody>';
         row.votantes.forEach(function (v) {
             var icono = v.voto
                 ? '<i class="fas fa-check-circle text-success"></i>'
                 : '<i class="fas fa-times-circle text-danger"></i>';
+            var alertaSaturado = v.saturado
+                ? ' <i class="fas fa-exclamation-triangle text-warning" title="El candidato obtuvo tantos o más votos que la estructura movilizada en esta mesa (R_M ≥ 100%)"></i>'
+                : '';
             html += '<tr>'
                 + '<td>' + texto(v.nombre) + '</td>'
                 + '<td>' + texto(v.cedula) + '</td>'
                 + '<td>' + texto(v.mesa) + '</td>'
                 + '<td>' + texto(v.escuela) + '</td>'
                 + '<td class="text-center">' + icono + '</td>'
-                + '<td class="text-right">' + (v.tasa * 100).toFixed(0) + '%</td>'
-                + '<td class="text-right"><strong>' + (v.p_fidelidad * 100).toFixed(1) + '%</strong></td>'
-                + '<td class="text-right">' + (v.p_fuga * 100).toFixed(1) + '%</td>'
-                + '<td>' + clasBadge(v.clasificacion) + '</td>'
+                + '<td class="text-right">' + numero.format(v.votos_candidato_mesa) + '</td>'
+                + '<td class="text-right">' + numero.format(v.estructura_movilizada_mesa) + '</td>'
+                + '<td class="text-right">' + (v.rendimiento_mesa * 100).toFixed(0) + '%' + alertaSaturado + '</td>'
+                + '<td class="text-right"><strong>' + (v.voto ? v.aporte_estadistico.toFixed(2) : '—') + '</strong></td>'
+                + '<td>' + estadoBadge(v.clasificacion) + '</td>'
                 + '</tr>';
         });
-        html += '</tbody></table></div></td>';
+        html += '</tbody></table>'
+            + '<div class="mt-1 px-2 pb-1 text-muted small">'
+            + '<i class="fas fa-info-circle"></i> El aporte estadístico es una estimación basada exclusivamente en resultados agregados de mesa y no identifica ni determina el voto individual.'
+            + '</div></div></td>';
         return html;
-    }
-
-    function clasBadge(clas) {
-        var map = {
-            'Fiel probable': 'badge-success',
-            'Dudoso': 'badge-warning',
-            'Probable fuga': 'badge-danger',
-            'Ausente': 'badge-secondary',
-            'Sin mesa': 'badge-dark'
-        };
-        var clase = map[clas] || 'badge-info';
-        return '<span class="badge ' + clase + '">' + texto(clas) + '</span>';
     }
 
     function buildTabla(filas) {
@@ -371,12 +430,11 @@ $(function () {
             {data:'anotados', render: function (value) { return '<span class="badge badge-secondary badge-pill">' + numero.format(value) + '</span>'; }},
             {data:'votaron', render: function (value) { return '<span class="badge badge-success badge-pill">' + numero.format(value) + '</span>'; }},
             {data:'ausentes', render: function (value) { return '<span class="badge badge-secondary badge-pill">' + numero.format(value) + '</span>'; }},
-            {data:'votos_efectivos', render: function (value) { return '<span class="badge badge-primary badge-pill">' + numero.format(value) + '</span>'; }},
-            {data:'votos_perdidos', render: function (value) { return '<span class="badge badge-danger badge-pill">' + numero.format(value) + '</span>'; }},
-            {data:'ef_mov', render: function (value) { return badgePorcentaje(Number(value) * 100, 100); }},
-            {data:'ef_real', render: function (value) { return badgePorcentaje(Number(value) * 100, 100); }},
-            {data:'tasa_fuga', render: function (value) { return badgePorcentaje(Number(value) * 100, 100); }},
-            {data:'ieg', render: function (value, type, row) { return barraIEG(value, row.color); }, className: 'votante-col'}
+            {data:'votos_esperados', render: function (value) { return '<span class="badge badge-primary badge-pill">' + numero.format(value) + '</span>'; }},
+            {data:'brecha', render: function (value) { return '<span class="badge badge-danger badge-pill">' + numero.format(value) + '</span>'; }},
+            {data:'mov', render: function (value) { return badgePorcentaje(Number(value) * 100, 100); }},
+            {data:'rem', render: function (value) { return badgePorcentaje(Number(value) * 100, 100); }},
+            {data:'rge', render: function (value, type, row) { return barraRGE(value, row.color); }, className: 'votante-col'}
         ];
 
         if (tabla) {
@@ -386,7 +444,7 @@ $(function () {
         tabla = $('#tabla-punteros').DataTable({
             data: filas, columns: columnas, language: idioma,
             pageLength: 25, lengthMenu: [10, 25, 50, 100],
-            deferRender: true, scrollX: true, order: [[11, 'desc']],
+            deferRender: true, scrollX: true, order: [[10, 'desc']],
             dom: "<'row'<'col-md-6'l><'col-md-6 text-right'B>>" +
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row'<'col-sm-5'i><'col-sm-7'p>>",
@@ -397,7 +455,7 @@ $(function () {
                     className: 'btn btn-success btn-sm',
                     title: 'Efectividad por Puntero - ' + nombreCandidato,
                     filename: 'Efectividad_Puntero_' + nombreCandidato.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0,10),
-                    exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10,11] }
+                    exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10] }
                 },
                 {
                     extend: 'pdfHtml5',
@@ -407,13 +465,65 @@ $(function () {
                     filename: 'Efectividad_Puntero_' + nombreCandidato.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0,10),
                     orientation: 'landscape',
                     pageSize: 'A4',
-                    exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10,11] }
+                    exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10] }
                 },
                 {
                     extend: 'print',
                     text: '<i class="fas fa-print"></i> Imprimir',
                     className: 'btn btn-secondary btn-sm',
-                    exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10,11] }
+                    exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10] }
+                }
+            ]
+        });
+    }
+
+    function buildTablaMesas(filas) {
+        var nombreCandidato = datosGlobales ? (datosGlobales.candidato.nombre + (datosGlobales.candidato.partido ? ' ' + datosGlobales.candidato.partido : '')) : 'Reporte';
+        var columnas = [
+            {data: 'mesa', render: texto},
+            {data: 'colegio', render: texto},
+            {data: 'votos_candidato', className: 'text-right', render: function (value) { return '<span class="badge badge-primary badge-pill">' + numero.format(value) + '</span>'; }},
+            {data: 'estructura_movilizada', className: 'text-right', render: function (value) { return '<span class="badge badge-secondary badge-pill">' + numero.format(value) + '</span>'; }},
+            {data: 'votos_estructura', className: 'text-right', render: function (value) { return '<span class="badge badge-success badge-pill">' + numero.format(value) + '</span>'; }},
+            {data: 'votos_externos', className: 'text-right', render: function (value) { return '<span class="badge ' + (Number(value) > 0 ? 'badge-danger' : 'badge-light') + ' badge-pill">' + numero.format(value) + '</span>'; }},
+            {data: 'rendimiento', className: 'text-right', render: function (value) { return Number(value) === 0 ? '—' : (Number(value) * 100).toFixed(0) + '%'; }}
+        ];
+
+        if (tablaMesas) {
+            tablaMesas.clear().rows.add(filas).draw();
+            return;
+        }
+        tablaMesas = $('#tabla-mesas').DataTable({
+            data: filas, columns: columnas, language: idiomaMesas,
+            pageLength: 25, lengthMenu: [10, 25, 50, 100],
+            deferRender: true, scrollX: true, order: [[5, 'desc']],
+            dom: "<'row'<'col-md-6'l><'col-md-6 text-right'B>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel"></i> Excel',
+                    className: 'btn btn-success btn-sm',
+                    title: 'Detalle por Mesa - ' + nombreCandidato,
+                    filename: 'Detalle_Mesas_' + nombreCandidato.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0,10),
+                    exportOptions: { columns: [0,1,2,3,4,5,6] }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="fas fa-file-pdf"></i> PDF',
+                    className: 'btn btn-danger btn-sm',
+                    title: 'Detalle por Mesa - ' + nombreCandidato,
+                    filename: 'Detalle_Mesas_' + nombreCandidato.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0,10),
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    exportOptions: { columns: [0,1,2,3,4,5,6] }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i> Imprimir',
+                    className: 'btn btn-secondary btn-sm',
+                    exportOptions: { columns: [0,1,2,3,4,5,6] }
                 }
             ]
         });
@@ -452,14 +562,17 @@ $(function () {
             $('#metrica-anotados').text(numero.format(r.anotados));
             $('#metrica-votaron').text(numero.format(r.votaron));
             $('#metrica-ausentes').text(numero.format(r.ausentes));
-            $('#metrica-efectivos').text(numero.format(r.votos_efectivos));
-            $('#metrica-perdidos').text(numero.format(r.votos_perdidos));
-            $('#metrica-ieg').text(numero.format(r.ieg));
+            $('#metrica-votosesperados').text(numero.format(r.votos_esperados));
+            $('#metrica-votoscandidato').text(numero.format(r.votos_candidato));
+            $('#metrica-votosexternos').text(numero.format(r.votos_externos));
+            $('#metrica-brecha').text(numero.format(r.brecha));
+            $('#metrica-rge').text(numero.format(r.rge));
 
             $('#reporte').prop('hidden', false);
             $('#aviso-sin-carga').prop('hidden', data.tiene_carga)
                 .text(data.tiene_carga ? '' : (data.mensaje_sin_carga || ''));
             buildTabla(data.punteros);
+            buildTablaMesas(data.mesas_detalle || []);
             actualizarEstadoSelectAllPunteros();
             actualizarInfoPunteros();
             $('#btnVerTodosVotantes').prop('disabled', false);
@@ -515,9 +628,10 @@ $(function () {
                     mesa: v.mesa || '',
                     escuela: v.escuela || '',
                     voto: v.voto ? 'Sí' : 'No',
-                    tasa: (v.tasa * 100).toFixed(0) + '%',
-                    fidelidad: (v.p_fidelidad * 100).toFixed(1) + '%',
-                    fuga: (v.p_fuga * 100).toFixed(1) + '%',
+                    votosCand: numero.format(v.votos_candidato_mesa),
+                    estructuraMov: numero.format(v.estructura_movilizada_mesa),
+                    rendimiento: (v.rendimiento_mesa * 100).toFixed(0) + '%' + (v.saturado ? ' (≥100%)' : ''),
+                    aporte: v.voto ? v.aporte_estadistico.toFixed(2) : '—',
                     clasificacion: v.clasificacion || ''
                 });
             });
@@ -546,10 +660,11 @@ $(function () {
                     {data: 'mesa'},
                     {data: 'escuela'},
                     {data: 'voto', className: 'text-center'},
-                    {data: 'tasa', className: 'text-right'},
-                    {data: 'fidelidad', className: 'text-right'},
-                    {data: 'fuga', className: 'text-right'},
-                    {data: 'clasificacion'}
+                    {data: 'votosCand', className: 'text-right'},
+                    {data: 'estructuraMov', className: 'text-right'},
+                    {data: 'rendimiento', className: 'text-right'},
+                    {data: 'aporte', className: 'text-right'},
+                    {data: 'clasificacion', render: function (value, type) { return type === 'display' ? estadoBadge(value) : value; }}
                 ],
                 dom: "<'row'<'col-md-6'f><'col-md-6 text-right'B>>" +
                      "<'row'<'col-sm-12'tr>>" +
@@ -614,9 +729,10 @@ $(function () {
                     mesa: v.mesa || '',
                     escuela: v.escuela || '',
                     voto: v.voto ? 'Sí' : 'No',
-                    tasa: (v.tasa * 100).toFixed(0) + '%',
-                    fidelidad: (v.p_fidelidad * 100).toFixed(1) + '%',
-                    fuga: (v.p_fuga * 100).toFixed(1) + '%',
+                    votosCand: numero.format(v.votos_candidato_mesa),
+                    estructuraMov: numero.format(v.estructura_movilizada_mesa),
+                    rendimiento: (v.rendimiento_mesa * 100).toFixed(0) + '%' + (v.saturado ? ' (≥100%)' : ''),
+                    aporte: v.voto ? v.aporte_estadistico.toFixed(2) : '—',
                     clasificacion: v.clasificacion || ''
                 });
             });
@@ -674,7 +790,7 @@ $(function () {
         }
         return {
             rows: indicesDeGrupos(dt, grupos),
-            columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             modifier: { search: 'none', order: 'applied' }
         };
     }
@@ -721,10 +837,11 @@ $(function () {
                     {data: 'mesa', defaultContent: ''},
                     {data: 'escuela', defaultContent: ''},
                     {data: 'voto', className: 'text-center', defaultContent: ''},
-                    {data: 'tasa', className: 'text-right', defaultContent: ''},
-                    {data: 'fidelidad', className: 'text-right', defaultContent: ''},
-                    {data: 'fuga', className: 'text-right', defaultContent: ''},
-                    {data: 'clasificacion', defaultContent: ''}
+                    {data: 'votosCand', className: 'text-right', defaultContent: ''},
+                    {data: 'estructuraMov', className: 'text-right', defaultContent: ''},
+                    {data: 'rendimiento', className: 'text-right', defaultContent: ''},
+                    {data: 'aporte', className: 'text-right', defaultContent: ''},
+                    {data: 'clasificacion', defaultContent: '', render: function (value, type) { return type === 'display' ? (value ? estadoBadge(value) : '') : value; }}
                 ],
                 createdRow: function (row, data) {
                     if (data.esPuntero) {
