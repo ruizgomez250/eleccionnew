@@ -648,15 +648,14 @@
                             showConfirmButton: false
                         });
                         limpiarFormularioVotante();
-                        // Recargar votantes del puntero
+                        // Mantener el contexto actual y recargar solo sus votantes.
+                        // No reconstruir la lista de punteros: obligaría a repetir filtros.
                         setTimeout(() => {
-                            let punteroId = $('#votante_id_puntero').val();
-                            window.cargarVotantes(punteroId, nombrePuntero);
+                            const contexto = window.punteroVotanteActual;
+                            const punteroId = response.punteroId || contexto?.id || $('#votante_id_puntero').val();
+                            const punteroNombre = response.punteroNombre || contexto?.nombre || nombrePuntero;
+                            window.cargarVotantes(punteroId, punteroNombre);
                         }, 100);
-                        // Recargar lista de punteros si está visible (actualiza contadores)
-                        if (typeof window.filtrarPunterosGeneral === 'function') {
-                            window.filtrarPunterosGeneral();
-                        }
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -1388,7 +1387,10 @@
             $('#votante_nombre, #direccion, #mesa, #orden, #partido, #escuela, #ciudad, #departamento').val('');
         }
 
+        window.punteroVotanteActual = null;
+
         window.cargarVotantes = function(idPuntero, nombrePuntero = '') {
+            window.punteroVotanteActual = { id: idPuntero, nombre: nombrePuntero };
             $('#tituloVotantes').html(`<i class="fas fa-users"></i> Votantes del Puntero: ${nombrePuntero}`);
             $('#votante_id_puntero').val(idPuntero);
             $('#modalVotantes').modal('show');
