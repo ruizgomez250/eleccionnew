@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Distritos')
+@section('plugins.Select2', true)
 
 @section('content_header')
     <div class="ua-header">

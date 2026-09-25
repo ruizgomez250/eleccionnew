@@ -219,6 +219,11 @@
                             <button class="btn btn-primary btn-sm" onclick="generarPDFporDir({{ $dir->id }})">
                                 <i class="fas fa-file-pdf"></i>
                             </button>
+                            <button class="btn btn-warning btn-sm" title="Transferir punteros y votantes"
+                                data-nombre="{{ $dir->nombre }}"
+                                onclick="abrirTransferenciaDirigente(this, {{ $dir->id }})">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
                             <button class="btn btn-danger btn-sm" onclick="eliminarDirigente({{ $dir->id }})">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -227,6 +232,39 @@
                 @endforeach
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTransferirDirigente" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-exchange-alt"></i> Transferir punteros y votantes</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="transferir_dirigente_origen_id">
+                <p>Dirigente actual: <strong id="transferir_dirigente_origen_nombre"></strong></p>
+                <div class="form-group">
+                    <label for="transferir_dirigente_destino_id">Nuevo dirigente</label>
+                    <select id="transferir_dirigente_destino_id" class="form-control select2-transferencia" required>
+                        <option value="">Seleccione...</option>
+                        @foreach ($dirigentesTransferencia as $destino)
+                            <option value="{{ $destino->id }}">
+                                {{ $destino->nombre }} — {{ $destino->equipo->descripcion ?? 'Sin colegio' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="form-text text-muted">Todos los punteros y sus votantes pasarán al dirigente seleccionado.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnConfirmarTransferenciaDirigente">
+                    <i class="fas fa-exchange-alt"></i> Transferir
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -471,6 +509,76 @@
         // DISPARAR EL FILTRO
         $('#equipo_id_dir').trigger('change');
     }
+
+    function abrirTransferenciaDirigente(button, dirigenteId) {
+        const nombre = $(button).data('nombre');
+        $('#transferir_dirigente_origen_id').val(dirigenteId);
+        $('#transferir_dirigente_origen_nombre').text(nombre);
+        const selector = $('#transferir_dirigente_destino_id');
+        if (selector.hasClass('select2-hidden-accessible')) {
+            selector.select2('destroy');
+        }
+        selector.find('option').prop('disabled', false);
+        selector.val('');
+        selector.find('option[value="' + dirigenteId + '"]').prop('disabled', true);
+        selector.select2({
+            width: '100%',
+            dropdownParent: $('#modalTransferirDirigente'),
+            placeholder: 'Buscar dirigente por nombre o colegio...',
+            allowClear: true,
+            language: {
+                noResults: function() { return 'No se encontraron dirigentes'; },
+                searching: function() { return 'Buscando...'; }
+            }
+        });
+        $('#modalTransferirDirigente').modal('show');
+        setTimeout(function() { selector.select2('open'); }, 300);
+    }
+
+    $(document).off('click', '#btnConfirmarTransferenciaDirigente').on('click', '#btnConfirmarTransferenciaDirigente', function() {
+        const dirigenteId = $('#transferir_dirigente_origen_id').val();
+        const destinoId = $('#transferir_dirigente_destino_id').val();
+        const destinoNombre = $('#transferir_dirigente_destino_id option:selected').text().trim();
+
+        if (!destinoId) {
+            Swal.fire('Atención', 'Seleccione el nuevo dirigente.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Confirmar transferencia?',
+            text: 'Todos los punteros y votantes pasarán a ' + destinoNombre + '.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, transferir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            const boton = $('#btnConfirmarTransferenciaDirigente');
+            boton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Transfiriendo...');
+
+            $.ajax({
+                url: `{{ url('/') }}/dirigentes/ajax/${dirigenteId}/transferir`,
+                type: 'PUT',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    dirigente_destino_id: destinoId
+                },
+                success: function(response) {
+                    $('#modalTransferirDirigente').modal('hide');
+                    Swal.fire('Transferencia completada', response.message, 'success');
+                    filtrarDirigentes();
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'No se pudo realizar la transferencia.', 'error');
+                },
+                complete: function() {
+                    boton.prop('disabled', false).html('<i class="fas fa-exchange-alt"></i> Transferir');
+                }
+            });
+        });
+    });
 
     function eliminarDirigente(dirigenteId) {
         Swal.fire({

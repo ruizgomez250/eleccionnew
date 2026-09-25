@@ -263,6 +263,7 @@ Route::middleware('auth')->group(function () {
         ->name('sistemas.dirigentes');
     Route::post('/dirigentes/ajax', [DirigenteController::class, 'storeAjax'])->name('dirigentes.store.ajax');
     Route::delete('/dirigentes/ajax/{id}', [DirigenteController::class, 'destroyAjax'])->name('dirigentes.destroy.ajax');
+    Route::put('/dirigentes/ajax/{id}/transferir', [DirigenteController::class, 'transferirPunteros'])->name('dirigentes.transferir');
     Route::get('/dirigente/{dirigente}/punteros/count', [DirigenteController::class, 'getPunterosCount'])->name('dirigente.punteros.count');
     Route::post('/punteros/store-ajax', [PunteroController::class, 'storeAjax'])->name('puntero.store.ajax');
     Route::delete('/punteros/destroy-ajax', [PunteroController::class, 'destroyAjax'])->name('puntero.destroy.ajax');

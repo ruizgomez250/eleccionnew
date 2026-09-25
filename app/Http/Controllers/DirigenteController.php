@@ -24,7 +24,8 @@ class DirigenteController extends Controller
                 'destroy',
                 'createWithEquipo',
                 'punteros',
-                'buscarPorCedula'
+                'buscarPorCedula',
+                'transferirPunteros'
             ]
         ]);
     }
@@ -227,6 +228,15 @@ class DirigenteController extends Controller
             })
             ->get();
 
+        // El selector de transferencia debe incluir a todos los dirigentes del sistema,
+        // aunque la tabla visible esté filtrada por colegio electoral.
+        $dirigentesTransferencia = Dirigente::with('equipo')
+            ->whereHas('equipo', function ($q) use ($sistemaId) {
+                $q->where('sist', $sistemaId);
+            })
+            ->orderBy('nombre')
+            ->get();
+
         // Calcular votantes via DB por cada dirigente
         $dirigenteIds = $dirigentes->pluck('id');
         $votantesPorDirigente = DB::table('puntero')
@@ -248,6 +258,7 @@ class DirigenteController extends Controller
             'ciudades.partials.lista_dirigentes',
             compact(
                 'dirigentes',
+                'dirigentesTransferencia',
                 'equipos',
                 'equipoId',
                 'totalVotantesGeneral',
@@ -321,6 +332,56 @@ class DirigenteController extends Controller
             ], 500);
         }
     }
+    public function transferirPunteros(Request $request, $id)
+    {
+        $request->validate([
+            'dirigente_destino_id' => 'required|integer|exists:dirigente,id',
+        ]);
+
+        $origen = Dirigente::with('equipo')->findOrFail($id);
+        $destino = Dirigente::with('equipo')->findOrFail($request->dirigente_destino_id);
+
+        if ($origen->id === $destino->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El dirigente destino debe ser diferente al dirigente actual.',
+            ], 422);
+        }
+
+        $sistemaUsuario = (string) Auth::user()->sistema;
+        if (!$origen->equipo || !$destino->equipo
+            || (string) $origen->equipo->sist !== $sistemaUsuario
+            || (string) $destino->equipo->sist !== $sistemaUsuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden transferir punteros entre dirigentes del sistema actual.',
+            ], 403);
+        }
+
+        $resultado = DB::transaction(function () use ($origen, $destino) {
+            Dirigente::whereKey($origen->id)->lockForUpdate()->firstOrFail();
+            Dirigente::whereKey($destino->id)->lockForUpdate()->firstOrFail();
+
+            $votantes = DB::table('votante')
+                ->join('puntero', 'votante.idpuntero', '=', 'puntero.id')
+                ->where('puntero.id_dirigente', $origen->id)
+                ->count('votante.id');
+
+            $punteros = DB::table('puntero')->where('id_dirigente', $origen->id)->update([
+                'id_dirigente' => $destino->id,
+                'id_equipo' => $destino->id_equipo,
+            ]);
+
+            return compact('punteros', 'votantes');
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Se transfirieron {$resultado['punteros']} punteros y {$resultado['votantes']} votantes a {$destino->nombre}.",
+            'data' => $resultado,
+        ]);
+    }
+
     // Agrega este método al final del controlador
     public function destroyAjax($id)
     {
