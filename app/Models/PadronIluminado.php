@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PadronIluminado extends Model
 {
-    protected $table = 'padroniluminado';
+    protected $table = 'padron';
 
     protected $primaryKey = 'id'; // si la tabla tiene id autoincrement
 

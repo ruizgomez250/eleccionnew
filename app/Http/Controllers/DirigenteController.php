@@ -162,7 +162,7 @@ class DirigenteController extends Controller
             $dirigente = PadronIluminado::where('cedula', $cedula)->first();
             if ($dirigente) {
                 // Crear alias
-                $dirigente->direccion = $dirigente->localdesc;
+                $dirigente->direccion = $dirigente->direccion ?? $dirigente->local_generales ?? '';
                 $dirigente->nombre = $dirigente->nombre . ' ' . $dirigente->apellido;
                 return response()->json([
                     'encontrado' => true,
