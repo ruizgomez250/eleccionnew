@@ -159,6 +159,15 @@
                                     </span>
                                 </button>
 
+                                {{-- Botón para transferir los votos a otro puntero --}}
+                                @can('Puntero')
+                                    <button class="btn btn-warning" title="Transferir votantes a otro puntero"
+                                        data-nombre="{{ $p->nombre }}"
+                                        onclick="abrirTransferenciaVotosPuntero(this, {{ $p->id }})">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                @endcan
+
                                 {{-- Botón eliminar --}}
                                 <button class="btn btn-danger"
                                     onclick="eliminarPunteroModal({{ $p->id }}, {{ $p->id_dirigente }})">
@@ -241,6 +250,41 @@
                 <button type="button" class="btn btn-secondary" onclick="cerrarModalEditarPuntero()">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnActualizarPuntero">
                     <i class="fas fa-save"></i> Actualizar Puntero
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL DE TRANSFERENCIA DE VOTANTES --}}
+<div class="modal fade" id="modalTransferirVotosPuntero" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-exchange-alt"></i> Transferir votantes</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="transferir_puntero_origen_id">
+                <p>Puntero actual: <strong id="transferir_puntero_origen_nombre"></strong></p>
+                <div class="form-group">
+                    <label for="transferir_puntero_destino_id">Nuevo puntero</label>
+                    <select id="transferir_puntero_destino_id" class="form-control select2-transferencia-votos" required>
+                        <option value="">Seleccione...</option>
+                        @foreach ($punterosTransferencia ?? [] as $destino)
+                            <option value="{{ $destino->id }}">
+                                {{ $destino->nombre }} — C.I. {{ $destino->cedula }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="form-text text-muted">Todos los votantes del puntero actual pasarán al puntero
+                        seleccionado.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnConfirmarTransferenciaVotosPuntero">
+                    <i class="fas fa-exchange-alt"></i> Transferir
                 </button>
             </div>
         </div>
@@ -757,6 +801,76 @@
             );
         });
     }
+
+    function abrirTransferenciaVotosPuntero(button, punteroId) {
+        const nombre = $(button).data('nombre');
+        $('#transferir_puntero_origen_id').val(punteroId);
+        $('#transferir_puntero_origen_nombre').text(nombre);
+        const selector = $('#transferir_puntero_destino_id');
+        if (selector.hasClass('select2-hidden-accessible')) {
+            selector.select2('destroy');
+        }
+        selector.find('option').prop('disabled', false);
+        selector.val('');
+        selector.find('option[value="' + punteroId + '"]').prop('disabled', true);
+        selector.select2({
+            width: '100%',
+            dropdownParent: $('#modalTransferirVotosPuntero'),
+            placeholder: 'Buscar puntero por nombre o cédula...',
+            allowClear: true,
+            language: {
+                noResults: function() { return 'No se encontraron punteros'; },
+                searching: function() { return 'Buscando...'; }
+            }
+        });
+        $('#modalTransferirVotosPuntero').modal('show');
+        setTimeout(function() { selector.select2('open'); }, 300);
+    }
+
+    $(document).off('click', '#btnConfirmarTransferenciaVotosPuntero').on('click', '#btnConfirmarTransferenciaVotosPuntero', function() {
+        const punteroId = $('#transferir_puntero_origen_id').val();
+        const destinoId = $('#transferir_puntero_destino_id').val();
+        const destinoNombre = $('#transferir_puntero_destino_id option:selected').text().trim();
+
+        if (!destinoId) {
+            Swal.fire('Atención', 'Seleccione el nuevo puntero.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Confirmar transferencia?',
+            text: 'Todos los votantes pasarán a ' + destinoNombre + '.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, transferir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            const boton = $('#btnConfirmarTransferenciaVotosPuntero');
+            boton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Transfiriendo...');
+
+            $.ajax({
+                url: `{{ url('/') }}/punteros/ajax/${punteroId}/transferir-votos`,
+                type: 'PUT',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    puntero_destino_id: destinoId
+                },
+                success: function(response) {
+                    $('#modalTransferirVotosPuntero').modal('hide');
+                    Swal.fire('Transferencia completada', response.message, 'success');
+                    filtrarPunterosGeneral();
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'No se pudo realizar la transferencia.', 'error');
+                },
+                complete: function() {
+                    boton.prop('disabled', false).html('<i class="fas fa-exchange-alt"></i> Transferir');
+                }
+            });
+        });
+    });
 
     function eliminarPunteroModal(punteroId, dirigenteId) {
         Swal.fire({

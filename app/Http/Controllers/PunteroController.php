@@ -19,8 +19,22 @@ class PunteroController extends Controller
     {
         $this->middleware('auth');
         $this->middleware('permission:Puntero', [
-            'only' => ['index', 'create', 'store', 'destroy', 'edit', 'update', 'show', 'createWithDirigente', 'createWithEquipo']
+            'only' => ['index', 'create', 'store', 'destroy', 'edit', 'update', 'show', 'createWithDirigente', 'createWithEquipo', 'transferirVotantes']
         ]);
+    }
+
+    /**
+     * Punteros candidatos a recibir la transferencia de votantes.
+     * Incluye todos los del sistema, aunque la tabla visible esté filtrada.
+     */
+    private function punterosParaTransferencia($sistemaId)
+    {
+        return Puntero::with('equipo')
+            ->whereHas('dirigente.equipo', function ($q) use ($sistemaId) {
+                $q->where('sist', $sistemaId);
+            })
+            ->orderBy('nombre')
+            ->get();
     }
 
     // Mostrar todos los punteros
@@ -398,11 +412,14 @@ class PunteroController extends Controller
                 $punteros = $punteros->where('id_dirigente', $dirigenteSeleccionado);
             }
 
+            $punterosTransferencia = $this->punterosParaTransferencia($sistema->id);
+
             if (request()->ajax()) {
                 return view('ciudades.partials.lista_punteros', compact(
                     'equipos',
                     'punteros',
                     'dirigentes',
+                    'punterosTransferencia',
                     'totalVotantesGeneral',
                     'equipoSeleccionado',
                     'dirigenteSeleccionado',
@@ -463,11 +480,14 @@ class PunteroController extends Controller
                 $punteros = $punteros->where('id_dirigente', $dirigenteSeleccionado);
             }
 
+            $punterosTransferencia = $this->punterosParaTransferencia($sistema->id);
+
             if (request()->ajax()) {
                 return view('ciudades.partials.lista_punteros', compact(
                     'equipos',
                     'punteros',
                     'dirigentes',
+                    'punterosTransferencia',
                     'totalVotantesGeneral',
                     'equipoSeleccionado',
                     'dirigenteSeleccionado',
@@ -523,11 +543,14 @@ class PunteroController extends Controller
             $dirigenteSeleccionado = $dirigenteId;
             $dirigenteId = $dirigenteId;
 
+            $punterosTransferencia = $this->punterosParaTransferencia($sistema->id);
+
             if (request()->ajax()) {
                 return view('ciudades.partials.lista_punteros', compact(
                     'equipos',
                     'punteros',
                     'dirigentes',
+                    'punterosTransferencia',
                     'totalVotantesGeneral',
                     'equipoSeleccionado',
                     'dirigenteSeleccionado',
@@ -591,11 +614,13 @@ class PunteroController extends Controller
             })->get();
             $equipoSeleccionado = $equipoId;
             $dirigenteSeleccionado = $dirigenteId;
+            $punterosTransferencia = $this->punterosParaTransferencia(Auth::user()->sistema);
 
             return view('ciudades.partials.lista_punteros', compact(
                 'punteros',
                 'equipos',
                 'dirigentes',
+                'punterosTransferencia',
                 'totalVotantesGeneral',
                 'equipoId',
                 'equipoSeleccionado',
@@ -789,5 +814,53 @@ class PunteroController extends Controller
                 'message' => 'Error al actualizar el puntero: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Transfiere todos los votantes de un puntero a otro del mismo sistema.
+     */
+    public function transferirVotantes(Request $request, $id)
+    {
+        $request->validate([
+            'puntero_destino_id' => 'required|integer|exists:puntero,id',
+        ]);
+
+        $origen = Puntero::with('equipo')->findOrFail($id);
+        $destino = Puntero::with('equipo')->findOrFail($request->puntero_destino_id);
+
+        if ($origen->id === $destino->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El puntero destino debe ser diferente al puntero actual.',
+            ], 422);
+        }
+
+        $sistemaUsuario = (string) Auth::user()->sistema;
+        if (!$origen->equipo || !$destino->equipo
+            || (string) $origen->equipo->sist !== $sistemaUsuario
+            || (string) $destino->equipo->sist !== $sistemaUsuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden transferir votos entre punteros del sistema actual.',
+            ], 403);
+        }
+
+        $votantes = DB::transaction(function () use ($origen, $destino) {
+            Puntero::whereKey($origen->id)->lockForUpdate()->firstOrFail();
+            Puntero::whereKey($destino->id)->lockForUpdate()->firstOrFail();
+
+            return DB::table('votante')
+                ->where('idpuntero', $origen->id)
+                ->update([
+                    'idpuntero' => $destino->id,
+                    'idequipo' => $destino->id_equipo,
+                ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Se transfirieron {$votantes} votantes a {$destino->nombre}.",
+            'data' => ['votantes' => $votantes],
+        ]);
     }
 }
