@@ -29,23 +29,24 @@
         <i class="fas fa-check-circle fa-3x mb-3"></i>
         <p class="mb-0 h5">No hay punteros duplicados en este distrito</p>
         <small class="text-muted">
-            Se verifica cédula por cédula dentro de cada sistema. Si la misma persona está
-            en dos sistemas distintos no se considera duplicado.
+            Se verifica cédula por cédula en todo el distrito. Si la misma cédula
+            aparece en dos sistemas distintos también se marca como duplicado.
         </small>
     </div>
 @else
     <div class="alert alert-warning py-2">
         <i class="fas fa-exclamation-triangle"></i>
-        Solo se detectan duplicados <strong>dentro del mismo sistema</strong>. Marcá <strong>una sola
-        carga</strong> por cédula: la vieja o la nueva, nunca las dos.
+        Cada grupo es <strong>una cédula cargada más de una vez</strong> (puede cruzarse entre
+        sistemas: mismo colegio cargado dos veces). Marcá <strong>una sola carga</strong>:
+        la vieja o la nueva, nunca las dos.
         Al borrar el puntero también se borran sus votantes asociados.
     </div>
 
     @foreach ($grupos as $indice => $grupo)
         <div class="card mb-2 shadow-sm grupo-puntero-duplicado">
             <div class="card-header py-2" style="background:#f4f6f9;">
-                <span class="badge badge-info mr-2" title="Sistema donde se detectó la duplicación">
-                    <i class="fas fa-flag"></i> {{ $grupo['sistema'] }}
+                <span class="badge badge-info mr-2" title="Sistemas donde aparece esta cédula">
+                    <i class="fas fa-flag"></i> {{ implode(' / ', $grupo['sistemas']) }}
                 </span>
                 <strong>Cédula: {{ $grupo['cedula'] }}</strong>
                 <span class="ml-2">{{ $grupo['nombre'] }}</span>
