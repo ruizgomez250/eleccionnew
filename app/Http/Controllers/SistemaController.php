@@ -336,13 +336,14 @@ class SistemaController extends Controller
     }
 
     /**
-     * Punteros del distrito con los datos de dirigente/equipo.
+     * Punteros del distrito con los datos de dirigente/equipo/sistema.
      */
     private function punterosDelDistrito($sistemaIds)
     {
         return DB::table('puntero as p')
             ->join('dirigente as d', 'd.id', '=', 'p.id_dirigente')
             ->join('equipo as e', 'e.id', '=', 'd.id_equipo')
+            ->leftJoin('sistemas as s', 's.id', '=', 'e.sist')
             ->whereIn('e.sist', $sistemaIds)
             ->orderBy('p.cedula')
             ->orderBy('p.id')
@@ -355,8 +356,12 @@ class SistemaController extends Controller
                 'p.telefono2',
                 'p.barrio',
                 'p.created_at',
+                'd.id as dirigente_id',
                 'd.nombre as dirigente_nombre',
+                'e.id as equipo_id',
                 'e.descripcion as equipo_descripcion',
+                'e.sist',
+                's.nombre as sistema_nombre',
             ])
             ->get();
     }
@@ -379,9 +384,14 @@ class SistemaController extends Controller
             ->select('idpuntero', DB::raw('COUNT(*) as total'))
             ->pluck('total', 'idpuntero');
 
+        // La duplicación se verifica POR SISTEMA: solo se marca cuando la misma
+        // cédula está cargada dos veces dentro del mismo sistema. Que la misma
+        // persona esté en dos sistemas distintos es algo válido y no se toca.
+        $porSistemaYCedula = $punteros->groupBy(fn($p) => $p->sist . '|' . $p->cedula);
+
         $grupos = [];
 
-        foreach ($punteros->groupBy('cedula') as $cedula => $registros) {
+        foreach ($porSistemaYCedula as $clave => $registros) {
             if ($registros->count() < 2) {
                 continue;
             }
@@ -395,6 +405,8 @@ class SistemaController extends Controller
                     'barrio' => $p->barrio,
                     'dirigente' => $p->dirigente_nombre,
                     'equipo' => $p->equipo_descripcion,
+                    'sistema_id' => (int) $p->sist,
+                    'sistema' => $p->sistema_nombre ?? ('Sistema #' . $p->sist),
                     'carga' => $p->created_at ? strtotime($p->created_at) : 0,
                     'fecha_carga' => $p->created_at
                         ? Carbon::parse($p->created_at)->format('d/m/Y H:i')
@@ -417,10 +429,11 @@ class SistemaController extends Controller
             }
 
             $grupos[] = [
-                'cedula' => $cedula,
+                'clave' => $clave,
+                'cedula' => $items[0]['cedula'],
                 'nombre' => $items[0]['nombre'],
-                'dirigente' => $items[0]['dirigente'],
-                'equipo' => $items[0]['equipo'],
+                'sistema_id' => $items[0]['sistema_id'],
+                'sistema' => $items[0]['sistema'],
                 'punteros' => $items,
             ];
         }
@@ -485,28 +498,33 @@ class SistemaController extends Controller
             }
         }
 
-        $conteoPorCedula = [];
+        // Clave de duplicado: sistema + cédula (la duplicación es por sistema)
+        $conteoPorClave = [];
         foreach ($punterosPorId as $p) {
-            $conteoPorCedula[$p->cedula] = ($conteoPorCedula[$p->cedula] ?? 0) + 1;
+            $clave = $p->sist . '|' . $p->cedula;
+            $conteoPorClave[$clave] = ($conteoPorClave[$clave] ?? 0) + 1;
         }
 
-        $seleccionadosPorCedula = [];
+        $seleccionadosPorClave = [];
         foreach ($seleccionados as $id) {
-            $seleccionadosPorCedula[$punterosPorId[$id]->cedula][] = $id;
+            $p = $punterosPorId[$id];
+            $seleccionadosPorClave[$p->sist . '|' . $p->cedula][] = $id;
         }
 
-        foreach ($seleccionadosPorCedula as $cedula => $ids) {
+        foreach ($seleccionadosPorClave as $clave => $ids) {
+            [$sist, $cedula] = explode('|', $clave, 2);
+
             if (count($ids) > 1) {
                 return response()->json([
                     'success' => false,
-                    'message' => "No podés borrar las dos cargas de la cédula $cedula al mismo tiempo. Elegí solo una.",
+                    'message' => "No podés borrar las dos cargas de la cédula $cedula del sistema #$sist al mismo tiempo. Elegí solo una.",
                 ], 422);
             }
 
-            if (($conteoPorCedula[$cedula] ?? 0) < 2) {
+            if (($conteoPorClave[$clave] ?? 0) < 2) {
                 return response()->json([
                     'success' => false,
-                    'message' => "El puntero con cédula $cedula ya no está duplicado.",
+                    'message' => "El puntero con cédula $cedula ya no está duplicado en el sistema #$sist.",
                 ], 422);
             }
         }

@@ -28,24 +28,27 @@
     <div class="alert alert-success text-center py-5">
         <i class="fas fa-check-circle fa-3x mb-3"></i>
         <p class="mb-0 h5">No hay punteros duplicados en este distrito</p>
+        <small class="text-muted">
+            Se verifica cédula por cédula dentro de cada sistema. Si la misma persona está
+            en dos sistemas distintos no se considera duplicado.
+        </small>
     </div>
 @else
     <div class="alert alert-warning py-2">
         <i class="fas fa-exclamation-triangle"></i>
-        Marcá <strong>una sola carga</strong> por cédula: la vieja o la nueva, nunca las dos.
+        Solo se detectan duplicados <strong>dentro del mismo sistema</strong>. Marcá <strong>una sola
+        carga</strong> por cédula: la vieja o la nueva, nunca las dos.
         Al borrar el puntero también se borran sus votantes asociados.
     </div>
 
     @foreach ($grupos as $indice => $grupo)
         <div class="card mb-2 shadow-sm grupo-puntero-duplicado">
             <div class="card-header py-2" style="background:#f4f6f9;">
+                <span class="badge badge-info mr-2" title="Sistema donde se detectó la duplicación">
+                    <i class="fas fa-flag"></i> {{ $grupo['sistema'] }}
+                </span>
                 <strong>Cédula: {{ $grupo['cedula'] }}</strong>
                 <span class="ml-2">{{ $grupo['nombre'] }}</span>
-                <small class="text-muted ml-2">
-                    <i class="fas fa-user-tie"></i> {{ $grupo['dirigente'] ?? 'N/A' }}
-                    <span class="mx-1">|</span>
-                    <i class="fas fa-school"></i> {{ $grupo['equipo'] ?? 'N/A' }}
-                </small>
                 <span class="badge badge-secondary float-right">
                     {{ count($grupo['punteros']) }} cargas
                 </span>
@@ -83,6 +86,13 @@
                                             <span class="mx-1">|</span>
                                             <i class="fas fa-map-marker-alt"></i> {{ $item['barrio'] }}
                                         @endif
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-user-tie"></i> {{ $item['dirigente'] ?? 'N/A' }}
+                                        <span class="mx-1">|</span>
+                                        <i class="fas fa-school"></i> {{ $item['equipo'] ?? 'N/A' }}
+                                        <span class="mx-1">|</span>
+                                        <i class="fas fa-flag"></i> {{ $item['sistema'] }}
                                     </small>
                                 </td>
 
