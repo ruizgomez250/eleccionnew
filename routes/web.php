@@ -259,6 +259,10 @@ Route::middleware('auth')->group(function () {
         ->name('ciudades.index'); // opcional según tu sistema de autenticación
     Route::get('/distritos/{idCiudad}/sistemas', [SistemaController::class, 'sistemasPorDistrito'])
         ->name('distritos.sistemas');
+    Route::get('/distritos/{idCiudad}/punteros-duplicados', [SistemaController::class, 'punterosDuplicadosPorDistrito'])
+        ->name('distritos.punteros.duplicados');
+    Route::post('/distritos/punteros-duplicados/borrar', [SistemaController::class, 'borrarPunterosDuplicados'])
+        ->name('distritos.punteros.duplicados.borrar');
     Route::get('/sistemas/{sistema}/dirigentes', [DirigenteController::class, 'dirigentesPorSistema'])
         ->name('sistemas.dirigentes');
     Route::post('/dirigentes/ajax', [DirigenteController::class, 'storeAjax'])->name('dirigentes.store.ajax');

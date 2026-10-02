@@ -13,10 +13,12 @@ use App\Models\User;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class SistemaController extends Controller
 {
@@ -302,7 +304,233 @@ class SistemaController extends Controller
         }
 
         // 🔹 Retornamos la vista con sistemas + totales
-        return view('ciudades.partials.sistemas_modal', compact('sistemas', 'totalesSistemas'))->render();
+        $sistemasVisibles = $this->sistemasVisiblesDeDistrito($ciudad->id);
+
+        return view('ciudades.partials.sistemas_modal', compact('sistemas', 'totalesSistemas') + [
+            'ciudadId' => $ciudad->id,
+            'distritoNombre' => $ciudad->descripcion,
+            'totalDuplicados' => $sistemasVisibles->isEmpty()
+                ? 0
+                : $this->gruposPunterosDuplicados($sistemasVisibles)->count(),
+        ])->render();
+    }
+
+    /**
+     * IDs de los sistemas (intendente/concejal) de un distrito que el usuario
+     * logueado tiene permitido ver.
+     */
+    private function sistemasVisiblesDeDistrito($ciudadId)
+    {
+        $userId = Auth::id();
+        $userSistema = Auth::user()->sistema;
+
+        return Sistema::where('id_ciudad_electoral', $ciudadId)
+            ->whereRaw('LOWER(tipo) IN (?, ?)', ['intendente', 'concejal'])
+            ->when(!in_array($userId, [1, 4]), function ($q) use ($userId, $userSistema) {
+                $q->where(function ($sub) use ($userId, $userSistema) {
+                    $sub->where('idusuario', $userId)
+                        ->orWhere('id', $userSistema);
+                });
+            })
+            ->pluck('id');
+    }
+
+    /**
+     * Punteros del distrito con los datos de dirigente/equipo.
+     */
+    private function punterosDelDistrito($sistemaIds)
+    {
+        return DB::table('puntero as p')
+            ->join('dirigente as d', 'd.id', '=', 'p.id_dirigente')
+            ->join('equipo as e', 'e.id', '=', 'd.id_equipo')
+            ->whereIn('e.sist', $sistemaIds)
+            ->orderBy('p.cedula')
+            ->orderBy('p.id')
+            ->select([
+                'p.id',
+                'p.cedula',
+                'p.nombre',
+                'p.telefono',
+                'p.telefono1',
+                'p.telefono2',
+                'p.barrio',
+                'p.created_at',
+                'd.nombre as dirigente_nombre',
+                'e.descripcion as equipo_descripcion',
+            ])
+            ->get();
+    }
+
+    /**
+     * Agrupa los punteros del distrito por cédula dejando solo los duplicados.
+     * Cada grupo va ordenado de la carga más nueva a la más vieja.
+     */
+    private function gruposPunterosDuplicados($sistemaIds)
+    {
+        $punteros = $this->punterosDelDistrito($sistemaIds);
+
+        if ($punteros->isEmpty()) {
+            return collect();
+        }
+
+        $votantesPorPuntero = DB::table('votante')
+            ->whereIn('idpuntero', $punteros->pluck('id')->all())
+            ->groupBy('idpuntero')
+            ->select('idpuntero', DB::raw('COUNT(*) as total'))
+            ->pluck('total', 'idpuntero');
+
+        $grupos = [];
+
+        foreach ($punteros->groupBy('cedula') as $cedula => $registros) {
+            if ($registros->count() < 2) {
+                continue;
+            }
+
+            $items = $registros->map(function ($p) use ($votantesPorPuntero) {
+                return [
+                    'id' => (int) $p->id,
+                    'cedula' => $p->cedula,
+                    'nombre' => $p->nombre,
+                    'telefono' => $p->telefono ?: ($p->telefono1 ?: ($p->telefono2 ?: '')),
+                    'barrio' => $p->barrio,
+                    'dirigente' => $p->dirigente_nombre,
+                    'equipo' => $p->equipo_descripcion,
+                    'carga' => $p->created_at ? strtotime($p->created_at) : 0,
+                    'fecha_carga' => $p->created_at
+                        ? Carbon::parse($p->created_at)->format('d/m/Y H:i')
+                        : 'Sin fecha',
+                    'votantes' => (int) ($votantesPorPuntero[$p->id] ?? 0),
+                ];
+            })->values()->all();
+
+            // Más nueva primero (created_at y, a igual fecha, el id más alto)
+            usort($items, function ($a, $b) {
+                if ($a['carga'] !== $b['carga']) {
+                    return $b['carga'] <=> $a['carga'];
+                }
+
+                return $b['id'] <=> $a['id'];
+            });
+
+            foreach ($items as $i => $item) {
+                $items[$i]['es_nueva'] = ($i === 0);
+            }
+
+            $grupos[] = [
+                'cedula' => $cedula,
+                'nombre' => $items[0]['nombre'],
+                'dirigente' => $items[0]['dirigente'],
+                'equipo' => $items[0]['equipo'],
+                'punteros' => $items,
+            ];
+        }
+
+        return collect($grupos);
+    }
+
+    /**
+     * Vista (HTML) con los punteros duplicados del distrito para cargar
+     * dentro del modal de sistemas del distrito.
+     */
+    public function punterosDuplicadosPorDistrito($idCiudad)
+    {
+        $ciudad = CiudadElectoral::find($idCiudad);
+        $distritoNombre = $ciudad->descripcion ?? 'Distrito';
+
+        $sistemaIds = $ciudad ? $this->sistemasVisiblesDeDistrito($ciudad->id) : collect();
+        $grupos = $sistemaIds->isEmpty() ? collect() : $this->gruposPunterosDuplicados($sistemaIds);
+
+        return view('ciudades.partials.punteros_duplicados', [
+            'distritoNombre' => $distritoNombre,
+            'ciudadId' => (int) $idCiudad,
+            'grupos' => $grupos,
+        ])->render();
+    }
+
+    /**
+     * Borra los punteros duplicados seleccionados. Solo se permite borrar una
+     * carga por cédula (la vieja o la nueva, nunca las dos).
+     */
+    public function borrarPunterosDuplicados(Request $request)
+    {
+        $datos = $request->validate([
+            'ciudad_id' => 'required|integer',
+            'punteros' => 'required|array|min:1',
+            'punteros.*' => 'integer|distinct',
+        ]);
+
+        $ciudadId = (int) $datos['ciudad_id'];
+        $seleccionados = array_map('intval', $datos['punteros']);
+
+        $sistemaIds = $this->sistemasVisiblesDeDistrito($ciudadId);
+
+        if ($sistemaIds->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tenés acceso a los sistemas de este distrito.',
+            ], 403);
+        }
+
+        $punterosPorId = [];
+        foreach ($this->punterosDelDistrito($sistemaIds) as $p) {
+            $punterosPorId[(int) $p->id] = $p;
+        }
+
+        foreach ($seleccionados as $id) {
+            if (!isset($punterosPorId[$id])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Uno o más punteros seleccionados no pertenecen a este distrito.',
+                ], 422);
+            }
+        }
+
+        $conteoPorCedula = [];
+        foreach ($punterosPorId as $p) {
+            $conteoPorCedula[$p->cedula] = ($conteoPorCedula[$p->cedula] ?? 0) + 1;
+        }
+
+        $seleccionadosPorCedula = [];
+        foreach ($seleccionados as $id) {
+            $seleccionadosPorCedula[$punterosPorId[$id]->cedula][] = $id;
+        }
+
+        foreach ($seleccionadosPorCedula as $cedula => $ids) {
+            if (count($ids) > 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No podés borrar las dos cargas de la cédula $cedula al mismo tiempo. Elegí solo una.",
+                ], 422);
+            }
+
+            if (($conteoPorCedula[$cedula] ?? 0) < 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "El puntero con cédula $cedula ya no está duplicado.",
+                ], 422);
+            }
+        }
+
+        $votantesEliminados = DB::table('votante')->whereIn('idpuntero', $seleccionados)->count();
+
+        DB::transaction(function () use ($seleccionados) {
+            DB::table('votante')->whereIn('idpuntero', $seleccionados)->delete();
+            DB::table('puntero_vehiculo')->whereIn('puntero_id', $seleccionados)->delete();
+
+            if (Schema::hasTable('visita_puntero')) {
+                DB::table('visita_puntero')->whereIn('idpuntero', $seleccionados)->delete();
+            }
+
+            DB::table('puntero')->whereIn('id', $seleccionados)->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Se borraron ' . count($seleccionados) . ' puntero(s) duplicado(s) y '
+                . $votantesEliminados . ' votante(s) asociado(s).',
+            'punteros_eliminados' => count($seleccionados),
+            'votantes_eliminados' => $votantesEliminados,
+        ]);
     }
     public function mostrarArbol()
     {

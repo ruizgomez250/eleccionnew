@@ -757,44 +757,7 @@
                         })
                         .then(html => {
                             modalBody.innerHTML = html;
-                            setTimeout(function() {
-                                if ($.fn.DataTable && $('#sistemas-table').length) {
-                                    if ($.fn.DataTable.isDataTable('#sistemas-table'))
-                                        $('#sistemas-table').DataTable().destroy();
-                                    $('#sistemas-table').DataTable({
-                                        dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>",
-                                        responsive: true,
-                                        language: {
-                                            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
-                                            search: "Buscar sistema:",
-                                            searchPlaceholder: "Nombre, ubicación..."
-                                        },
-                                        buttons: [{
-                                            extend: 'print',
-                                            text: '<i class="fas fa-print"></i> Imprimir',
-                                            className: 'btn btn-secondary',
-                                            autoPrint: true,
-                                            title: 'Sistemas del Distrito',
-                                            customize: function(win) {
-                                                $(win.document.body)
-                                                    .find('table')
-                                                    .addClass(
-                                                        'table table-bordered'
-                                                    );
-                                                $(win.document.body)
-                                                    .find('h1').css(
-                                                        'text-align',
-                                                        'center');
-                                            }
-                                        }],
-                                        pageLength: 10,
-                                        lengthMenu: [
-                                            [10, 25, 50, -1],
-                                            [10, 25, 50, "Todos"]
-                                        ]
-                                    });
-                                }
-                            }, 100);
+                            setTimeout(inicializarTablaSistemasDistrito, 100);
                         })
                         .catch(error => {
                             modalBody.innerHTML =
@@ -889,6 +852,7 @@
                 })
                 .then(html => {
                     modalBody.innerHTML = html;
+                    setTimeout(inicializarTablaSistemasDistrito, 100);
                 })
                 .catch(error => {
                     modalBody.innerHTML =
@@ -1965,6 +1929,197 @@
                 }
             });
         }
+
+        // =============================================
+        // PUNTEROS DUPLICADOS DEL DISTRITO
+        // =============================================
+        window.distritoPunterosDuplicados = { id: null, nombre: '' };
+
+        window.inicializarTablaSistemasDistrito = function() {
+            if (!$.fn.DataTable || !$('#sistemas-table').length) return;
+
+            if ($.fn.DataTable.isDataTable('#sistemas-table')) {
+                $('#sistemas-table').DataTable().destroy();
+            }
+
+            $('#sistemas-table').DataTable({
+                dom: "<'row'<'col-md-4'l><'col-md-4'f><'col-md-4 text-right'B>><'row'<'col-sm-12'tr>><'row'<'col-sm-5'i><'col-sm-7'p>>",
+                responsive: true,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                    search: "Buscar sistema:",
+                    searchPlaceholder: "Nombre, ubicación..."
+                },
+                buttons: [{
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i> Imprimir',
+                    className: 'btn btn-secondary',
+                    autoPrint: true,
+                    title: 'Sistemas del Distrito',
+                    customize: function(win) {
+                        $(win.document.body).find('table').addClass('table table-bordered');
+                        $(win.document.body).find('h1').css('text-align', 'center');
+                    }
+                }],
+                pageLength: 10,
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, "Todos"]
+                ]
+            });
+        };
+
+        window.actualizarContadorPunterosDuplicados = function() {
+            let total = $('#contenedorPunterosDuplicados .chk-puntero-duplicado:checked').length;
+            let $contador = $('#contadorSeleccionDup');
+
+            if (!$contador.length) return;
+
+            $contador.text(total).toggleClass('badge-light', total === 0).toggleClass('badge-dark', total > 0);
+            $('#btnBorrarPunterosDuplicados').prop('disabled', total === 0);
+        };
+
+        // Solo se puede marcar una carga por cédula: al tildar una se
+        // desmarcan las demás del mismo grupo (nueva vs vieja).
+        $(document)
+            .off('change', '#modalSistemasBody .chk-puntero-duplicado')
+            .on('change', '#modalSistemasBody .chk-puntero-duplicado', function() {
+                if (this.checked) {
+                    let grupo = $(this).data('grupo');
+                    $('#modalSistemasBody .chk-puntero-duplicado[data-grupo="' + grupo + '"]')
+                        .not(this)
+                        .prop('checked', false);
+                }
+
+                window.actualizarContadorPunterosDuplicados();
+            });
+
+        window.abrirPunterosDuplicados = function(ciudadId, distritoNombre) {
+            let modalBody = document.getElementById('modalSistemasBody');
+
+            window.distritoPunterosDuplicados.id = ciudadId;
+            window.distritoPunterosDuplicados.nombre = distritoNombre;
+
+            modalBody.innerHTML =
+                `<div class="text-center text-muted py-5"><div class="spinner-border text-danger mb-3" role="status" style="width: 3rem; height: 3rem;"><span class="sr-only">Cargando...</span></div><p>Buscando punteros duplicados en ${distritoNombre}...</p></div>`;
+
+            fetch(`{{ url('/') }}/distritos/${ciudadId}/punteros-duplicados`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error');
+                    return res.text();
+                })
+                .then(html => {
+                    modalBody.innerHTML = `<div id="contenedorPunterosDuplicados">${html}</div>`;
+                    if (window.actualizarContadorPunterosDuplicados) {
+                        window.actualizarContadorPunterosDuplicados();
+                    }
+                })
+                .catch(() => {
+                    modalBody.innerHTML =
+                        `<div class="text-center text-danger py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><p>No se pudieron buscar los punteros duplicados. Intente nuevamente.</p></div>`;
+                });
+        };
+
+        window.volverASistemasDelDistrito = function() {
+            if (!window.distritoPunterosDuplicados.id) {
+                $('#modalSistemas').modal('hide');
+                return;
+            }
+
+            cargarSistemasManual(
+                window.distritoPunterosDuplicados.id,
+                window.distritoPunterosDuplicados.nombre
+            );
+        };
+
+        window.borrarPunterosDuplicadosSeleccionados = function() {
+            let ciudadId = window.distritoPunterosDuplicados.id;
+            let seleccionados = [];
+
+            $('#contenedorPunterosDuplicados .chk-puntero-duplicado:checked').each(function() {
+                seleccionados.push($(this).val());
+            });
+
+            if (!seleccionados.length) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: 'Seleccioná al menos un puntero duplicado para borrar.'
+                });
+                return;
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: `¿Borrar ${seleccionados.length} puntero(s) duplicado(s)?`,
+                html: 'Se borrarán los punteros seleccionados <strong>y todos sus votantes</strong>.<br>' +
+                    '<span class="text-muted small">Esta acción no se puede deshacer.</span>',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, borrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.fire({
+                    title: 'Borrando...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.ajax({
+                    url: `{{ route('distritos.punteros.duplicados.borrar') }}`,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        ciudad_id: ciudadId,
+                        punteros: seleccionados
+                    },
+                    success: function(response) {
+                        Swal.close();
+
+                        if (!response.success) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'No se pudieron borrar los punteros duplicados'
+                            });
+                            return;
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Punteros duplicados borrados',
+                            text: response.message,
+                            timer: 2500,
+                            showConfirmButton: false
+                        });
+
+                        window.abrirPunterosDuplicados(ciudadId, window.distritoPunterosDuplicados.nombre);
+                    },
+                    error: function(xhr) {
+                        Swal.close();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message ||
+                                (xhr.status === 422 && xhr.responseJSON?.errors
+                                    ? Object.values(xhr.responseJSON.errors).flat().join(' ')
+                                    : 'No se pudieron borrar los punteros duplicados')
+                        });
+                    }
+                });
+            });
+        };
 
         // Limpiar DataTables al cerrar modales
         $('#modalSistemas').on('hidden.bs.modal', function() {

@@ -1,15 +1,25 @@
-<h4 class="mb-3">
-    Totales Generales:
-    <span class="badge badge-warning">
-        Dirigentes: {{ number_format($totalesSistemas ? collect($totalesSistemas)->sum('dirigentes') : 0) }}
-    </span>
-    <span class="badge badge-info">
-        Punteros: {{ number_format($totalesSistemas ? collect($totalesSistemas)->sum('punteros') : 0) }}
-    </span>
-    <span class="badge badge-success">
-        Votantes: {{ number_format($totalesSistemas ? collect($totalesSistemas)->sum('votantes') : 0) }}
-    </span>
-</h4>
+<div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+    <h4 class="mb-0">
+        Totales Generales:
+        <span class="badge badge-warning">
+            Dirigentes: {{ number_format($totalesSistemas ? collect($totalesSistemas)->sum('dirigentes') : 0) }}
+        </span>
+        <span class="badge badge-info">
+            Punteros: {{ number_format($totalesSistemas ? collect($totalesSistemas)->sum('punteros') : 0) }}
+        </span>
+        <span class="badge badge-success">
+            Votantes: {{ number_format($totalesSistemas ? collect($totalesSistemas)->sum('votantes') : 0) }}
+        </span>
+    </h4>
+
+    <button type="button" class="btn btn-danger btn-sm"
+        onclick="abrirPunterosDuplicados({{ $ciudadId }}, '{{ addslashes($distritoNombre ?? '') }}')">
+        <i class="fas fa-copy"></i> Borrar Punteros Duplicados
+        @if (!empty($totalDuplicados))
+            <span class="badge badge-light">{{ $totalDuplicados }}</span>
+        @endif
+    </button>
+</div>
 
 <div class="card">
     <div class="card-body">
